@@ -55,8 +55,9 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
 };
 
 export default function AppLayout() {
-  const { role, setRole, theme, toggleTheme } = useRole();
+  const { role, setRole, theme, toggleTheme, signOut, displayName } = useRole();
   const meta = ROLE_META[role];
+  const userLabel = displayName || meta.user;
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const items = NAV[role];
@@ -126,18 +127,18 @@ export default function AppLayout() {
           <div className="flex items-center gap-3 px-1">
             <Avatar className="size-9 border border-sidebar-border">
               <AvatarFallback style={{ background: meta.color, color: "white" }} className="text-xs font-semibold">
-                {meta.user.split(" ").map(s => s[0]).slice(0,2).join("")}
+                {userLabel.split(" ").map(s => s[0]).slice(0,2).join("").toUpperCase()}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold truncate">{meta.user}</div>
+                <div className="text-sm font-semibold truncate">{userLabel}</div>
                 <div className="text-[11px] text-muted-foreground truncate">{meta.subtitle}</div>
               </div>
             )}
           </div>
           {!collapsed && (
-            <Button variant="ghost" size="sm" className="w-full justify-start mt-3 text-muted-foreground">
+            <Button variant="ghost" size="sm" className="w-full justify-start mt-3 text-muted-foreground" onClick={signOut}>
               <LogOut className="size-4 mr-2" /> Logout
             </Button>
           )}
@@ -203,11 +204,11 @@ export default function AppLayout() {
                   <button className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-secondary/60">
                     <Avatar className="size-9">
                       <AvatarFallback style={{ background: meta.color, color: "white" }} className="text-xs font-semibold">
-                        {meta.user.split(" ").map(s => s[0]).slice(0,2).join("")}
+                        {userLabel.split(" ").map(s => s[0]).slice(0,2).join("").toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden sm:block text-left leading-tight">
-                      <div className="text-sm font-semibold">{meta.user}</div>
+                      <div className="text-sm font-semibold">{userLabel}</div>
                       <div className="text-[11px] text-muted-foreground">{meta.subtitle}</div>
                     </div>
                     <ChevronDown className="size-4 text-muted-foreground" />
@@ -225,7 +226,7 @@ export default function AppLayout() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>Profile</DropdownMenuItem>
                   <DropdownMenuItem>Settings</DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">Logout</DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive" onClick={signOut}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
