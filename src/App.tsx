@@ -8,6 +8,7 @@ import AppLayout from "./layouts/AppLayout";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RoleGuard from "./components/RoleGuard";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminStudents from "./pages/admin/Students";
@@ -57,35 +58,35 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<RoleRedirect />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/students" element={<AdminStudents />} />
-              <Route path="/admin/teachers" element={<AdminTeachers />} />
-              <Route path="/admin/classes"  element={<AdminClasses />} />
-              <Route path="/admin/reports"  element={<AdminReports />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/admin" element={<RoleGuard allow="admin"><AdminDashboard /></RoleGuard>} />
+              <Route path="/admin/students" element={<RoleGuard allow="admin"><AdminStudents /></RoleGuard>} />
+              <Route path="/admin/teachers" element={<RoleGuard allow="admin"><AdminTeachers /></RoleGuard>} />
+              <Route path="/admin/classes"  element={<RoleGuard allow="admin"><AdminClasses /></RoleGuard>} />
+              <Route path="/admin/reports"  element={<RoleGuard allow="admin"><AdminReports /></RoleGuard>} />
+              <Route path="/admin/settings" element={<RoleGuard allow="admin"><AdminSettings /></RoleGuard>} />
 
-              <Route path="/teacher"            element={<TeacherDashboard />} />
-              <Route path="/teacher/classes"    element={<TeacherClasses />} />
-              <Route path="/teacher/attendance" element={<TeacherAttendance />} />
-              <Route path="/teacher/tests"      element={<TestBuilder />} />
-              <Route path="/teacher/grading"    element={<Grading />} />
-              <Route path="/teacher/students"   element={<TeacherStudents />} />
+              <Route path="/teacher"            element={<RoleGuard allow="teacher"><TeacherDashboard /></RoleGuard>} />
+              <Route path="/teacher/classes"    element={<RoleGuard allow="teacher"><TeacherClasses /></RoleGuard>} />
+              <Route path="/teacher/attendance" element={<RoleGuard allow="teacher"><TeacherAttendance /></RoleGuard>} />
+              <Route path="/teacher/tests"      element={<RoleGuard allow="teacher"><TestBuilder /></RoleGuard>} />
+              <Route path="/teacher/grading"    element={<RoleGuard allow="teacher"><Grading /></RoleGuard>} />
+              <Route path="/teacher/students"   element={<RoleGuard allow="teacher"><TeacherStudents /></RoleGuard>} />
 
-              <Route path="/student"          element={<StudentDashboard />} />
-              <Route path="/student/classes"  element={<StudentClasses />} />
-              <Route path="/student/exams"    element={<ExamInterface />} />
-              <Route path="/student/results"  element={<StudentResults />} />
-              <Route path="/student/library"  element={<Library />} />
-              <Route path="/student/ai-tutor" element={<AITutor />} />
-              <Route path="/student/calendar" element={<StudentCalendar />} />
+              <Route path="/student"          element={<RoleGuard allow="student"><StudentDashboard /></RoleGuard>} />
+              <Route path="/student/classes"  element={<RoleGuard allow="student"><StudentClasses /></RoleGuard>} />
+              <Route path="/student/exams"    element={<RoleGuard allow="student"><ExamInterface /></RoleGuard>} />
+              <Route path="/student/results"  element={<RoleGuard allow="student"><StudentResults /></RoleGuard>} />
+              <Route path="/student/library"  element={<RoleGuard allow="student"><Library /></RoleGuard>} />
+              <Route path="/student/ai-tutor" element={<RoleGuard allow="student"><AITutor /></RoleGuard>} />
+              <Route path="/student/calendar" element={<RoleGuard allow="student"><StudentCalendar /></RoleGuard>} />
 
-              <Route path="/parent"            element={<ParentDashboard />} />
-              <Route path="/parent/children"   element={<ParentChildren />} />
-              <Route path="/parent/results"    element={<ParentResults />} />
-              <Route path="/parent/attendance" element={<ParentAttendance />} />
-              <Route path="/parent/activity"   element={<ParentActivity />} />
-              <Route path="/parent/fees"       element={<ParentFees />} />
-              <Route path="/parent/messages"   element={<ParentMessages />} />
+              <Route path="/parent"            element={<RoleGuard allow="parent"><ParentDashboard /></RoleGuard>} />
+              <Route path="/parent/children"   element={<RoleGuard allow="parent"><ParentChildren /></RoleGuard>} />
+              <Route path="/parent/results"    element={<RoleGuard allow="parent"><ParentResults /></RoleGuard>} />
+              <Route path="/parent/attendance" element={<RoleGuard allow="parent"><ParentAttendance /></RoleGuard>} />
+              <Route path="/parent/activity"   element={<RoleGuard allow="parent"><ParentActivity /></RoleGuard>} />
+              <Route path="/parent/fees"       element={<RoleGuard allow="parent"><ParentFees /></RoleGuard>} />
+              <Route path="/parent/messages"   element={<RoleGuard allow="parent"><ParentMessages /></RoleGuard>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
