@@ -9,6 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const ICONS: Record<string, any> = { users: Users, graduationCap: GraduationCap, bookOpen: BookOpen, dollarSign: DollarSign, userPlus: UserPlus, userCheck: UserCheck, fileText: FileText, wallet: Wallet };
 
+const ACT_TONE: Record<string, { bg: string; fg: string }> = {
+  info:    { bg: "bg-info/10",       fg: "text-info" },
+  success: { bg: "bg-success/10",    fg: "text-success" },
+  warning: { bg: "bg-warning/10",    fg: "text-warning" },
+  student: { bg: "bg-student/10",    fg: "text-student" },
+  parent:  { bg: "bg-parent/10",     fg: "text-parent" },
+};
+
 export default function AdminDashboard() {
   return (
     <div className="space-y-6">
@@ -56,9 +64,9 @@ export default function AdminDashboard() {
             {recentActivities.map((a, i) => {
               const Icon = ICONS[a.icon] ?? FileText;
               return (
-                <li key={i} className="flex gap-3">
-                  <div className={`size-9 rounded-lg grid place-items-center bg-${a.color}/10 shrink-0`}>
-                    <Icon className={`size-4 text-${a.color}`} />
+              <li key={i} className="flex gap-3">
+                  <div className={`size-9 rounded-lg grid place-items-center shrink-0 ${ACT_TONE[a.color]?.bg ?? "bg-secondary"}`}>
+                    <Icon className={`size-4 ${ACT_TONE[a.color]?.fg ?? "text-foreground"}`} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium truncate">{a.title}</div>
