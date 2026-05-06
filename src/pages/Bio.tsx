@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 export default function Bio() {
   const navigate = useNavigate();
-  const { user, school, activeRole, loading, schoolLoading, refreshMemberships, displayName, signOut } = useSchool();
+  const { user, school, activeRole, loading, schoolLoading, refreshMemberships, refreshProfile, displayName, signOut } = useSchool();
   const [busy, setBusy] = useState(false);
 
   // common
@@ -67,7 +67,7 @@ export default function Bio() {
       }).eq("user_id", user.id).eq("school_id", school.id).eq("role", activeRole);
       if (mErr) throw mErr;
 
-      await refreshMemberships();
+      await Promise.all([refreshMemberships(), refreshProfile()]);
       toast.success("Profile saved");
       navigate(`/app/${activeRole}`, { replace: true });
     } catch (err) {
