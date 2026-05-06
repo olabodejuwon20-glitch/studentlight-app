@@ -5,14 +5,12 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+const json = (b: unknown, s = 200) =>
+  new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
-function normalizePhone(p: string) {
-  return p.replace(/[^\d+]/g, "");
-}
-function fakeEmail(phone: string, slug: string) {
-  return `p${normalizePhone(phone).replace(/\+/g, "")}.${slug}@members.edusmart.local`;
-}
-function isPin(s: string) { return /^\d{4,6}$/.test(s); }
+const normPhone = (p: string) => p.replace(/[^\d+]/g, "");
+const fakeEmail = (phone: string, slug: string) => `p${normPhone(phone).replace(/\+/g, "")}.${slug}@members.edusmart.local`;
+const isPin = (s: string) => /^\d{4,6}$/.test(s);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -20,68 +18,71 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const mode = body.mode as "signup" | "signin";
     const fullName = (body.fullName ?? "").toString().trim();
-    const phone = normalizePhone((body.phone ?? "").toString());
+    const phone = normPhone((body.phone ?? "").toString());
     const code = (body.code ?? "").toString().trim();
     const pin = (body.pin ?? "").toString().trim();
+    const schoolSlug = (body.schoolSlug ?? "").toString().trim().toLowerCase();
 
     if (!phone || phone.length < 6) return json({ error: "Invalid phone" }, 400);
-    if (!code) return json({ error: "School code is required" }, 400);
     if (!isPin(pin)) return json({ error: "PIN must be 4–6 digits" }, 400);
-    if (mode === "signup" && !fullName) return json({ error: "Name is required" }, 400);
 
     const url = Deno.env.get("SUPABASE_URL")!;
     const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(url, service, { auth: { persistSession: false } });
 
-    // Look up the invite code → school + role
-    const { data: invite, error: invErr } = await admin
-      .from("invite_codes").select("id, school_id, role, max_uses, uses, expires_at").eq("code", code).maybeSingle();
-    if (invErr) return json({ error: invErr.message }, 400);
-    if (!invite) return json({ error: "Invalid school code" }, 400);
-    if (invite.expires_at && new Date(invite.expires_at) < new Date()) return json({ error: "Code expired" }, 400);
+    // Resolve school: by code (signup) or by slug (signin/signup-with-slug)
+    let schoolId: string | null = null;
+    let slug = schoolSlug;
+    let role: string | null = null;
 
-    const { data: school } = await admin.from("schools").select("slug,name").eq("id", invite.school_id).single();
-    if (!school) return json({ error: "School not found" }, 400);
+    if (code) {
+      const { data: invite } = await admin.from("invite_codes").select("school_id, role, expires_at").eq("code", code).maybeSingle();
+      if (!invite) return json({ error: "Invalid school code" }, 400);
+      if (invite.expires_at && new Date(invite.expires_at) < new Date()) return json({ error: "Code expired" }, 400);
+      schoolId = invite.school_id; role = invite.role;
+      const { data: s } = await admin.from("schools").select("slug,name").eq("id", schoolId!).single();
+      if (!s) return json({ error: "School not found" }, 400);
+      slug = s.slug;
+    } else if (slug) {
+      const { data: s } = await admin.from("schools").select("id,name,slug").eq("slug", slug).maybeSingle();
+      if (!s) return json({ error: "School not found" }, 400);
+      schoolId = s.id;
+    } else {
+      return json({ error: "Please provide a school code or be on a school portal" }, 400);
+    }
 
-    const email = fakeEmail(phone, school.slug);
+    const email = fakeEmail(phone, slug);
 
     if (mode === "signup") {
-      // Create the auth user
+      if (!fullName) return json({ error: "Name is required" }, 400);
+      if (!role) return json({ error: "An invite code is required to join a school" }, 400);
+
       const { data: created, error: cErr } = await admin.auth.admin.createUser({
         email, password: pin, email_confirm: true,
         user_metadata: { full_name: fullName, phone, member_via: "phone_code" },
       });
       if (cErr) {
-        // If the user already exists, treat as a friendly hint
-        if (/already/i.test(cErr.message)) return json({ error: "This phone is already registered for this school. Please sign in." }, 400);
+        if (/already/i.test(cErr.message)) return json({ error: "This phone is already registered for this school. Please sign in instead." }, 400);
         return json({ error: cErr.message }, 400);
       }
       const uid = created.user!.id;
-
-      // Profile (trigger usually handles, but ensure)
       await admin.from("profiles").upsert({ id: uid, full_name: fullName, email, phone });
-
-      // Membership (use code role; do not increment uses for shared codes if max is generous)
       await admin.from("memberships").upsert(
-        { school_id: invite.school_id, user_id: uid, role: invite.role, status: "active", bio_completed: false },
-        { onConflict: "school_id,user_id,role" } as any
+        { school_id: schoolId, user_id: uid, role, status: "active", bio_completed: false },
+        { onConflict: "school_id,user_id,role" } as any,
       );
-
-      return json({ ok: true, email, schoolSlug: school.slug, schoolName: school.name, role: invite.role, isNew: true });
+      return json({ ok: true, email, schoolSlug: slug, role, isNew: true });
     }
 
-    // signin: just return the email so the client can sign in with PIN as password
-    // Verify a profile exists with this phone for this school
-    const { data: existing } = await admin.auth.admin.listUsers();
-    const userMatch = existing?.users?.find((u) => u.email === email);
-    if (!userMatch) return json({ error: "No account found. Please sign up first." }, 400);
+    // signin: must have a membership in the resolved school
+    const { data: list } = await admin.auth.admin.listUsers();
+    const u = list?.users?.find((x) => x.email === email);
+    if (!u) return json({ error: "No account found for this phone in this school." }, 400);
+    const { data: mem } = await admin.from("memberships").select("role").eq("user_id", u.id).eq("school_id", schoolId!).eq("status", "active").maybeSingle();
+    if (!mem) return json({ error: "You are not a member of this school." }, 403);
 
-    return json({ ok: true, email, schoolSlug: school.slug, role: invite.role, isNew: false });
+    return json({ ok: true, email, schoolSlug: slug, role: mem.role, isNew: false });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
 });
-
-function json(b: unknown, s = 200) {
-  return new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
-}
