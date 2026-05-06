@@ -9,7 +9,7 @@ import {
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -77,7 +77,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
 };
 
 export default function AppLayout() {
-  const { school, activeRole, theme, toggleTheme, signOut, displayName, email } = useSchool();
+  const { school, activeRole, theme, toggleTheme, signOut, displayName, email, photoUrl } = useSchool();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -134,7 +134,8 @@ export default function AppLayout() {
             </div>
           )}
           <div className="flex items-center gap-3 px-1">
-            <Avatar className="size-9 border border-sidebar-border">
+            <Avatar className="size-9 border border-sidebar-border ring-2 ring-background">
+              {photoUrl && <AvatarImage src={photoUrl} alt={userLabel} />}
               <AvatarFallback style={{ background: meta.color, color: "white" }} className="text-xs font-semibold">{initials}</AvatarFallback>
             </Avatar>
             {!collapsed && (
@@ -170,7 +171,10 @@ export default function AppLayout() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-secondary/60">
-                    <Avatar className="size-9"><AvatarFallback style={{ background: meta.color, color: "white" }} className="text-xs font-semibold">{initials}</AvatarFallback></Avatar>
+                    <Avatar className="size-9 ring-2 ring-background">
+                      {photoUrl && <AvatarImage src={photoUrl} alt={userLabel} />}
+                      <AvatarFallback style={{ background: meta.color, color: "white" }} className="text-xs font-semibold">{initials}</AvatarFallback>
+                    </Avatar>
                     <div className="hidden sm:block text-left leading-tight">
                       <div className="text-sm font-semibold">{userLabel}</div>
                       <div className="text-[11px] text-muted-foreground capitalize">{activeRole}</div>
