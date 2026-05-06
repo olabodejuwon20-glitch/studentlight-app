@@ -1,28 +1,22 @@
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { ClipboardCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
-import { attendanceLog } from "@/data/mock";
-
-const TONE: Record<string, string> = { Present: "border-success/30 bg-success/10 text-success", Absent: "border-destructive/30 bg-destructive/10 text-destructive", Late: "border-warning/30 bg-warning/10 text-warning" };
-
+import { EmptyState } from "@/components/EmptyState";
 export default function ParentAttendance() {
+  const { school, user } = useSchool();
+  const [rows, setRows] = useState<any[]>([]);
+  useEffect(() => {
+    if (!school || !user) return;
+    supabase.from("attendance").select("*").eq("school_id", school.id).then(({ data }) => setRows(data ?? []));
+  }, [school, user]);
   return (
-    <SectionCard title="Attendance Details" description="Daily attendance log">
-      <table className="w-full text-sm">
-        <thead><tr className="text-xs uppercase text-muted-foreground border-b border-border">
-          <th className="text-left font-medium py-3 pr-4">Date</th><th className="text-left font-medium py-3 pr-4">Day</th>
-          <th className="text-left font-medium py-3 pr-4">Status</th><th className="text-left font-medium py-3 pr-4">Class</th>
-        </tr></thead>
-        <tbody>
-          {attendanceLog.map((a, i) => (
-            <tr key={i} className="border-b border-border last:border-0">
-              <td className="py-3 pr-4">{a.date}</td>
-              <td className="py-3 pr-4 text-muted-foreground">{a.day}</td>
-              <td className="py-3 pr-4"><Badge variant="outline" className={TONE[a.status]}>{a.status}</Badge></td>
-              <td className="py-3 pr-4">{a.class}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <SectionCard title="Attendance">
+      {rows.length === 0 ? <EmptyState icon={ClipboardCheck} title="Nothing yet" /> :
+        <ul className="divide-y divide-border">{rows.map((r:any) => (
+          <li key={r.id} className="py-3 text-sm flex justify-between"><span>{r.description || r.subject || r.title || r.body || r.id.slice(0,8)}</span><span className="text-xs text-muted-foreground">{r.created_at && new Date(r.created_at).toLocaleDateString()}</span></li>
+        ))}</ul>}
     </SectionCard>
   );
 }
