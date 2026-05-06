@@ -63,7 +63,7 @@ export default function Bio() {
       if (activeRole === "parent")  Object.assign(profile_data, { occupation, children_names: childrenNames.split(",").map(s => s.trim()).filter(Boolean) });
 
       const { error: mErr } = await supabase.from("memberships").update({
-        bio_completed: true, profile_data,
+        bio_completed: true, profile_data: profile_data as any,
       }).eq("user_id", user.id).eq("school_id", school.id).eq("role", activeRole);
       if (mErr) throw mErr;
 
