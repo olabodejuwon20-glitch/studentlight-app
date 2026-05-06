@@ -600,24 +600,30 @@ export type Database = {
       }
       memberships: {
         Row: {
+          bio_completed: boolean
           created_at: string
           id: string
+          profile_data: Json
           role: Database["public"]["Enums"]["member_role"]
           school_id: string
           status: string
           user_id: string
         }
         Insert: {
+          bio_completed?: boolean
           created_at?: string
           id?: string
+          profile_data?: Json
           role: Database["public"]["Enums"]["member_role"]
           school_id: string
           status?: string
           user_id: string
         }
         Update: {
+          bio_completed?: boolean
           created_at?: string
           id?: string
+          profile_data?: Json
           role?: Database["public"]["Enums"]["member_role"]
           school_id?: string
           status?: string
@@ -726,22 +732,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           created_at: string
+          dob: string | null
           email: string | null
           full_name: string | null
+          gender: string | null
           id: string
+          phone: string | null
+          photo_url: string | null
         }
         Insert: {
+          address?: string | null
           created_at?: string
+          dob?: string | null
           email?: string | null
           full_name?: string | null
+          gender?: string | null
           id: string
+          phone?: string | null
+          photo_url?: string | null
         }
         Update: {
+          address?: string | null
           created_at?: string
+          dob?: string | null
           email?: string | null
           full_name?: string | null
+          gender?: string | null
           id?: string
+          phone?: string | null
+          photo_url?: string | null
         }
         Relationships: []
       }
