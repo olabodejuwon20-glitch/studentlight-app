@@ -1,1 +1,4 @@
 project_id = "fhrmtsqlcweofjdcibea"
+
+[functions.ai-tutor]
+verify_jwt = true
