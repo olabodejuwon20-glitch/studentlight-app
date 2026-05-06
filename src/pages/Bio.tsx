@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Loader2, UserCircle2 } from "lucide-react";
+import { GraduationCap, Loader2, UserCircle2, Upload, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool, ROLE_META } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,38 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
 export default function Bio() {
   const navigate = useNavigate();
   const { user, school, activeRole, loading, schoolLoading, refreshMemberships, refreshProfile, displayName, signOut } = useSchool();
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  async function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("File too large (max 5 MB)");
+    setUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      setPhotoUrl(pub.publicUrl);
+      toast.success("Photo uploaded");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally { setUploading(false); }
+  }
+
+  async function removePhoto() {
+    setPhotoUrl("");
+    toast("Photo removed", { description: "Save to apply." });
+  }
 
   // common
   const [phone, setPhone] = useState("");
@@ -124,7 +150,31 @@ export default function Bio() {
                   </Select>
                 </div>
                 <div className="space-y-2 sm:col-span-2"><Label>Address</Label><Textarea rows={2} value={address} onChange={e => setAddress(e.target.value)} /></div>
-                <div className="space-y-2 sm:col-span-2"><Label>Photo URL (optional)</Label><Input value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} placeholder="https://..." /></div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Profile photo</Label>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="size-20 border border-border">
+                      {photoUrl && <AvatarImage src={photoUrl} alt={displayName} />}
+                      <AvatarFallback style={{ background: ROLE_META[activeRole].color, color: "white" }} className="text-lg font-semibold">
+                        {(displayName || "U").split(/\s+/).map(s => s[0]).slice(0,2).join("").toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col gap-2">
+                      <label className="inline-flex">
+                        <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={onPickPhoto} />
+                        <Button asChild size="sm" variant="outline" disabled={uploading}>
+                          <span>{uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />} {photoUrl ? "Replace photo" : "Upload photo"}</span>
+                        </Button>
+                      </label>
+                      {photoUrl && (
+                        <Button type="button" size="sm" variant="ghost" className="text-muted-foreground" onClick={removePhoto} disabled={uploading}>
+                          <Trash2 className="size-3.5" /> Remove
+                        </Button>
+                      )}
+                      <p className="text-[11px] text-muted-foreground">PNG, JPG or WebP · up to 5 MB</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
 
