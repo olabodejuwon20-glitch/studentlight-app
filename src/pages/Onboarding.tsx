@@ -49,15 +49,35 @@ export default function Onboarding() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
+    const trimmedName = name.trim();
+    const finalSlug = slugify(slug || trimmedName);
+    const { data: authState } = await supabase.auth.getSession();
+    const currentUser = authState.session?.user ?? user;
+
+    if (!currentUser) {
+      toast.error("Your session is not ready yet. Please sign in again and retry.");
+      return;
+    }
+
+    if (!trimmedName || !finalSlug) {
+      toast.error("Enter a school name and slug.");
+      return;
+    }
+
     setBusy(true);
-    const finalSlug = slug || slugify(name);
-    const { data, error } = await supabase.from("schools").insert({ name, slug: finalSlug, created_by: user.id }).select("slug").single();
+    const { error } = await supabase
+      .from("schools")
+      .insert({ name: trimmedName, slug: finalSlug, created_by: currentUser.id });
+
     setBusy(false);
-    if (error) return toast.error(error.message.includes("schools_slug_key") ? "That slug is taken" : error.message);
+    if (error) {
+      const isPolicyError = error.code === "42501" || /row-level security/i.test(error.message);
+      return toast.error(isPolicyError ? "Your account session is not allowed to create this school yet. Please sign out, sign back in, then try again." : error.message.includes("schools_slug_key") ? "That slug is taken" : error.message);
+    }
+
     toast.success("School created");
     await refreshMemberships();
-    goToSchool(data!.slug);
+    goToSchool(finalSlug);
   }
 
   async function handleJoin(e: React.FormEvent) {
