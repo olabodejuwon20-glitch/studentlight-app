@@ -84,7 +84,21 @@ export default function Auth() {
             {school ? "Choose how you access this portal." : "Enter your school's slug to continue, or contact your admin."}
           </p>
 
-          {!school ? <FindSchool /> : (
+          {!school ? (
+            <Tabs defaultValue="find" className="mt-6">
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="find">Find school</TabsTrigger>
+                <TabsTrigger value="admin">Create / join</TabsTrigger>
+              </TabsList>
+              <TabsContent value="find" className="mt-6"><FindSchool /></TabsContent>
+              <TabsContent value="admin" className="mt-6">
+                <p className="text-xs text-muted-foreground mb-4">
+                  Sign in or create an account to create a new school or join one with an invite code.
+                </p>
+                <AdminAuth busy={busy} setBusy={setBusy} />
+              </TabsContent>
+            </Tabs>
+          ) : (
             <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mt-6">
               <TabsList className="grid grid-cols-2 w-full">
                 <TabsTrigger value="member">Teacher / Student / Parent</TabsTrigger>
@@ -130,7 +144,7 @@ function FindSchool() {
         <p className="text-[11px] text-muted-foreground">Your portal: <span className="font-mono">[slug].edusmart.app</span></p>
       </div>
       <div className="border-t border-border pt-4 text-sm text-muted-foreground">
-        New here? <Link to="/onboarding" className="text-primary font-medium">Create or join a school →</Link>
+        New here? Switch to the <span className="text-primary font-medium">Create / join</span> tab above.
       </div>
     </form>
   );
