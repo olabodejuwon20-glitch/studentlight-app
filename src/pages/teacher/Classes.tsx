@@ -1,22 +1,29 @@
-import { Users, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { teacherClasses } from "@/data/mock";
+import { useEffect, useState } from "react";
+import { BookOpen } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSchool } from "@/contexts/SchoolContext";
+import { SectionCard } from "@/components/dashboard/SectionCard";
+import { EmptyState } from "@/components/EmptyState";
 
-export default function TeacherClassesPage() {
+export default function TeacherClasses() {
+  const { school, user } = useSchool();
+  const [rows, setRows] = useState<any[]>([]);
+  useEffect(() => {
+    if (!school || !user) return;
+    supabase.from("classes").select("*").eq("school_id", school.id).eq("teacher_id", user.id).then(({ data }) => setRows(data ?? []));
+  }, [school, user]);
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {teacherClasses.map((c) => (
-        <div key={c.code} className="rounded-xl bg-card border border-border p-5 shadow-card hover:shadow-soft transition-all">
-          <div className="size-11 rounded-lg bg-teacher/10 text-teacher grid place-items-center"><BookOpen className="size-5" /></div>
-          <div className="mt-4 font-display font-semibold text-lg">{c.code}</div>
-          <div className="text-xs text-muted-foreground">{c.subject}</div>
-          <div className="mt-4 flex items-center justify-between text-sm">
-            <span className="inline-flex items-center gap-1.5 text-muted-foreground"><Users className="size-4" /> {c.students}</span>
-            <span className="text-success font-semibold">{c.attendance}%</span>
-          </div>
-          <Button variant="secondary" className="w-full mt-4">Manage</Button>
-        </div>
-      ))}
-    </div>
+    <SectionCard title="My Classes">
+      {rows.length === 0 ? <EmptyState icon={BookOpen} title="No classes" /> :
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {rows.map(c => (
+            <div key={c.id} className="rounded-xl border border-border p-5">
+              <div className="size-10 rounded-lg bg-teacher/10 text-teacher grid place-items-center"><BookOpen className="size-5" /></div>
+              <div className="mt-3 font-semibold">{c.code}</div>
+              <div className="text-sm">{c.name}</div>
+            </div>
+          ))}
+        </div>}
+    </SectionCard>
   );
 }

@@ -1,85 +1,83 @@
 import { useEffect, useState } from "react";
-import { Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ListChecks } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
-import { examQuestions } from "@/data/mock";
-import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-const PAD = 30;
-const TOTAL = examQuestions.length + PAD;
-const all = [...examQuestions, ...Array.from({length: PAD}).map((_, i) => ({ q: `Question ${examQuestions.length + i + 1} placeholder`, options: ["A", "B", "C", "D"], correct: 0 }))];
-
 export default function ExamInterface() {
-  const [current, setCurrent] = useState(6); // question 7
-  const [answers, setAnswers] = useState<Record<number, number>>({ 0: 0, 1: 1, 2: 2, 3: 0, 4: 1, 5: 2 });
-  const [time, setTime] = useState(89 * 60 + 45);
+  const { school, user } = useSchool();
+  const [exams, setExams] = useState<any[]>([]);
+  const [activeExam, setActiveExam] = useState<any | null>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [attemptId, setAttemptId] = useState<string | null>(null);
 
-  useEffect(() => { const t = setInterval(() => setTime(s => Math.max(0, s-1)), 1000); return () => clearInterval(t); }, []);
-  const mm = String(Math.floor(time / 60)).padStart(2, "0");
-  const ss = String(time % 60).padStart(2, "0");
-  const hh = String(Math.floor(time / 3600)).padStart(2, "0");
+  useEffect(() => {
+    if (!school) return;
+    supabase.from("exams").select("*").eq("school_id", school.id).in("status", ["scheduled","active"]).then(({ data }) => setExams(data ?? []));
+  }, [school]);
 
-  const q = all[current];
+  async function start(exam: any) {
+    if (!user || !school) return;
+    const { data: a, error } = await supabase.from("exam_attempts").insert({ exam_id: exam.id, school_id: school.id, student_id: user.id }).select("id").single();
+    if (error && !error.message.includes("duplicate")) return toast.error(error.message);
+    let attempt = a;
+    if (!attempt) {
+      const { data: existing } = await supabase.from("exam_attempts").select("id").eq("exam_id", exam.id).eq("student_id", user.id).single();
+      attempt = existing!;
+    }
+    setAttemptId(attempt.id);
+    const { data: qs } = await supabase.from("exam_questions").select("*").eq("exam_id", exam.id).order("position");
+    setQuestions(qs ?? []); setActiveExam(exam);
+  }
+
+  async function submit() {
+    if (!attemptId || !activeExam) return;
+    const rows = Object.entries(answers).map(([question_id, selected_index]) => ({ attempt_id: attemptId, question_id, selected_index }));
+    if (rows.length) await supabase.from("exam_answers").upsert(rows, { onConflict: "attempt_id,question_id" });
+    let correct = 0;
+    questions.forEach(q => { if (answers[q.id] === q.correct_index) correct += q.points; });
+    const total = questions.reduce((s, q) => s + q.points, 0) || 1;
+    const score = Math.round((correct / total) * 100);
+    await supabase.from("exam_attempts").update({ submitted_at: new Date().toISOString(), score }).eq("id", attemptId);
+    toast.success(`Submitted! Score: ${score}%`);
+    setActiveExam(null); setQuestions([]); setAnswers({}); setAttemptId(null);
+  }
+
+  if (activeExam) {
+    return (
+      <SectionCard title={activeExam.title} action={<Button onClick={submit}>Submit</Button>}>
+        <ol className="space-y-5">
+          {questions.map((q, i) => (
+            <li key={q.id}>
+              <div className="font-medium">{i + 1}. {q.prompt}</div>
+              <div className="mt-2 space-y-1.5">
+                {(q.options as string[]).map((o, oi) => (
+                  <label key={oi} className="flex items-center gap-2 p-2 rounded-md border border-border cursor-pointer hover:bg-secondary/40">
+                    <input type="radio" name={q.id} checked={answers[q.id] === oi} onChange={() => setAnswers({ ...answers, [q.id]: oi })} />
+                    <span className="text-sm">{o}</span>
+                  </label>
+                ))}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </SectionCard>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-      <SectionCard title={`Exam Interface (CBT)`} className="lg:col-span-2"
-        action={
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-[11px] text-muted-foreground">Time Left</div>
-              <div className="font-display font-bold tabular-nums text-destructive flex items-center gap-1.5"><Clock className="size-4" />{hh}:{mm}:{ss}</div>
-            </div>
-            <Button onClick={() => toast.success("Exam submitted")}>Submit Exam</Button>
-          </div>
-        }>
-        <div className="space-y-5">
-          <div>
-            <div className="text-xs font-medium text-muted-foreground">Question {current + 1} of {TOTAL}</div>
-            <div className="mt-2 text-base sm:text-lg font-medium">{q.q}</div>
-          </div>
-          <div className="space-y-2">
-            {q.options.map((opt, oi) => {
-              const selected = answers[current] === oi;
-              return (
-                <label key={oi} className={cn("flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors", selected ? "border-student bg-student/5" : "border-border hover:bg-secondary/40")}>
-                  <span className={cn("size-5 rounded-full border-2 grid place-items-center", selected ? "border-student" : "border-muted-foreground/40")}>
-                    {selected && <span className="size-2 rounded-full bg-student" />}
-                  </span>
-                  <span className="text-sm">{String.fromCharCode(65 + oi)}. {opt}</span>
-                </label>
-              );
-            })}
-          </div>
-          <div className="flex items-center justify-between pt-2">
-            <Button variant="outline" disabled={current === 0} onClick={() => setCurrent(c => c - 1)}>Previous</Button>
-            <Button onClick={() => setCurrent(c => Math.min(TOTAL - 1, c + 1))}>Next</Button>
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Question Navigator" description="Jump to any question">
-        <div className="grid grid-cols-6 gap-2">
-          {Array.from({ length: TOTAL }).map((_, i) => {
-            const answered = answers[i] !== undefined;
-            const isCur = i === current;
-            return (
-              <button key={i} onClick={() => setCurrent(i)}
-                className={cn("aspect-square rounded-md text-xs font-semibold border transition-colors",
-                  isCur ? "bg-student text-white border-student" :
-                  answered ? "bg-success/10 text-success border-success/30" :
-                  "bg-card text-muted-foreground border-border hover:bg-secondary")}>
-                {i+1}
-              </button>
-            );
-          })}
-        </div>
-        <div className="mt-5 space-y-2 text-xs">
-          <div className="flex items-center gap-2"><span className="size-3 rounded-sm bg-success/20 border border-success/30" /> Answered</div>
-          <div className="flex items-center gap-2"><span className="size-3 rounded-sm bg-student" /> Current</div>
-          <div className="flex items-center gap-2"><span className="size-3 rounded-sm border border-border" /> Unanswered</div>
-        </div>
-      </SectionCard>
-    </div>
+    <SectionCard title="Available Exams">
+      {exams.length === 0 ? <EmptyState icon={ListChecks} title="No exams available" /> :
+        <ul className="space-y-2">{exams.map(e => (
+          <li key={e.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
+            <div><div className="font-medium">{e.title}</div><div className="text-xs text-muted-foreground">{e.duration_minutes} min</div></div>
+            <Button onClick={() => start(e)}>Start</Button>
+          </li>
+        ))}</ul>}
+    </SectionCard>
   );
 }
