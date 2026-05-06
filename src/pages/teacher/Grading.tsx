@@ -1,41 +1,42 @@
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { PencilRuler } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
-import { pendingGrading } from "@/data/mock";
-import { toast } from "sonner";
+import { EmptyState } from "@/components/EmptyState";
 
 export default function Grading() {
-  const [scores, setScores] = useState<Record<number, string>>({});
+  const { school, user } = useSchool();
+  const [rows, setRows] = useState<any[]>([]);
+  useEffect(() => {
+    if (!school || !user) return;
+    (async () => {
+      const { data: exams } = await supabase.from("exams").select("id,title").eq("school_id", school.id).eq("created_by", user.id);
+      if (!exams?.length) return setRows([]);
+      const { data: attempts } = await supabase.from("exam_attempts").select("id,student_id,score,submitted_at,exam_id").in("exam_id", exams.map(e => e.id)).not("submitted_at", "is", null);
+      const eMap: Record<string, string> = {}; exams.forEach(e => eMap[e.id] = e.title);
+      setRows((attempts ?? []).map(a => ({ ...a, examTitle: eMap[a.exam_id] })));
+    })();
+  }, [school, user]);
   return (
-    <SectionCard
-      title="Grading Center"
-      description={`${pendingGrading.length} submissions awaiting your review`}
-      action={<Button onClick={() => toast.success("Grades submitted")}>Publish Grades</Button>}
-    >
-      <table className="w-full text-sm">
-        <thead><tr className="text-xs uppercase text-muted-foreground border-b border-border">
-          <th className="text-left font-medium py-3 pr-4">Student</th><th className="text-left font-medium py-3 pr-4">Class</th>
-          <th className="text-left font-medium py-3 pr-4">Assessment</th><th className="text-left font-medium py-3 pr-4">Due</th>
-          <th className="text-left font-medium py-3 pr-4">Score (/100)</th><th className="text-left font-medium py-3 pr-4">Status</th>
-        </tr></thead>
-        <tbody>
-          {pendingGrading.map((p, i) => {
-            const score = scores[i];
-            return (
-              <tr key={i} className="border-b border-border last:border-0">
-                <td className="py-3 pr-4 font-medium">{p.student}</td>
-                <td className="py-3 pr-4">{p.class}</td>
-                <td className="py-3 pr-4">{p.assessment}</td>
-                <td className="py-3 pr-4 text-muted-foreground">{p.due}</td>
-                <td className="py-3 pr-4 w-32"><Input type="number" min={0} max={100} value={scores[i] ?? ""} onChange={e => setScores(s => ({...s, [i]: e.target.value}))} /></td>
-                <td className="py-3 pr-4"><Badge variant="outline" className={score ? "border-success/30 bg-success/10 text-success" : "border-warning/30 bg-warning/10 text-warning"}>{score ? "Graded" : "Pending"}</Badge></td>
+    <SectionCard title="Submissions">
+      {rows.length === 0 ? <EmptyState icon={PencilRuler} title="No submissions yet" /> :
+        <table className="w-full text-sm">
+          <thead><tr className="text-xs uppercase text-muted-foreground border-b border-border">
+            <th className="text-left font-medium py-3">Exam</th><th className="text-left font-medium py-3">Student</th>
+            <th className="text-left font-medium py-3">Score</th><th className="text-left font-medium py-3">Submitted</th>
+          </tr></thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id} className="border-b border-border last:border-0">
+                <td className="py-3">{r.examTitle}</td>
+                <td className="py-3 text-muted-foreground font-mono text-xs">{r.student_id.slice(0,8)}</td>
+                <td className="py-3 font-semibold">{r.score ?? "—"}</td>
+                <td className="py-3 text-muted-foreground">{new Date(r.submitted_at).toLocaleString()}</td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            ))}
+          </tbody>
+        </table>}
     </SectionCard>
   );
 }
