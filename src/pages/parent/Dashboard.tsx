@@ -29,5 +29,6 @@ export default function ParentDashboard() {
           </div>
         ))}</div>}
     </SectionCard>
+    </div>
   );
 }
