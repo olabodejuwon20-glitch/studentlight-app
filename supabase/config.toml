@@ -2,3 +2,6 @@ project_id = "fhrmtsqlcweofjdcibea"
 
 [functions.ai-tutor]
 verify_jwt = true
+
+[functions.phone-auth]
+verify_jwt = false
