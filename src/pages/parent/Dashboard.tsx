@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
+import { ProfileCard } from "@/components/ProfileCard";
 export default function ParentDashboard() {
   const { school, user } = useSchool();
   const [children, setChildren] = useState<any[]>([]);
@@ -18,6 +19,8 @@ export default function ParentDashboard() {
     })();
   }, [school, user]);
   return (
+    <div className="space-y-6">
+    <ProfileCard />
     <SectionCard title="My Children">
       {children.length === 0 ? <EmptyState icon={UserSquare2} title="No children linked" desc="Ask the school admin to link your account to your children." /> :
         <div className="grid sm:grid-cols-2 gap-4">{children.map(c => (
@@ -26,5 +29,6 @@ export default function ParentDashboard() {
           </div>
         ))}</div>}
     </SectionCard>
+    </div>
   );
 }

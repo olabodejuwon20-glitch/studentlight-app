@@ -5,6 +5,7 @@ import { useSchool } from "@/contexts/SchoolContext";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
+import { ProfileCard } from "@/components/ProfileCard";
 
 export default function TeacherDashboard() {
   const { school, user } = useSchool();
@@ -21,6 +22,7 @@ export default function TeacherDashboard() {
   }, [school, user]);
   return (
     <div className="space-y-6">
+      <ProfileCard />
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard label="My Classes" value={String(classes.length)} icon={BookOpen} tone="teacher" />
         <StatCard label="Exams Created" value={String(examCount)} icon={ClipboardCheck} tone="info" />
