@@ -144,7 +144,7 @@ function FindSchool() {
         <p className="text-[11px] text-muted-foreground">Your portal: <span className="font-mono">[slug].edusmart.app</span></p>
       </div>
       <div className="border-t border-border pt-4 text-sm text-muted-foreground">
-        New here? <Link to="/onboarding" className="text-primary font-medium">Create or join a school →</Link>
+        New here? Switch to the <span className="text-primary font-medium">Create / join</span> tab above.
       </div>
     </form>
   );
