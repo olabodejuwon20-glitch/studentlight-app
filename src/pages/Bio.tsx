@@ -18,6 +18,30 @@ export default function Bio() {
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  async function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("File too large (max 5 MB)");
+    setUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      setPhotoUrl(pub.publicUrl);
+      toast.success("Photo uploaded");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally { setUploading(false); }
+  }
+
+  async function removePhoto() {
+    setPhotoUrl("");
+    toast("Photo removed", { description: "Save to apply." });
+  }
+
   // common
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState("");
