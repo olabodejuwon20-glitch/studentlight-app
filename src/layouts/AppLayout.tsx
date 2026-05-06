@@ -4,7 +4,7 @@ import {
   Bell, ChevronDown, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
   Settings, ClipboardCheck, FilePlus2, Calendar, Library, Sparkles, MessagesSquare,
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
-  Building2, Ticket,
+  Building2, Ticket, Plus,
 } from "lucide-react";
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Classes",   to: "classes",   icon: BookOpen },
     { label: "Reports",   to: "reports",   icon: FileBarChart },
     { label: "Invites",   to: "invites",   icon: Ticket },
+    { label: "New School", to: "new-school", icon: Plus },
     { label: "Settings",  to: "settings",  icon: Settings },
   ],
   teacher: [
@@ -61,6 +62,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "classes":    { title: "Classes",            sub: "All active classes" },
   "reports":    { title: "Reports",            sub: "Performance & insights" },
   "invites":    { title: "Invites",            sub: "Generate join codes" },
+  "new-school": { title: "Create School",      sub: "Spin up a new tenant" },
   "settings":   { title: "Settings",           sub: "School preferences" },
   "attendance": { title: "Attendance",         sub: "Daily attendance" },
   "tests":      { title: "Test Builder",       sub: "Create assessments" },
