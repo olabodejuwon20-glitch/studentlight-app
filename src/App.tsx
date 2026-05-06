@@ -19,6 +19,7 @@ import AdminClasses from "./pages/admin/Classes";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminInvites from "./pages/admin/Invites";
+import AdminCreateSchool from "./pages/admin/CreateSchool";
 
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import TeacherClasses from "./pages/teacher/Classes";
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="admin/classes" element={<RoleGate allow="admin"><AdminClasses /></RoleGate>} />
               <Route path="admin/reports" element={<RoleGate allow="admin"><AdminReports /></RoleGate>} />
               <Route path="admin/invites" element={<RoleGate allow="admin"><AdminInvites /></RoleGate>} />
+              <Route path="admin/new-school" element={<RoleGate allow="admin"><AdminCreateSchool /></RoleGate>} />
               <Route path="admin/settings" element={<RoleGate allow="admin"><AdminSettings /></RoleGate>} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
