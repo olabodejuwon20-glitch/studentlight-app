@@ -20,6 +20,7 @@ interface Ctx {
   loading: boolean;
   displayName: string;
   email: string;
+  photoUrl: string | null;
   school: School | null;          // resolved-from-URL school (may be null on landing)
   schoolLoading: boolean;
   memberships: Membership[];      // all schools the current user belongs to
@@ -51,6 +52,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [school, setSchool] = useState<School | null>(null);
   const [schoolLoading, setSchoolLoading] = useState(true);
@@ -75,9 +77,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadProfile = useCallback(async (uid: string, fallbackEmail: string) => {
-    const { data } = await supabase.from("profiles").select("full_name,email").eq("id", uid).maybeSingle();
+    const { data } = await supabase.from("profiles").select("full_name,email,photo_url").eq("id", uid).maybeSingle();
     setDisplayName(data?.full_name || fallbackEmail);
     setEmail(data?.email || fallbackEmail);
+    setPhotoUrl(data?.photo_url ?? null);
   }, []);
 
   useEffect(() => {
@@ -89,7 +92,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
           loadMemberships(s.user.id);
         }, 0);
       } else {
-        setDisplayName(""); setEmail(""); setMemberships([]);
+        setDisplayName(""); setEmail(""); setPhotoUrl(null); setMemberships([]);
       }
     });
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
@@ -110,7 +113,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
   return (
     <SchoolContext.Provider value={{
-      user, session, loading, displayName, email,
+      user, session, loading, displayName, email, photoUrl,
       school, schoolLoading, memberships, activeRole,
       theme, toggleTheme: () => setTheme(t => t === "light" ? "dark" : "light"),
       refreshMemberships, refreshProfile, signOut,
