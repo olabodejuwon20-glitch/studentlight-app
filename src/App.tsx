@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
+import Bio from "./pages/Bio";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminStudents from "./pages/admin/Students";
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
+            <Route path="/bio" element={<RequireAuth><Bio /></RequireAuth>} />
             <Route path="/app" element={<RequireSchool><AppLayout /></RequireSchool>}>
               <Route index element={<AppRoot />} />
 
