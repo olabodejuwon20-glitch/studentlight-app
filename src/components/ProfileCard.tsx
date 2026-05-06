@@ -44,7 +44,7 @@ export function ProfileCard() {
 
       {!loaded ? null : !completed ? (
         <div className="mt-4">
-          <EmptyState icon={BadgeCheck} title="Complete your profile" body="Add your details so your school can identify you." />
+          <EmptyState icon={BadgeCheck} title="Complete your profile" desc="Add your details so your school can identify you." />
         </div>
       ) : (
         <div className="mt-4 grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
