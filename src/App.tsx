@@ -9,7 +9,9 @@ import AppLayout from "./layouts/AppLayout";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
-import Onboarding from "./pages/Onboarding";
+import Register from "./pages/Register";
+import Join from "./pages/Join";
+import ChangePin from "./pages/ChangePin";
 import Bio from "./pages/Bio";
 
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -19,7 +21,7 @@ import AdminClasses from "./pages/admin/Classes";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminInvites from "./pages/admin/Invites";
-import AdminCreateSchool from "./pages/admin/CreateSchool";
+import AdminBulkUpload from "./pages/admin/BulkUpload";
 
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import TeacherClasses from "./pages/teacher/Classes";
@@ -61,7 +63,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/join" element={<Join />} />
+            <Route path="/change-pin" element={<RequireAuth><ChangePin /></RequireAuth>} />
             <Route path="/bio" element={<RequireAuth><Bio /></RequireAuth>} />
             <Route path="/app" element={<RequireSchool><AppLayout /></RequireSchool>}>
               <Route index element={<AppRoot />} />
@@ -72,7 +76,7 @@ const App = () => (
               <Route path="admin/classes" element={<RoleGate allow="admin"><AdminClasses /></RoleGate>} />
               <Route path="admin/reports" element={<RoleGate allow="admin"><AdminReports /></RoleGate>} />
               <Route path="admin/invites" element={<RoleGate allow="admin"><AdminInvites /></RoleGate>} />
-              <Route path="admin/new-school" element={<RoleGate allow="admin"><AdminCreateSchool /></RoleGate>} />
+              <Route path="admin/bulk" element={<RoleGate allow="admin"><AdminBulkUpload /></RoleGate>} />
               <Route path="admin/settings" element={<RoleGate allow="admin"><AdminSettings /></RoleGate>} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
