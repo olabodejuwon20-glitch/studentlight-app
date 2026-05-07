@@ -24,10 +24,10 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-2">
             {user
-              ? <Button onClick={() => navigate("/onboarding")}>Open dashboard</Button>
+              ? <Button onClick={() => navigate("/app")}>Open dashboard</Button>
               : <>
                   <Button variant="ghost" onClick={() => navigate("/auth")}>Sign in</Button>
-                  <Button onClick={() => navigate("/auth?mode=signup")}>Get started</Button>
+                  <Button onClick={() => navigate("/register")}>Register your school</Button>
                 </>}
           </div>
         </div>
@@ -45,10 +45,10 @@ export default function Landing() {
             EduSmart gives every school its own secure workspace — students, teachers, parents and admins working together with data that's fully isolated per school.
           </p>
           <div className="mt-8 flex gap-3">
-            <Button size="lg" onClick={() => navigate(user ? "/onboarding" : "/auth?mode=signup")}>
+            <Button size="lg" onClick={() => navigate(user ? "/app" : "/register")}>
               {user ? "Continue setup" : "Create your school"} <ArrowRight className="size-4 ml-1" />
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/auth")}>I have a code</Button>
+            <Button size="lg" variant="outline" onClick={() => navigate("/join")}>I have a code</Button>
           </div>
         </div>
 
