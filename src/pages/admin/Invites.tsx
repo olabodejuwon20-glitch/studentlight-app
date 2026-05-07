@@ -80,17 +80,22 @@ export default function AdminInvites() {
       {rows.length === 0
         ? <EmptyState icon={Ticket} title="No codes yet" desc="Generate one to invite teachers, students or parents." />
         : <div className="space-y-2">
-            {rows.map(r => (
-              <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg border border-border">
-                <code className="px-3 py-1.5 rounded-md bg-secondary font-mono text-sm">{r.code}</code>
-                <Badge variant="outline" className="capitalize">{r.role}</Badge>
-                <span className="text-xs text-muted-foreground">{r.uses}/{r.max_uses} uses</span>
-                <div className="ml-auto flex items-center gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(r.code); toast.success("Copied"); }}><Copy className="size-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => remove(r.id)}><Trash2 className="size-4 text-destructive" /></Button>
+            {rows.map(r => {
+              const exhausted = r.uses >= r.max_uses;
+              return (
+                <div key={r.id} className={`flex items-center gap-3 p-3 rounded-lg border ${exhausted ? "border-destructive/40 bg-destructive/5 opacity-80" : "border-border"}`}>
+                  <code className={`px-3 py-1.5 rounded-md font-mono text-sm ${exhausted ? "bg-muted line-through" : "bg-secondary"}`}>{r.code}</code>
+                  <Badge variant="outline" className="capitalize">{r.role}</Badge>
+                  <span className="text-xs text-muted-foreground">{r.uses}/{r.max_uses} uses</span>
+                  {exhausted && <Badge variant="destructive">Exhausted</Badge>}
+                  <div className="ml-auto flex items-center gap-1">
+                    <Button variant="ghost" size="icon" disabled={exhausted}
+                      onClick={() => { navigator.clipboard.writeText(r.code); toast.success("Copied"); }}><Copy className="size-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => remove(r.id)}><Trash2 className="size-4 text-destructive" /></Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>}
     </SectionCard>
   );
