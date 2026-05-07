@@ -7,6 +7,7 @@ import {
   Building2, Ticket, Upload,
 } from "lucide-react";
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
+import { schoolPath } from "@/lib/tenant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -83,7 +84,7 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (!school || !activeRole) return <Navigate to="/auth" replace />;
+  if (!school || !activeRole) return <Navigate to={schoolPath(school?.slug, "/auth")} replace />;
 
   const meta = ROLE_META[activeRole];
   const items = NAV[activeRole];
@@ -112,7 +113,9 @@ export default function AppLayout() {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
             {items.map((it) => {
-              const path = it.to ? `/app/${activeRole}/${it.to}` : `/app/${activeRole}`;
+              const path = it.to
+                ? schoolPath(school.slug, `/app/${activeRole}/${it.to}`)
+                : schoolPath(school.slug, `/app/${activeRole}`);
               return (
                 <li key={path}>
                   <NavLink to={path} end={!it.to} onClick={() => setMobileOpen(false)}

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { schoolPath } from "@/lib/tenant";
 
 export default function ChangePin() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function ChangePin() {
       if (mErr) throw mErr;
       await refreshMemberships();
       toast.success("PIN updated");
-      navigate(`/app`, { replace: true });
+      navigate(schoolPath(school.slug, "/app"), { replace: true });
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setBusy(false); }
