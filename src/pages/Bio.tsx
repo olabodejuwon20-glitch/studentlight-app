@@ -59,7 +59,7 @@ export default function Bio() {
   useEffect(() => {
     if (loading || schoolLoading) return;
     if (!user) navigate("/auth", { replace: true });
-    else if (!school || !activeRole) navigate("/onboarding", { replace: true });
+    else if (!school || !activeRole) navigate("/auth", { replace: true });
   }, [user, school, activeRole, loading, schoolLoading, navigate]);
 
   useEffect(() => {
