@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { buildSubdomainUrl } from "@/lib/tenant";
+import { schoolPath } from "@/lib/tenant";
 
 export default function Join() {
   const navigate = useNavigate();
@@ -37,6 +37,7 @@ export default function Join() {
       const { data, error } = await supabase.functions.invoke("join-with-code", {
         body: {
           code, fullName, phone, pin,
+          schoolSlug: school?.slug,
           bio: { gender, dob: dob || null, address, photo_url: null, profile_data: {} },
         },
       });
@@ -47,7 +48,7 @@ export default function Join() {
       const { error: sErr } = await supabase.auth.signInWithPassword({ email, password: pin });
       if (sErr) throw sErr;
       toast.success("Welcome to your school");
-      window.location.href = buildSubdomainUrl(slug, "/app");
+      window.location.href = schoolPath(slug, "/app");
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setBusy(false); }
@@ -63,7 +64,7 @@ export default function Join() {
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
             <div><div className="font-display font-bold text-lg leading-none">EduSmart</div><div className="text-[11px] text-muted-foreground mt-1">{school.name}</div></div>
           </div>
-          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground">Already a member? Sign in</Link>
+          <Link to={schoolPath(school.slug, "/auth")} className="text-sm text-muted-foreground hover:text-foreground">Already a member? Sign in</Link>
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-6 py-10">

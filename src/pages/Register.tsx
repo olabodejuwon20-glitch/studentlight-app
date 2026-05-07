@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { buildSubdomainUrl, getCurrentSchoolSlug } from "@/lib/tenant";
+import { getCurrentSchoolSlug, schoolPath, buildSchoolUrl } from "@/lib/tenant";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -34,8 +34,8 @@ export default function Register() {
       const slug = (data as any).slug as string;
       const { error: sErr } = await supabase.auth.signInWithPassword({ email, password });
       if (sErr) throw sErr;
-      toast.success(`School created — ${slug}.edusmart.com`);
-      window.location.href = buildSubdomainUrl(slug, "/app");
+      toast.success(`School created — ${buildSchoolUrl(slug, "")}`);
+      window.location.href = schoolPath(slug, "/app");
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setBusy(false); }
