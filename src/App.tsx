@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SchoolProvider, useSchool } from "@/contexts/SchoolContext";
+import { schoolPath } from "@/lib/tenant";
 import { RequireAuth, RequireSchool, RoleGate } from "@/components/Guards";
 import AppLayout from "./layouts/AppLayout";
 import NotFound from "./pages/NotFound";
@@ -49,8 +50,8 @@ import ParentMessages from "./pages/parent/Messages";
 const queryClient = new QueryClient();
 
 function AppRoot() {
-  const { activeRole } = useSchool();
-  return <Navigate to={`/app/${activeRole}`} replace />;
+  const { activeRole, school } = useSchool();
+  return <Navigate to={schoolPath(school?.slug, `/app/${activeRole}`)} replace />;
 }
 
 const App = () => (
@@ -62,12 +63,15 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/join" element={<Join />} />
-            <Route path="/change-pin" element={<RequireAuth><ChangePin /></RequireAuth>} />
-            <Route path="/bio" element={<RequireAuth><Bio /></RequireAuth>} />
-            <Route path="/app" element={<RequireSchool><AppLayout /></RequireSchool>}>
+
+            {/* School-scoped routes: /:slug/... */}
+            <Route path="/:slug/auth" element={<Auth />} />
+            <Route path="/:slug/join" element={<Join />} />
+            <Route path="/:slug/change-pin" element={<RequireAuth><ChangePin /></RequireAuth>} />
+            <Route path="/:slug/bio" element={<RequireAuth><Bio /></RequireAuth>} />
+            <Route path="/:slug" element={<Navigate to="auth" replace />} />
+            <Route path="/:slug/app" element={<RequireSchool><AppLayout /></RequireSchool>}>
               <Route index element={<AppRoot />} />
 
               <Route path="admin" element={<RoleGate allow="admin"><AdminDashboard /></RoleGate>} />
