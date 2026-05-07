@@ -2,17 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GraduationCap, Loader2, Building2, User, Mail, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useSchool } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { buildSubdomainUrl } from "@/lib/tenant";
+import { buildSubdomainUrl, getCurrentSchoolSlug } from "@/lib/tenant";
 
 export default function Register() {
   const navigate = useNavigate();
-  const { school, schoolLoading } = useSchool();
   const [busy, setBusy] = useState(false);
   const [schoolName, setSchoolName] = useState("");
   const [fullName, setFullName] = useState("");
@@ -20,7 +18,9 @@ export default function Register() {
   const [password, setPassword] = useState("");
 
   // If we're already on a subdomain, registration isn't allowed here.
-  useEffect(() => { if (!schoolLoading && school) navigate("/auth", { replace: true }); }, [school, schoolLoading, navigate]);
+  useEffect(() => {
+    if (getCurrentSchoolSlug()) navigate("/auth", { replace: true });
+  }, [navigate]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
