@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { buildSubdomainUrl } from "@/lib/tenant";
+import { schoolPath, buildSchoolUrl } from "@/lib/tenant";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function Auth() {
     if (!session || !school) return;
     const m = memberships.find(x => x.school_id === school.id);
     if (!m) return;
-    navigate("/app", { replace: true });
+    navigate(schoolPath(school.slug, "/app"), { replace: true });
   }, [session, school, memberships, navigate]);
 
   if (loading || schoolLoading) return <div className="min-h-screen grid place-items-center"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>;
@@ -37,7 +37,7 @@ export default function Auth() {
         </Link>
         <div className="relative space-y-4 max-w-md">
           <div className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-white/15 backdrop-blur">
-            <Building2 className="size-3.5" /> {school.slug}.edusmart.com
+            <Building2 className="size-3.5" /> {buildSchoolUrl(school.slug, "")}
           </div>
           <h2 className="font-display text-4xl font-bold leading-tight">{school.name}</h2>
           <p className="text-white/85">Sign in to your school portal.</p>
@@ -56,7 +56,7 @@ export default function Auth() {
             <div className="size-9 rounded-md bg-primary/10 grid place-items-center"><Building2 className="size-4 text-primary" /></div>
             <div className="min-w-0">
               <div className="text-sm font-semibold truncate">{school.name}</div>
-              <div className="text-[11px] text-muted-foreground truncate">{school.slug}.edusmart.com</div>
+              <div className="text-[11px] text-muted-foreground truncate">{buildSchoolUrl(school.slug, "")}</div>
             </div>
           </div>
 
@@ -69,11 +69,11 @@ export default function Auth() {
               <TabsTrigger value="admin">Admin</TabsTrigger>
             </TabsList>
             <TabsContent value="member" className="mt-6"><MemberSignIn schoolSlug={school.slug} /></TabsContent>
-            <TabsContent value="admin" className="mt-6"><AdminSignIn /></TabsContent>
+            <TabsContent value="admin" className="mt-6"><AdminSignIn schoolSlug={school.slug} /></TabsContent>
           </Tabs>
 
           <div className="mt-6 pt-4 border-t border-border text-center text-xs text-muted-foreground">
-            New to this school? <Link to="/join" className="text-primary font-medium">Use your onboarding code</Link>
+            New to this school? <Link to={schoolPath(school.slug, "/join")} className="text-primary font-medium">Use your onboarding code</Link>
           </div>
         </Card>
       </div>
@@ -101,7 +101,7 @@ function MemberSignIn({ schoolSlug }: { schoolSlug: string }) {
       const { error: sErr } = await supabase.auth.signInWithPassword({ email, password: pin });
       if (sErr) throw new Error("PIN doesn't match. Try again.");
       toast.success("Welcome");
-      window.location.href = buildSubdomainUrl(schoolSlug, mustChange ? "/change-pin" : "/app");
+      window.location.href = schoolPath(schoolSlug, mustChange ? "/change-pin" : "/app");
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   }
 
@@ -119,7 +119,7 @@ function MemberSignIn({ schoolSlug }: { schoolSlug: string }) {
   );
 }
 
-function AdminSignIn() {
+function AdminSignIn({ schoolSlug }: { schoolSlug: string }) {
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -131,7 +131,7 @@ function AdminSignIn() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success("Welcome back");
-      window.location.href = "/app";
+      window.location.href = schoolPath(schoolSlug, "/app");
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   }
 

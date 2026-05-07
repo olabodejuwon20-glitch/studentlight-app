@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import { getCurrentSchoolSlug } from "@/lib/tenant";
 
 export type Role = "admin" | "teacher" | "student" | "parent";
 
@@ -33,18 +34,7 @@ interface Ctx {
 }
 const SchoolContext = createContext<Ctx | null>(null);
 
-function detectSlug(): string | null {
-  if (typeof window === "undefined") return null;
-  const url = new URL(window.location.href);
-  const q = url.searchParams.get("school");
-  if (q) return q.toLowerCase();
-  const host = url.hostname;
-  // skip localhost / preview hosts
-  const parts = host.split(".");
-  if (host === "localhost" || host.endsWith(".lovable.app") || host.endsWith(".lovableproject.com") || host === "127.0.0.1") return null;
-  if (parts.length >= 3) return parts[0].toLowerCase();
-  return null;
-}
+const detectSlug = getCurrentSchoolSlug;
 
 export function SchoolProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem("edusmart-theme") as any) || "light");

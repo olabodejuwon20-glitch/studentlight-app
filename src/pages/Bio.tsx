@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { schoolPath } from "@/lib/tenant";
 
 export default function Bio() {
   const navigate = useNavigate();
@@ -58,8 +59,8 @@ export default function Bio() {
 
   useEffect(() => {
     if (loading || schoolLoading) return;
-    if (!user) navigate("/auth", { replace: true });
-    else if (!school || !activeRole) navigate("/auth", { replace: true });
+    if (!user) navigate(schoolPath(school?.slug, "/auth"), { replace: true });
+    else if (!school || !activeRole) navigate("/", { replace: true });
   }, [user, school, activeRole, loading, schoolLoading, navigate]);
 
   useEffect(() => {
@@ -95,7 +96,7 @@ export default function Bio() {
 
       await Promise.all([refreshMemberships(), refreshProfile()]);
       toast.success("Profile saved");
-      navigate(`/app/${activeRole}`, { replace: true });
+      navigate(schoolPath(school.slug, `/app/${activeRole}`), { replace: true });
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setBusy(false); }

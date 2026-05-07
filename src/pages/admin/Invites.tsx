@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { buildSchoolUrl } from "@/lib/tenant";
 
 const ROLES: Role[] = ["student", "teacher", "parent"];
 const PREFIX: Record<string, string> = { student: "STU", teacher: "TCH", parent: "PRT" };
@@ -70,6 +71,12 @@ export default function AdminInvites() {
           </DialogContent>
         </Dialog>
       }>
+      {school && (
+        <div className="mb-4 p-3 rounded-lg border border-border bg-muted/40 text-xs">
+          <div className="font-semibold text-foreground mb-1">Codes only work on your school's portal:</div>
+          <code className="font-mono break-all">{buildSchoolUrl(school.slug, "/join")}</code>
+        </div>
+      )}
       {rows.length === 0
         ? <EmptyState icon={Ticket} title="No codes yet" desc="Generate one to invite teachers, students or parents." />
         : <div className="space-y-2">

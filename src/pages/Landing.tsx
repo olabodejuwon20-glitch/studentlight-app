@@ -2,10 +2,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { GraduationCap, ShieldCheck, Users, BookOpen, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSchool } from "@/contexts/SchoolContext";
+import { schoolPath, getCurrentSchoolSlug } from "@/lib/tenant";
 
 export default function Landing() {
   const navigate = useNavigate();
-  const { user } = useSchool();
+  const { user, school } = useSchool();
+  const slug = school?.slug ?? getCurrentSchoolSlug();
 
   const features = [
     { icon: ShieldCheck, title: "Secure & isolated", desc: "Each school's data is fully separated with row-level security." },
@@ -24,9 +26,9 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-2">
             {user
-              ? <Button onClick={() => navigate("/app")}>Open dashboard</Button>
+              ? <Button onClick={() => navigate(schoolPath(slug, "/app"))}>Open dashboard</Button>
               : <>
-                  <Button variant="ghost" onClick={() => navigate("/auth")}>Sign in</Button>
+                  <Button variant="ghost" onClick={() => navigate(slug ? schoolPath(slug, "/auth") : "/register")}>Sign in</Button>
                   <Button onClick={() => navigate("/register")}>Register your school</Button>
                 </>}
           </div>
@@ -45,10 +47,10 @@ export default function Landing() {
             EduSmart gives every school its own secure workspace — students, teachers, parents and admins working together with data that's fully isolated per school.
           </p>
           <div className="mt-8 flex gap-3">
-            <Button size="lg" onClick={() => navigate(user ? "/app" : "/register")}>
+            <Button size="lg" onClick={() => navigate(user ? schoolPath(slug, "/app") : "/register")}>
               {user ? "Continue setup" : "Create your school"} <ArrowRight className="size-4 ml-1" />
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/join")}>I have a code</Button>
+            <Button size="lg" variant="outline" onClick={() => navigate(slug ? schoolPath(slug, "/join") : "/")}>I have a code</Button>
           </div>
         </div>
 
@@ -68,7 +70,7 @@ export default function Landing() {
       <footer className="border-t border-border">
         <div className="mx-auto max-w-7xl px-6 py-6 text-xs text-muted-foreground flex justify-between">
           <span>© 2026 EduSmart</span>
-          <Link to="/auth" className="hover:text-foreground">Sign in</Link>
+          <Link to={slug ? schoolPath(slug, "/auth") : "/register"} className="hover:text-foreground">Sign in</Link>
         </div>
       </footer>
     </div>

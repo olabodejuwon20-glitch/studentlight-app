@@ -20,12 +20,14 @@ Deno.serve(async (req) => {
     const phone = normPhone((body.phone ?? "").toString());
     const code = (body.code ?? "").toString().trim().toUpperCase();
     const pin = (body.pin ?? "").toString().trim();
+    const schoolSlug = (body.schoolSlug ?? "").toString().trim().toLowerCase();
     const bio = body.bio ?? {};
 
     if (!fullName) return json({ error: "Full name is required" }, 400);
     if (!phone || phone.length < 6) return json({ error: "Invalid phone" }, 400);
     if (!isPin(pin)) return json({ error: "PIN must be 6 digits" }, 400);
     if (!code) return json({ error: "Code is required" }, 400);
+    if (!schoolSlug) return json({ error: "Open this school's portal URL to join." }, 400);
 
     const url = Deno.env.get("SUPABASE_URL")!;
     const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -38,6 +40,9 @@ Deno.serve(async (req) => {
 
     const { data: school } = await admin.from("schools").select("id,slug,name").eq("id", invite.school_id).single();
     if (!school) return json({ error: "School not found" }, 400);
+    if (school.slug !== schoolSlug) {
+      return json({ error: "This code does not belong to this school portal." }, 403);
+    }
 
     const email = fakeEmail(phone, school.slug);
     const { data: created, error: cErr } = await admin.auth.admin.createUser({

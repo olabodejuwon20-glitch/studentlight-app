@@ -1,57 +1,29 @@
-export function buildSubdomainUrl(slug: string, path = "/app") {
-  if (typeof window === "undefined") return path;
-  const u = new URL(window.location.href);
-  const host = u.hostname;
-  const isPreview =
-    host === "localhost" ||
-    host === "127.0.0.1" ||
-    host.endsWith(".lovable.app") ||
-    host.endsWith(".lovableproject.com");
-  if (isPreview) {
-    u.searchParams.set("school", slug);
-    u.pathname = path;
-    u.hash = "";
-    return u.toString();
-  }
-  const root = host.split(".").slice(-2).join(".");
-  return `${u.protocol}//${slug}.${root}${path}`;
-}
+const RESERVED = new Set(["", "register", "auth", "app", "bio", "join", "change-pin", "api", "assets", "favicon.ico"]);
 
-export function getCurrentSchoolSlug() {
+export function getCurrentSchoolSlug(): string | null {
   if (typeof window === "undefined") return null;
   const u = new URL(window.location.href);
-  const querySlug = u.searchParams.get("school");
-  if (querySlug) return querySlug.toLowerCase();
+  const q = u.searchParams.get("school");
+  if (q) return q.toLowerCase();
+  const first = u.pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+  if (!first || RESERVED.has(first)) return null;
+  return first;
+}
 
-  const host = u.hostname;
-  const isPreview =
-    host === "localhost" ||
-    host === "127.0.0.1" ||
-    host.endsWith(".lovable.app") ||
-    host.endsWith(".lovableproject.com");
+/** Path under a school: schoolPath("greenfield-xy", "/app") -> "/greenfield-xy/app" */
+export function schoolPath(slug: string | null | undefined, path = "/auth") {
+  if (!slug) return path;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `/${slug}${p}`;
+}
 
-  if (isPreview) return null;
-
-  const parts = host.split(".");
-  return parts.length >= 3 ? parts[0].toLowerCase() : null;
+/** Absolute URL for a school portal (uses current origin) */
+export function buildSchoolUrl(slug: string, path = "/auth") {
+  if (typeof window === "undefined") return schoolPath(slug, path);
+  return `${window.location.origin}${schoolPath(slug, path)}`;
 }
 
 export function buildRootUrl(path = "/") {
   if (typeof window === "undefined") return path;
-  const u = new URL(window.location.href);
-  const host = u.hostname;
-  const isPreview =
-    host === "localhost" ||
-    host === "127.0.0.1" ||
-    host.endsWith(".lovable.app") ||
-    host.endsWith(".lovableproject.com");
-  if (isPreview) {
-    u.searchParams.delete("school");
-    u.pathname = path;
-    u.hash = "";
-    return u.toString();
-  }
-  const parts = host.split(".");
-  const root = parts.slice(-2).join(".");
-  return `${u.protocol}//${root}${path}`;
+  return `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
