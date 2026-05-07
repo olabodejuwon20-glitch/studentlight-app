@@ -12,8 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
-const ROLES: Role[] = ["admin", "teacher", "student", "parent"];
-const rand = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+const ROLES: Role[] = ["student", "teacher", "parent"];
+const PREFIX: Record<string, string> = { student: "STU", teacher: "TCH", parent: "PRT" };
+const rand = (n: number) => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for (let i = 0; i < n; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+};
 
 export default function AdminInvites() {
   const { school, user } = useSchool();
@@ -32,7 +38,8 @@ export default function AdminInvites() {
   async function create(e: React.FormEvent) {
     e.preventDefault();
     if (!school || !user) return;
-    const code = `${school.slug.toUpperCase().slice(0,5)}-${role.toUpperCase().slice(0,3)}-${rand()}`;
+    const len = role === "student" ? 5 : 2;
+    const code = `${PREFIX[role]}-${rand(len)}`;
     const { error } = await supabase.from("invite_codes").insert({ school_id: school.id, code, role, max_uses: maxUses, created_by: user.id });
     if (error) return toast.error(error.message);
     toast.success("Code generated"); setOpen(false); load();

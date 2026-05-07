@@ -603,6 +603,7 @@ export type Database = {
           bio_completed: boolean
           created_at: string
           id: string
+          must_change_pin: boolean
           profile_data: Json
           role: Database["public"]["Enums"]["member_role"]
           school_id: string
@@ -613,6 +614,7 @@ export type Database = {
           bio_completed?: boolean
           created_at?: string
           id?: string
+          must_change_pin?: boolean
           profile_data?: Json
           role: Database["public"]["Enums"]["member_role"]
           school_id: string
@@ -623,6 +625,7 @@ export type Database = {
           bio_completed?: boolean
           created_at?: string
           id?: string
+          must_change_pin?: boolean
           profile_data?: Json
           role?: Database["public"]["Enums"]["member_role"]
           school_id?: string
