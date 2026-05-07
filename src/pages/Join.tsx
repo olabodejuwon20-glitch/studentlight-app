@@ -64,7 +64,7 @@ export default function Join() {
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
             <div><div className="font-display font-bold text-lg leading-none">EduSmart</div><div className="text-[11px] text-muted-foreground mt-1">{school.name}</div></div>
           </div>
-          <Link to={schoolPath(school.slug, "/auth")} className="text-sm text-muted-foreground hover:text-foreground">Already a member? Sign in</Link>
+          <Link to={schoolPath(school.slug, "/signin")} className="text-sm text-muted-foreground hover:text-foreground">Already a member? Sign in</Link>
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-6 py-10">

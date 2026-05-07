@@ -8,9 +8,12 @@ import { schoolPath } from "@/lib/tenant";
 import { RequireAuth, RequireSchool, RoleGate } from "@/components/Guards";
 import AppLayout from "./layouts/AppLayout";
 import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
 import Register from "./pages/Register";
+import SignIn from "./pages/SignIn";
+import SchoolHome from "./pages/SchoolHome";
+import SchoolLogin from "./pages/SchoolLogin";
+import SchoolAdminLogin from "./pages/SchoolAdminLogin";
 import Join from "./pages/Join";
 import ChangePin from "./pages/ChangePin";
 import Bio from "./pages/Bio";
@@ -64,13 +67,15 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/signin" element={<SignIn />} />
 
             {/* School-scoped routes: /:slug/... */}
-            <Route path="/:slug/auth" element={<Auth />} />
+            <Route path="/:slug" element={<SchoolHome />} />
+            <Route path="/:slug/signin" element={<SchoolLogin />} />
+            <Route path="/:slug/admin" element={<SchoolAdminLogin />} />
             <Route path="/:slug/join" element={<Join />} />
             <Route path="/:slug/change-pin" element={<RequireAuth><ChangePin /></RequireAuth>} />
             <Route path="/:slug/bio" element={<RequireAuth><Bio /></RequireAuth>} />
-            <Route path="/:slug" element={<Navigate to="auth" replace />} />
             <Route path="/:slug/app" element={<RequireSchool><AppLayout /></RequireSchool>}>
               <Route index element={<AppRoot />} />
 

@@ -1,4 +1,4 @@
-const RESERVED = new Set(["", "register", "auth", "app", "bio", "join", "change-pin", "api", "assets", "favicon.ico"]);
+const RESERVED = new Set(["", "register", "signin", "auth", "app", "bio", "join", "change-pin", "admin-signin", "api", "assets", "favicon.ico"]);
 
 export function getCurrentSchoolSlug(): string | null {
   if (typeof window === "undefined") return null;
@@ -11,14 +11,14 @@ export function getCurrentSchoolSlug(): string | null {
 }
 
 /** Path under a school: schoolPath("greenfield-xy", "/app") -> "/greenfield-xy/app" */
-export function schoolPath(slug: string | null | undefined, path = "/auth") {
+export function schoolPath(slug: string | null | undefined, path = "/signin") {
   if (!slug) return path;
   const p = path.startsWith("/") ? path : `/${path}`;
   return `/${slug}${p}`;
 }
 
 /** Absolute URL for a school portal (uses current origin) */
-export function buildSchoolUrl(slug: string, path = "/auth") {
+export function buildSchoolUrl(slug: string, path = "/signin") {
   if (typeof window === "undefined") return schoolPath(slug, path);
   return `${window.location.origin}${schoolPath(slug, path)}`;
 }

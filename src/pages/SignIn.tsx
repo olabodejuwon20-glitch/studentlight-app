@@ -1,41 +1,39 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GraduationCap, Loader2, Building2, User, Mail, KeyRound, ArrowLeft } from "lucide-react";
+import { GraduationCap, Loader2, Mail, KeyRound, ArrowLeft, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getCurrentSchoolSlug, schoolPath, buildSchoolUrl } from "@/lib/tenant";
+import { schoolPath } from "@/lib/tenant";
 
-export default function Register() {
+/** Root admin sign in. School admins can sign in here OR from their /:slug/admin URL. */
+export default function SignIn() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
-  const [schoolName, setSchoolName] = useState("");
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  useEffect(() => { if (getCurrentSchoolSlug()) navigate("/", { replace: true }); }, [navigate]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke("register-school", {
-        body: { schoolName, fullName, email, password },
-      });
-      if (error) throw new Error(error.message);
-      if ((data as any)?.error) throw new Error((data as any).error);
-      const slug = (data as any).slug as string;
-      const { error: sErr } = await supabase.auth.signInWithPassword({ email, password });
-      if (sErr) throw sErr;
-      toast.success(`School created — ${buildSchoolUrl(slug, "")}`);
+      const { data: signed, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      const uid = signed.user!.id;
+      const { data: m } = await supabase.from("memberships")
+        .select("school_id, role, schools(slug)")
+        .eq("user_id", uid).eq("role", "admin").eq("status", "active").maybeSingle();
+      if (!m) {
+        await supabase.auth.signOut();
+        throw new Error("This account isn't a school admin. Use your school portal URL to sign in.");
+      }
+      const slug = (m as any).schools?.slug as string;
+      toast.success("Welcome back");
       window.location.href = schoolPath(slug, "/app");
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally { setBusy(false); }
+    } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   }
 
   return (
@@ -47,8 +45,11 @@ export default function Register() {
           <div><div className="font-display font-bold text-xl leading-none">EduSmart</div><div className="text-xs opacity-80 mt-1">School Management Platform</div></div>
         </Link>
         <div className="relative space-y-4 max-w-md">
-          <h2 className="font-display text-4xl font-bold leading-tight">Register your school</h2>
-          <p className="text-white/85">You become the admin and instantly get a unique portal URL to onboard everyone.</p>
+          <h2 className="font-display text-4xl font-bold leading-tight">Welcome back, Admin</h2>
+          <p className="text-white/85">Sign in to manage your school portal.</p>
+          <div className="text-xs text-white/70 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur">
+            <Building2 className="size-3.5" /> Admins only — staff & students sign in from their school URL.
+          </div>
         </div>
         <div className="relative text-xs opacity-70">© 2026 EduSmart</div>
       </div>
@@ -58,19 +59,15 @@ export default function Register() {
           <Link to="/" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-4">
             <ArrowLeft className="size-3.5" /> Back to home
           </Link>
-          <h1 className="font-display text-2xl font-bold tracking-tight">Create your school portal</h1>
-          <p className="text-sm text-muted-foreground mt-1">For new schools only. Sets you as the admin.</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight">Admin sign in</h1>
+          <p className="text-sm text-muted-foreground mt-1">Use the email and password you registered with.</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
-            <div className="space-y-2"><Label className="flex items-center gap-1.5"><Building2 className="size-3.5"/>School name</Label>
-              <Input required value={schoolName} onChange={e=>setSchoolName(e.target.value)} placeholder="Greenfield Academy" /></div>
-            <div className="space-y-2"><Label className="flex items-center gap-1.5"><User className="size-3.5"/>Your full name</Label>
-              <Input required value={fullName} onChange={e=>setFullName(e.target.value)} /></div>
             <div className="space-y-2"><Label className="flex items-center gap-1.5"><Mail className="size-3.5"/>Email</Label>
               <Input required type="email" value={email} onChange={e=>setEmail(e.target.value)} /></div>
             <div className="space-y-2"><Label className="flex items-center gap-1.5"><KeyRound className="size-3.5"/>Password</Label>
               <Input required type="password" minLength={6} value={password} onChange={e=>setPassword(e.target.value)} /></div>
-            <Button type="submit" className="w-full" disabled={busy}>{busy && <Loader2 className="size-4 animate-spin mr-1.5" />} Register school</Button>
-            <p className="text-xs text-muted-foreground text-center">Already have a school? <Link to="/signin" className="text-primary font-medium">Sign in</Link></p>
+            <Button type="submit" className="w-full" disabled={busy}>{busy && <Loader2 className="size-4 animate-spin mr-1.5" />} Sign in</Button>
+            <p className="text-xs text-muted-foreground text-center">New school? <Link to="/register" className="text-primary font-medium">Register here</Link></p>
           </form>
         </Card>
       </div>

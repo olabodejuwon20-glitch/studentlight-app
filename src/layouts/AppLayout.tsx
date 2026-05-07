@@ -84,7 +84,7 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (!school || !activeRole) return <Navigate to={schoolPath(school?.slug, "/auth")} replace />;
+  if (!school || !activeRole) return <Navigate to={schoolPath(school?.slug, "/signin")} replace />;
 
   const meta = ROLE_META[activeRole];
   const items = NAV[activeRole];
