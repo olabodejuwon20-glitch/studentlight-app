@@ -4,7 +4,7 @@ import {
   Bell, ChevronDown, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
   Settings, ClipboardCheck, FilePlus2, Calendar, Library, Sparkles, MessagesSquare,
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
-  Building2, Ticket, Plus,
+  Building2, Ticket, Upload,
 } from "lucide-react";
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Classes",   to: "classes",   icon: BookOpen },
     { label: "Reports",   to: "reports",   icon: FileBarChart },
     { label: "Invites",   to: "invites",   icon: Ticket },
-    { label: "New School", to: "new-school", icon: Plus },
+    { label: "Bulk Upload", to: "bulk",    icon: Upload },
     { label: "Settings",  to: "settings",  icon: Settings },
   ],
   teacher: [
@@ -83,7 +83,7 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (!school || !activeRole) return <Navigate to="/onboarding" replace />;
+  if (!school || !activeRole) return <Navigate to="/auth" replace />;
 
   const meta = ROLE_META[activeRole];
   const items = NAV[activeRole];
@@ -186,8 +186,6 @@ export default function AppLayout() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>{school.name}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => window.location.href = "/onboarding"}>Switch school</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="text-destructive" onClick={signOut}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
