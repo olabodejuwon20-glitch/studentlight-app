@@ -25,21 +25,21 @@ export function ProfileCard() {
   const completed = m?.bio_completed;
 
   return (
-    <Card className="p-5">
-      <div className="flex items-start gap-4">
-        <div className="size-14 rounded-xl grid place-items-center text-white shrink-0 overflow-hidden" style={{ background: ROLE_META[activeRole].color }}>
+    <Card className="p-4 sm:p-5">
+      <div className="flex items-start gap-3 sm:gap-4">
+        <div className="size-12 sm:size-14 rounded-xl grid place-items-center text-white shrink-0 overflow-hidden" style={{ background: ROLE_META[activeRole].color }}>
           {profile?.photo_url
             ? <img src={profile.photo_url} alt={displayName} className="size-full object-cover" />
-            : <UserCircle2 className="size-7" />}
+            : <UserCircle2 className="size-6 sm:size-7" />}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-display font-semibold truncate">{displayName || "Your profile"}</h3>
+            <h3 className="font-display font-semibold truncate text-sm sm:text-base">{displayName || "Your profile"}</h3>
             <span className="text-[10px] uppercase tracking-wide font-medium px-2 py-0.5 rounded-full bg-muted">{activeRole}</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">{school?.name}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">{school?.name}</p>
         </div>
-        <Button asChild size="sm" variant="outline"><Link to={`/bio?school=${school?.slug ?? ""}`}><Pencil className="size-3.5" /> Edit</Link></Button>
+        <Button asChild size="sm" variant="outline" className="shrink-0"><Link to={`/bio?school=${school?.slug ?? ""}`}><Pencil className="size-3.5" /> <span className="hidden sm:inline ml-1">Edit</span></Link></Button>
       </div>
 
       {!loaded ? null : !completed ? (
