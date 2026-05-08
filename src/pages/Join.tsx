@@ -68,8 +68,8 @@ export default function Join() {
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-6 py-10">
-        <h1 className="font-display text-3xl font-bold">Join {school.name}</h1>
-        <p className="text-muted-foreground mt-2">Enter your onboarding code and complete your profile. All fields are required.</p>
+        <h1 className="font-display text-2xl sm:text-3xl font-bold">Join {school.name}</h1>
+        <p className="text-muted-foreground mt-2 text-sm sm:text-base">Set up your account once. Next time you'll only need your phone and PIN.</p>
         <Card className="mt-6 p-6">
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-2"><Label className="flex items-center gap-1.5"><Hash className="size-3.5"/>Onboarding code</Label>

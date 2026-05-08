@@ -39,21 +39,21 @@ export default function SchoolHome() {
             <Building2 className="size-3.5 text-primary" /> {buildSchoolUrl(school.slug, "")}
           </div>
           <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mt-6">{school.name}</h1>
-          <p className="text-muted-foreground mt-3">Welcome to your school portal. Choose how you want to continue.</p>
+          <p className="text-muted-foreground mt-3">Choose how you want to continue.</p>
         </div>
 
         <div className="mt-12 grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
           <Card className="p-7 hover:border-primary/40 transition-colors group">
             <div className="size-11 rounded-xl bg-primary/10 text-primary grid place-items-center"><LogIn className="size-5" /></div>
             <h2 className="font-display text-xl font-semibold mt-4">Sign in</h2>
-            <p className="text-sm text-muted-foreground mt-1.5">Returning students, teachers and parents — sign in with your phone number and 6-digit PIN.</p>
+            <p className="text-sm text-muted-foreground mt-1.5">Already have an account? Use your phone and 6-digit PIN.</p>
             <Button className="w-full mt-5" onClick={() => navigate(schoolPath(school.slug, "/signin"))}>Sign in</Button>
           </Card>
 
           <Card className="p-7 hover:border-primary/40 transition-colors group">
             <div className="size-11 rounded-xl bg-primary/10 text-primary grid place-items-center"><UserPlus className="size-5" /></div>
             <h2 className="font-display text-xl font-semibold mt-4">Create account</h2>
-            <p className="text-sm text-muted-foreground mt-1.5">First time here? Use the onboarding code provided by your school admin.</p>
+            <p className="text-sm text-muted-foreground mt-1.5">First time? Enter the onboarding code from your school.</p>
             <Button variant="outline" className="w-full mt-5" onClick={() => navigate(schoolPath(school.slug, "/join"))}>Use onboarding code</Button>
           </Card>
         </div>

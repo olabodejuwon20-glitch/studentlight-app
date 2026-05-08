@@ -38,7 +38,7 @@ export default function AITutor() {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card flex flex-col h-[calc(100vh-180px)]">
+    <div className="rounded-xl border border-border bg-card flex flex-col h-[calc(100vh-200px)] sm:h-[calc(100vh-180px)]">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <Sparkles className="size-5 text-primary" /><span className="font-semibold">AI Tutor</span>
       </div>

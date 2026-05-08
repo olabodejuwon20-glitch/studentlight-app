@@ -47,8 +47,8 @@ export default function Register() {
           <div><div className="font-display font-bold text-xl leading-none">EduSmart</div><div className="text-xs opacity-80 mt-1">School Management Platform</div></div>
         </Link>
         <div className="relative space-y-4 max-w-md">
-          <h2 className="font-display text-4xl font-bold leading-tight">Register your school</h2>
-          <p className="text-white/85">You become the admin and instantly get a unique portal URL to onboard everyone.</p>
+          <h2 className="font-display text-4xl font-bold leading-tight">Launch your school portal</h2>
+          <p className="text-white/85">Set up your school in minutes and invite everyone with a single link.</p>
         </div>
         <div className="relative text-xs opacity-70">© 2026 EduSmart</div>
       </div>
@@ -58,8 +58,8 @@ export default function Register() {
           <Link to="/" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-4">
             <ArrowLeft className="size-3.5" /> Back to home
           </Link>
-          <h1 className="font-display text-2xl font-bold tracking-tight">Create your school portal</h1>
-          <p className="text-sm text-muted-foreground mt-1">For new schools only. Sets you as the admin.</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight">Create your school</h1>
+          <p className="text-sm text-muted-foreground mt-1">You'll be set as the school admin.</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div className="space-y-2"><Label className="flex items-center gap-1.5"><Building2 className="size-3.5"/>School name</Label>
               <Input required value={schoolName} onChange={e=>setSchoolName(e.target.value)} placeholder="Greenfield Academy" /></div>

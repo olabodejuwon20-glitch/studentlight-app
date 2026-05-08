@@ -197,7 +197,7 @@ export default function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 px-4 lg:px-8 py-6 animate-fade-in">
+        <main className="flex-1 px-3 sm:px-4 lg:px-8 py-4 sm:py-6 pb-20 lg:pb-6 animate-fade-in">
           <Outlet />
         </main>
       </div>
