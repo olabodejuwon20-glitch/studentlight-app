@@ -28,7 +28,7 @@ export default function SignIn() {
         .eq("user_id", uid).eq("role", "admin").eq("status", "active").maybeSingle();
       if (!m) {
         await supabase.auth.signOut();
-        throw new Error("This account isn't a school admin. Use your school portal URL to sign in.");
+        throw new Error("This account isn't a school admin.");
       }
       const slug = (m as any).schools?.slug as string;
       toast.success("Welcome back");
