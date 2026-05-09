@@ -1,111 +1,52 @@
-# Restructure Auth & Onboarding for Multi-Tenant Schools
+# Plan: Admin expansion, branded settings & dashboard redesign
 
-## The model (what we're building toward)
+## 1. Database & Storage
+Create a new migration that:
+- Adds columns to `schools`: `motto`, `current_session`, `current_term`, `grading_system`, `resumption_date`.
+- Creates a public storage bucket `school-logos` with RLS so school admins can upload/replace their own school's logo (path scoped to `<school_id>/...`); everyone can read.
+- Adds new admin-only tables (school-scoped, RLS via `is_school_admin`):
+  - `timetable` (class_id, day_of_week, period, subject, teacher_id, start_time, end_time)
+  - `hostels` (name, capacity, warden, gender)
+  - `transport_routes` (name, driver, vehicle_no, capacity, fee)
+  - `subjects` (name, code, class_id) — used by Classes & Subjects page
 
-```
-edusmart.com               → Public marketing + "Register your school" (admin signup only)
-<slug>.edusmart.com        → A specific school's portal (admin + members live here only)
-```
+## 2. Admin pages (new in sidebar)
+Add these routes/pages with simple CRUD using the existing `SectionCard`/table pattern:
+- `Classes & Subjects` — extend existing Classes with a Subjects panel.
+- `Timetable` — weekly grid view + add/edit slot.
+- `Hostel` — list + add/edit hostel.
+- `Transport` — list + add/edit route.
+- `Announcements` — already partial; add an admin management page (list/create/delete).
 
-- A school portal is **bound to one school**. No "switch school", no "create new school", no "your schools list" inside it.
-- Every registered admin email = exactly one school. Re-registering creates a new school subdomain.
-- Slug = `slugify(schoolName) + "-" + 2 random letters` (collision-safe), e.g. `greenfield-ab`.
+Update `AppLayout` admin nav to match the sidebar order in image #4: Dashboard, Students, Teachers, Classes, Attendance, Exams, Results, Library, Fees & Payments, Reports, Hostel, Transport, Announcements, Settings, Users & Roles (existing Invites).
 
-## Flows
+## 3. Admin Settings redesign (image #1)
+Rebuild `src/pages/admin/Settings.tsx` with two grouped cards:
+- **School Information** — Name, Address, Phone, Email, **Logo upload** (file input → Supabase Storage `school-logos` bucket → save `logo_url`), Motto.
+- **Academic Settings** — Current Session, Current Term, Grading System, Resumption Date.
+Keep the existing portal URL share block at the top.
 
-### A. Register a new school (root domain only)
-1. Admin visits `edusmart.com/register`.
-2. Enters: school name, admin full name, email, password.
-3. Backend creates the school (auto slug), creates admin user, links admin membership.
-4. Redirect to `https://<slug>.edusmart.com/app` (admin dashboard).
+## 4. Show school logo on portal login
+`SchoolLogin.tsx`, `SchoolAdminLogin.tsx`, `SchoolHome.tsx`, `Join.tsx` already load the school via `SchoolContext`. Render `school.logo_url` (with graceful fallback) above the title, similar to image #2.
 
-Preview fallback (when not on a real subdomain): use `?school=<slug>` so it still works in `lovable.app`.
+## 5. Dashboard redesigns (images #3 and #4)
+Match layouts exactly using existing semantic tokens (no hard-coded colors):
 
-### B. Sign in (subdomain only)
-On `<slug>.edusmart.com/auth`:
-- **Admin tab**: email + password (must be admin of this school).
-- **Member tab (Teacher / Student / Parent)**: full name + phone + 6-digit PIN.
+- **Admin Dashboard** — Top stat row (Total Students, Total Teachers, Active Classes, Total Revenue) with delta chips; Student Enrollment Trend (line chart, recharts); Recent Activities feed; Recent Students table with action icons; Reports Overview row (Performance by Class bar chart, Attendance donut, Top Performing Students list).
+- **Teacher Dashboard** — Greeting header; stat row (My Classes, Today's Classes, Pending Grading, Attendance Today); Today's Schedule list; Recent Activities; My Classes cards with attendance %; Pending Grading table; Attendance Overview table; Recent Submissions list.
+- **Student Dashboard** — Greeting + date picker; stat row (Upcoming Exams, Attendance %, Recent Score, Assigned Tasks); Upcoming Exams list; Performance Overview line chart; Announcements row.
+- **Parent Dashboard** — Child profile card with overall metrics; stat row (Attendance, Latest Result, Pending Fees, Assignments); Recent Results table; Attendance Overview donut.
 
-No "find your school", no "create / join", no admin signup here.
+Charts use `recharts` (already a shadcn dependency via `chart.tsx`). All colors via CSS tokens from `index.css`. Data wired to existing tables; if a table is empty, render `EmptyState`.
 
-### C. Onboard members — two ways (admin only, inside portal)
+## Technical notes
+- Logo upload uses `supabase.storage.from('school-logos').upload(\`${school.id}/logo-${Date.now()}.${ext}\`, file, { upsert: true })` → `getPublicUrl` → update `schools.logo_url`.
+- New tables follow existing pattern: `school_id`, `is_member` SELECT policy, `is_school_admin` ALL policy.
+- Sidebar uses existing `AppLayout` nav array; just extend the admin section.
+- Recharts theme reads `hsl(var(--primary))` etc. so dashboards stay on-brand.
 
-**Way 1 — Per-role onboarding codes**
-- Admin generates codes from `/app/admin/invites`:
-  - Student → `STU-XXXXX`
-  - Teacher → `TCH-XX`
-  - Parent → `PRT-XX`
-- Member visits `<slug>.edusmart.com/join`, enters the code.
-- Forced bio form (no skip): Name, phone, **personal 6-digit PIN**, gender, DOB, address, photo, role-specific fields.
-- On submit: account created, membership active, redirected to their portal.
+## Out of scope (ask if you want them)
+- Real-time payments integration for the Revenue stat (uses sum of `fees` instead).
+- Notifications bell dropdown wiring (UI only for now).
 
-**Way 2 — Bulk CSV upload**
-- Admin picks role + uploads CSV (`full_name, phone`).
-- Each row → user created with PIN = `123456`, membership active, `must_change_pin = true`.
-- No code needed.
-
-### D. First sign-in for bulk users
-- They sign in with phone + `123456`.
-- Forced "Change PIN" screen (no skip) — sets new 6-digit PIN, clears `must_change_pin`.
-- Then routed to their portal.
-
-## What we remove / fix
-
-- **Delete `/onboarding` page** (the "Welcome, my — Your schools / Create / Join" screen in image 2). No multi-school picker.
-- **Remove "Switch school" item** from the header dropdown (image 1). Keep only school name + Logout.
-- Remove "Create / join" tab from `/auth` on subdomains.
-- Remove `src/pages/admin/CreateSchool.tsx` and its sidebar entry & route — admins don't create more schools from inside a portal.
-- After admin signs up, do NOT route to `/onboarding`; route to their school subdomain dashboard.
-
-## File changes
-
-**New**
-- `src/pages/Register.tsx` — public school registration (root domain).
-- `src/pages/Join.tsx` — code-based member onboarding form (forced bio + PIN).
-- `src/pages/ChangePin.tsx` — forced PIN change for bulk users.
-- `src/pages/admin/BulkUpload.tsx` — CSV upload UI (role select + file input + preview + commit).
-- `supabase/functions/register-school/index.ts` — creates school with collision-safe slug + admin user + membership atomically.
-- `supabase/functions/join-with-code/index.ts` — validates onboarding code, creates user with chosen PIN, membership.
-- `supabase/functions/bulk-onboard/index.ts` — accepts `{role, rows[]}`, creates users with PIN `123456` and `must_change_pin=true`.
-
-**Edit**
-- `src/pages/Auth.tsx` — strip to two tabs on subdomain (Admin email/password, Member name+phone+PIN). Strip everything on root → just a CTA to `/register` and a "Go to my school" slug box.
-- `src/pages/admin/Invites.tsx` — generate STU/TCH/PRT-prefixed codes per role.
-- `src/layouts/AppLayout.tsx` — remove "Switch school" + "New School" sidebar item. Header dropdown: school name + Logout only.
-- `src/App.tsx` — add `/register`, `/join`, `/change-pin`, `/app/admin/bulk`; remove `/onboarding`, `/app/admin/new-school`.
-- `src/components/Guards.tsx` — `RequireAuth` redirects to `/auth`; new `RequirePinChange` redirects bulk users to `/change-pin` until done.
-- `supabase/functions/phone-auth/index.ts` — keep only the sign-in path (name + phone + PIN, scoped to school). Remove the `signup` path entirely.
-
-## Database (one migration)
-
-```sql
--- Forced PIN change flag for bulk-onboarded users
-alter table memberships add column if not exists must_change_pin boolean not null default false;
-
--- Onboarding codes per role (replace/extend existing invite_codes usage)
--- We'll keep invite_codes table but ensure code prefix matches role (STU/TCH/PRT) at generation time.
--- No schema change needed there.
-```
-
-Edge functions use service role to create users (`auth.admin.createUser`), insert into `profiles` and `memberships`, with the right `must_change_pin` flag.
-
-## URL helper (preview-safe)
-
-```ts
-function buildSubdomainUrl(slug: string, path = "/app") {
-  const u = new URL(window.location.href);
-  const host = u.hostname;
-  const isPreview = host === "localhost" || host.endsWith(".lovable.app") || host.endsWith(".lovableproject.com");
-  if (isPreview) { u.searchParams.set("school", slug); u.pathname = path; return u.toString(); }
-  const root = host.split(".").slice(-2).join(".");
-  return `${u.protocol}//${slug}.${root}${path}`;
-}
-```
-
-## After this lands
-
-- Root domain shows: marketing + "Register your school" + "Go to my school" slug box.
-- A school subdomain shows: only that school's auth + that school's portal.
-- Admins onboard members via codes or CSV; members sign in with name + phone + PIN; bulk users are forced to change `123456` on first login.
-
-Approve and I'll implement.
+Approve and I'll ship it.

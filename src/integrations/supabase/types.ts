@@ -499,6 +499,39 @@ export type Database = {
           },
         ]
       }
+      hostels: {
+        Row: {
+          capacity: number
+          created_at: string
+          gender: string | null
+          id: string
+          name: string
+          occupied: number
+          school_id: string
+          warden: string | null
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          gender?: string | null
+          id?: string
+          name: string
+          occupied?: number
+          school_id: string
+          warden?: string | null
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          gender?: string | null
+          id?: string
+          name?: string
+          occupied?: number
+          school_id?: string
+          warden?: string | null
+        }
+        Relationships: []
+      }
       invite_codes: {
         Row: {
           code: string
@@ -828,11 +861,16 @@ export type Database = {
           address: string | null
           created_at: string
           created_by: string
+          current_session: string | null
+          current_term: string | null
           email: string | null
+          grading_system: string | null
           id: string
           logo_url: string | null
+          motto: string | null
           name: string
           phone: string | null
+          resumption_date: string | null
           settings: Json
           slug: string
           updated_at: string
@@ -841,11 +879,16 @@ export type Database = {
           address?: string | null
           created_at?: string
           created_by: string
+          current_session?: string | null
+          current_term?: string | null
           email?: string | null
+          grading_system?: string | null
           id?: string
           logo_url?: string | null
+          motto?: string | null
           name: string
           phone?: string | null
+          resumption_date?: string | null
           settings?: Json
           slug: string
           updated_at?: string
@@ -854,14 +897,118 @@ export type Database = {
           address?: string | null
           created_at?: string
           created_by?: string
+          current_session?: string | null
+          current_term?: string | null
           email?: string | null
+          grading_system?: string | null
           id?: string
           logo_url?: string | null
+          motto?: string | null
           name?: string
           phone?: string | null
+          resumption_date?: string | null
           settings?: Json
           slug?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      subjects: {
+        Row: {
+          class_id: string | null
+          code: string | null
+          created_at: string
+          id: string
+          name: string
+          school_id: string
+        }
+        Insert: {
+          class_id?: string | null
+          code?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          school_id: string
+        }
+        Update: {
+          class_id?: string | null
+          code?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          school_id?: string
+        }
+        Relationships: []
+      }
+      timetable: {
+        Row: {
+          class_id: string
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          room: string | null
+          school_id: string
+          start_time: string
+          subject: string
+          teacher_id: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          room?: string | null
+          school_id: string
+          start_time: string
+          subject: string
+          teacher_id?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          room?: string | null
+          school_id?: string
+          start_time?: string
+          subject?: string
+          teacher_id?: string | null
+        }
+        Relationships: []
+      }
+      transport_routes: {
+        Row: {
+          capacity: number
+          created_at: string
+          driver: string | null
+          fee: number
+          id: string
+          name: string
+          school_id: string
+          vehicle_no: string | null
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          driver?: string | null
+          fee?: number
+          id?: string
+          name: string
+          school_id: string
+          vehicle_no?: string | null
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          driver?: string | null
+          fee?: number
+          id?: string
+          name?: string
+          school_id?: string
+          vehicle_no?: string | null
         }
         Relationships: []
       }
