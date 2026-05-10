@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { schoolPath } from "@/lib/tenant";
+import { SchoolBadge } from "@/components/SchoolBadge";
 
 export default function Join() {
   const navigate = useNavigate();
@@ -60,16 +61,16 @@ export default function Join() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="mx-auto max-w-3xl px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
-            <div><div className="font-display font-bold text-lg leading-none">EduSmart</div><div className="text-[11px] text-muted-foreground mt-1">{school.name}</div></div>
-          </div>
+          <Link to={schoolPath(school.slug, "")} className="flex items-center gap-2">
+            {school.logo_url ? <img src={school.logo_url} alt="" className="size-9 rounded-lg object-contain border border-border bg-card p-0.5" /> :
+              <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>}
+            <div><div className="font-display font-bold text-lg leading-none">{school.name}</div><div className="text-[11px] text-muted-foreground mt-1">EduSmart portal</div></div>
+          </Link>
           <Link to={schoolPath(school.slug, "/signin")} className="text-sm text-muted-foreground hover:text-foreground">Already a member? Sign in</Link>
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-6 py-10">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold">Join {school.name}</h1>
-        <p className="text-muted-foreground mt-2 text-sm sm:text-base">Set up your account once. Next time you'll only need your phone and PIN.</p>
+        <SchoolBadge name={school.name} logoUrl={school.logo_url} subtitle="Set up your account — one time only" />
         <Card className="mt-6 p-6">
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-2"><Label className="flex items-center gap-1.5"><Hash className="size-3.5"/>Onboarding code</Label>

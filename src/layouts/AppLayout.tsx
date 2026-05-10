@@ -4,7 +4,7 @@ import {
   Bell, ChevronDown, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
   Settings, ClipboardCheck, FilePlus2, Calendar, Library, Sparkles, MessagesSquare,
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
-  Building2, Ticket, Upload,
+  Building2, Ticket, Upload, Bus, Megaphone,
 } from "lucide-react";
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
@@ -23,6 +23,12 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Students",  to: "students",  icon: Users },
     { label: "Teachers",  to: "teachers",  icon: GraduationCap },
     { label: "Classes",   to: "classes",   icon: BookOpen },
+    { label: "Timetable", to: "timetable", icon: Calendar },
+    { label: "Library",   to: "library",   icon: Library },
+    { label: "Fees & Payments", to: "fees", icon: Wallet },
+    { label: "Hostel",    to: "hostel",    icon: Building2 },
+    { label: "Transport", to: "transport", icon: Bus },
+    { label: "Announcements", to: "announcements", icon: Megaphone },
     { label: "Reports",   to: "reports",   icon: FileBarChart },
     { label: "Invites",   to: "invites",   icon: Ticket },
     { label: "Bulk Upload", to: "bulk",    icon: Upload },
@@ -61,6 +67,10 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "students":   { title: "Students",           sub: "Manage all enrolled students" },
   "teachers":   { title: "Teachers",           sub: "Manage staff and assignments" },
   "classes":    { title: "Classes",            sub: "All active classes" },
+  "timetable":  { title: "Timetable",          sub: "Weekly schedule" },
+  "hostel":     { title: "Hostel",             sub: "Accommodation" },
+  "transport":  { title: "Transport",          sub: "Routes & vehicles" },
+  "announcements": { title: "Announcements",   sub: "Broadcast updates" },
   "reports":    { title: "Reports",            sub: "Performance & insights" },
   "invites":    { title: "Invites",            sub: "Generate onboarding codes" },
   "bulk":       { title: "Bulk Upload",        sub: "Onboard members from CSV" },
