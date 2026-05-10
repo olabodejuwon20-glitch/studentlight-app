@@ -31,6 +31,7 @@ import AdminTransport from "./pages/admin/Transport";
 import AdminTimetable from "./pages/admin/Timetable";
 import AdminAnnouncements from "./pages/admin/Announcements";
 import AdminFees from "./pages/admin/Fees";
+import LibraryPage from "./pages/student/Library";
 
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import TeacherClasses from "./pages/teacher/Classes";
@@ -96,6 +97,7 @@ const App = () => (
               <Route path="admin/transport" element={<RoleGate allow="admin"><AdminTransport /></RoleGate>} />
               <Route path="admin/announcements" element={<RoleGate allow="admin"><AdminAnnouncements /></RoleGate>} />
               <Route path="admin/fees" element={<RoleGate allow="admin"><AdminFees /></RoleGate>} />
+              <Route path="admin/library" element={<RoleGate allow="admin"><LibraryPage /></RoleGate>} />
               <Route path="admin/settings" element={<RoleGate allow="admin"><AdminSettings /></RoleGate>} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
