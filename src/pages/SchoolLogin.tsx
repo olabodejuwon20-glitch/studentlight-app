@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { schoolPath, buildSchoolUrl } from "@/lib/tenant";
+import { SchoolBadge } from "@/components/SchoolBadge";
 
 /** /:slug/signin — returning members (student/teacher/parent): phone + 6-digit PIN. */
 export default function SchoolLogin() {
@@ -50,19 +51,8 @@ export default function SchoolLogin() {
         <Link to={schoolPath(school.slug, "")} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-4">
           <ArrowLeft className="size-3.5" /> Back
         </Link>
-        <div className="flex items-center gap-2 mb-5">
-          <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
-          <span className="font-display font-bold text-lg">EduSmart</span>
-        </div>
-        <div className="mb-5 flex items-center gap-3 p-3 rounded-lg bg-muted/60 border border-border">
-          <div className="size-9 rounded-md bg-primary/10 grid place-items-center"><Building2 className="size-4 text-primary" /></div>
-          <div className="min-w-0">
-            <div className="text-sm font-semibold truncate">{school.name}</div>
-            <div className="text-[11px] text-muted-foreground truncate">{buildSchoolUrl(school.slug, "")}</div>
-          </div>
-        </div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">Sign in</h1>
-        <p className="text-sm text-muted-foreground mt-1">Enter your phone number and 6-digit PIN.</p>
+        <SchoolBadge name={school.name} logoUrl={school.logo_url} subtitle="Sign in to your portal" />
+        <p className="text-sm text-muted-foreground text-center -mt-3 mb-2">{buildSchoolUrl(school.slug, "")}</p>
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div className="space-y-2"><Label className="flex items-center gap-1.5"><Phone className="size-3.5"/>Phone number</Label>
             <Input required type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+233 555 000 000" /></div>
