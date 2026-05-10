@@ -26,6 +26,11 @@ import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminInvites from "./pages/admin/Invites";
 import AdminBulkUpload from "./pages/admin/BulkUpload";
+import AdminHostel from "./pages/admin/Hostel";
+import AdminTransport from "./pages/admin/Transport";
+import AdminTimetable from "./pages/admin/Timetable";
+import AdminAnnouncements from "./pages/admin/Announcements";
+import AdminFees from "./pages/admin/Fees";
 
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import TeacherClasses from "./pages/teacher/Classes";
@@ -86,6 +91,11 @@ const App = () => (
               <Route path="admin/reports" element={<RoleGate allow="admin"><AdminReports /></RoleGate>} />
               <Route path="admin/invites" element={<RoleGate allow="admin"><AdminInvites /></RoleGate>} />
               <Route path="admin/bulk" element={<RoleGate allow="admin"><AdminBulkUpload /></RoleGate>} />
+              <Route path="admin/timetable" element={<RoleGate allow="admin"><AdminTimetable /></RoleGate>} />
+              <Route path="admin/hostel" element={<RoleGate allow="admin"><AdminHostel /></RoleGate>} />
+              <Route path="admin/transport" element={<RoleGate allow="admin"><AdminTransport /></RoleGate>} />
+              <Route path="admin/announcements" element={<RoleGate allow="admin"><AdminAnnouncements /></RoleGate>} />
+              <Route path="admin/fees" element={<RoleGate allow="admin"><AdminFees /></RoleGate>} />
               <Route path="admin/settings" element={<RoleGate allow="admin"><AdminSettings /></RoleGate>} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
