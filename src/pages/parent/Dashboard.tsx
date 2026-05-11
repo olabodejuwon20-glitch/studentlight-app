@@ -96,6 +96,7 @@ export default function ParentDashboard() {
             <SectionCard title="" className="!p-0">
               <div className="flex items-center gap-4 p-5">
                 <Avatar className="size-16">
+                  {active.photo_url && <AvatarImage src={active.photo_url} alt={active.full_name} />}
                   <AvatarFallback className="bg-parent text-white text-lg font-semibold">{(active.full_name || active.email)?.split(" ").map((s: string) => s[0]).join("").slice(0,2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
