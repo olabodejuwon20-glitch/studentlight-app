@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -64,7 +65,7 @@ export default function SchoolAdminLogin() {
           <div className="space-y-2"><Label className="flex items-center gap-1.5"><Mail className="size-3.5"/>Email</Label>
             <Input required type="email" value={email} onChange={e=>setEmail(e.target.value)} /></div>
           <div className="space-y-2"><Label className="flex items-center gap-1.5"><KeyRound className="size-3.5"/>Password</Label>
-            <Input required type="password" minLength={6} value={password} onChange={e=>setPassword(e.target.value)} /></div>
+            <PasswordInput required minLength={6} value={password} onChange={e=>setPassword(e.target.value)} /></div>
           <Button type="submit" className="w-full" disabled={busy}>{busy && <Loader2 className="size-4 animate-spin mr-1.5"/>}Sign in</Button>
         </form>
       </Card>

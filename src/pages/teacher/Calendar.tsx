@@ -4,30 +4,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
+import { MonthCalendar, CalendarEvent } from "@/components/MonthCalendar";
 
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 export default function TeacherCalendar() {
   const { school, user } = useSchool();
   const [tt, setTt] = useState<any[]>([]);
-  const [exams, setExams] = useState<any[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
     if (!school || !user) return;
     (async () => {
-      const [{ data: t }, { data: e }] = await Promise.all([
+      const [{ data: t }, { data: e }, { data: a }] = await Promise.all([
         supabase.from("timetable").select("*").eq("school_id", school.id).eq("teacher_id", user.id).order("day_of_week").order("start_time"),
-        supabase.from("exams").select("id,title,subject,scheduled_at").eq("school_id", school.id).eq("created_by", user.id).order("scheduled_at"),
+        supabase.from("exams").select("id,title,subject,scheduled_at").eq("school_id", school.id).eq("created_by", user.id).not("scheduled_at", "is", null),
+        supabase.from("announcements").select("id,title,created_at").eq("school_id", school.id).order("created_at", { ascending: false }).limit(20),
       ]);
-      setTt(t ?? []); setExams(e ?? []);
+      setTt(t ?? []);
+      const exEvts: CalendarEvent[] = (e ?? []).map(x => ({ id: `e-${x.id}`, date: new Date(x.scheduled_at), title: x.title, type: "exam" }));
+      const annEvts: CalendarEvent[] = (a ?? []).map(x => ({ id: `a-${x.id}`, date: new Date(x.created_at), title: x.title, type: "announcement" }));
+      setEvents([...exEvts, ...annEvts]);
     })();
   }, [school, user]);
 
   return (
     <div className="space-y-6">
+      <MonthCalendar events={events} accent="teacher" />
       <SectionCard title="Weekly schedule">
         {tt.length === 0 ? <EmptyState icon={CalIcon} title="No periods assigned" /> :
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
             {DAYS.map((d, i) => {
               const day = tt.filter(x => x.day_of_week === (i || 7));
               return (
@@ -44,16 +50,6 @@ export default function TeacherCalendar() {
               );
             })}
           </div>}
-      </SectionCard>
-
-      <SectionCard title="Upcoming exams I created">
-        {exams.length === 0 ? <EmptyState icon={CalIcon} title="No upcoming exams" /> :
-          <ul className="divide-y divide-border">{exams.map(e => (
-            <li key={e.id} className="py-3 flex items-center justify-between">
-              <div><div className="font-medium">{e.title}</div><div className="text-xs text-muted-foreground">{e.subject || "—"}</div></div>
-              <div className="text-xs text-muted-foreground">{e.scheduled_at ? new Date(e.scheduled_at).toLocaleString() : "Not scheduled"}</div>
-            </li>
-          ))}</ul>}
       </SectionCard>
     </div>
   );

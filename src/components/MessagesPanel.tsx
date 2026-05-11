@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, MessagesSquare, Search } from "lucide-react";
+import { Send, MessagesSquare, Search, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -57,8 +57,8 @@ export function MessagesPanel() {
   const filtered = peers.filter(p => !filter || (p.profile?.full_name || p.profile?.email || "").toLowerCase().includes(filter.toLowerCase()));
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 h-[calc(100vh-180px)] min-h-[500px]">
-      <SectionCard title="Conversations" className="flex flex-col">
+    <div className="grid md:grid-cols-[280px_1fr] gap-4 h-[calc(100vh-180px)] min-h-[500px]">
+      <SectionCard title="Conversations" className={`flex-col ${active ? "hidden md:flex" : "flex"}`}>
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input placeholder="Search" value={filter} onChange={e => setFilter(e.target.value)} className="pl-9" />
@@ -76,7 +76,19 @@ export function MessagesPanel() {
         </div>
       </SectionCard>
 
-      <SectionCard title={active ? (active.profile?.full_name || active.profile?.email) : "Select a conversation"} className="flex flex-col">
+      <SectionCard
+        title={
+          active ? (
+            <span className="flex items-center gap-2">
+              <button onClick={() => setActive(null)} className="md:hidden -ml-1 p-1 rounded-md hover:bg-muted" aria-label="Back">
+                <ArrowLeft className="size-4" />
+              </button>
+              <span className="truncate">{active.profile?.full_name || active.profile?.email}</span>
+            </span>
+          ) : "Select a conversation"
+        }
+        className={`flex-col ${active ? "flex" : "hidden md:flex"}`}
+      >
         {!active ? <EmptyState icon={MessagesSquare} title="Pick a conversation" desc="Choose someone on the left to start chatting." /> :
           <>
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
