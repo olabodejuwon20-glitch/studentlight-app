@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
-import { ListChecks, ClipboardCheck, Star, FileText, Megaphone, Calendar } from "lucide-react";
+import { ListChecks, ClipboardCheck, Star, FileText, Megaphone, Calendar, BookOpen, Library, Sparkles, NotebookPen } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
+import { schoolPath } from "@/lib/tenant";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function StudentDashboard() {
-  const { school, user, displayName } = useSchool();
+  const { school, user, displayName, activeRole } = useSchool();
   const [exams, setExams] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [attPct, setAttPct] = useState(0);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [recentResults, setRecentResults] = useState<any[]>([]);
 
   useEffect(() => {
     if (!school || !user) return;
@@ -24,13 +27,23 @@ export default function StudentDashboard() {
         supabase.from("announcements").select("title,body,created_at").eq("school_id", school.id).order("created_at", { ascending: false }).limit(3),
       ]);
       setExams(ex ?? []); setResults(rs ?? []); setAnnouncements(ann ?? []);
+      setRecentResults((rs ?? []).slice(-5).reverse());
       const t = att?.length ?? 0;
       setAttPct(t ? Math.round(((att!.filter(a => a.status === "present").length) / t) * 100) : 0);
     })();
   }, [school, user]);
 
   const latest = results.length ? Math.round(Number(results[results.length - 1].score)) : 0;
+  const overall = results.length ? Math.round(results.reduce((s,r)=>s+Number(r.score),0)/results.length) : 0;
   const chart = results.slice(-8).map(r => ({ subject: r.subject, score: Number(r.score) }));
+  const base = school && activeRole ? schoolPath(school.slug, `/app/${activeRole}`) : "";
+  const QUICK = [
+    { label: "My Classes", icon: BookOpen, to: `${base}/classes`, tone: "bg-info/10 text-info" },
+    { label: "Past Exams", icon: FileText, to: `${base}/exams`, tone: "bg-warning/10 text-warning" },
+    { label: "Library",    icon: Library,  to: `${base}/library`, tone: "bg-success/10 text-success" },
+    { label: "AI Tutor",   icon: Sparkles, to: `${base}/ai-tutor`, tone: "bg-student/10 text-student" },
+    { label: "Calendar",   icon: NotebookPen, to: `${base}/calendar`, tone: "bg-parent/10 text-parent" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -44,10 +57,21 @@ export default function StudentDashboard() {
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard label="Upcoming Exams" value={String(exams.length)} icon={ListChecks} tone="student" sub={exams[0] ? `Next: ${exams[0].title}` : "No upcoming"} />
+        <StatCard label="Average Score" value={overall ? `${overall}%` : "—"} icon={Star} tone="success" sub="All subjects" />
         <StatCard label="Attendance" value={`${attPct}%`} icon={ClipboardCheck} tone="success" sub="This term" />
         <StatCard label="Recent Score" value={latest ? `${latest}%` : "—"} icon={Star} tone="warning" sub={results[results.length - 1]?.subject ?? "—"} />
-        <StatCard label="Assigned Tasks" value="0" icon={FileText} tone="info" sub="Pending" />
       </div>
+
+      <SectionCard title="Quick access">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+          {QUICK.map(q => (
+            <Link key={q.label} to={q.to} className="rounded-xl border border-border p-3 sm:p-4 bg-card hover:shadow-soft transition flex flex-col items-center text-center gap-2">
+              <div className={`size-10 rounded-lg grid place-items-center ${q.tone}`}><q.icon className="size-5" /></div>
+              <div className="text-xs font-medium">{q.label}</div>
+            </Link>
+          ))}
+        </div>
+      </SectionCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SectionCard title="Upcoming Exams">
@@ -91,6 +115,20 @@ export default function StudentDashboard() {
                 <div className="text-[11px] text-muted-foreground mt-2">{new Date(a.created_at).toLocaleDateString()}</div>
               </div>
             ))}</div>}
+      </SectionCard>
+
+      <SectionCard title="Recent results" action={<Link to={`${base}/results`} className="text-xs text-primary font-medium">View all</Link>}>
+        {recentResults.length === 0 ? <EmptyState icon={Star} title="No results yet" /> :
+          <div className="overflow-x-auto"><table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground border-b border-border"><tr><th className="text-left py-2">Subject</th><th className="text-right">Score</th><th className="text-left">Date</th></tr></thead>
+            <tbody>{recentResults.map((r, i) => (
+              <tr key={i} className="border-b border-border last:border-0">
+                <td className="py-3">{r.subject}</td>
+                <td className="text-right tabular-nums font-semibold">{Math.round(Number(r.score))}%</td>
+                <td className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
+              </tr>
+            ))}</tbody>
+          </table></div>}
       </SectionCard>
     </div>
   );
