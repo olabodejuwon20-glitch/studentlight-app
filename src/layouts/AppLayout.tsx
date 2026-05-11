@@ -64,6 +64,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Activity Feed",   to: "activity",    icon: Activity },
     { label: "Fees & Payments", to: "fees",        icon: Wallet },
     { label: "Messages",        to: "messages",    icon: MessagesSquare },
+    { label: "Calendar",        to: "calendar",    icon: Calendar },
   ],
 };
 
