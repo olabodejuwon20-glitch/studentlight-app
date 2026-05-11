@@ -2,11 +2,11 @@ import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  title: string;
+  title: ReactNode;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
-  description?: string;
+  description?: ReactNode;
 }
 
 export function SectionCard({ title, action, children, className, description }: Props) {
