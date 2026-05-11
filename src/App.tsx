@@ -61,6 +61,7 @@ import ParentAttendance from "./pages/parent/Attendance";
 import ParentActivity from "./pages/parent/Activity";
 import ParentFees from "./pages/parent/Fees";
 import ParentMessages from "./pages/parent/Messages";
+import ParentCalendar from "./pages/parent/Calendar";
 
 const queryClient = new QueryClient();
 
@@ -133,6 +134,7 @@ const App = () => (
               <Route path="parent/activity" element={<RoleGate allow="parent"><ParentActivity /></RoleGate>} />
               <Route path="parent/fees" element={<RoleGate allow="parent"><ParentFees /></RoleGate>} />
               <Route path="parent/messages" element={<RoleGate allow="parent"><ParentMessages /></RoleGate>} />
+              <Route path="parent/calendar" element={<RoleGate allow="parent"><ParentCalendar /></RoleGate>} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
