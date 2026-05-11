@@ -1,52 +1,60 @@
-# Plan: Admin expansion, branded settings & dashboard redesign
+# Build Plan — Portal Completion + NECO Strategy
 
-## 1. Database & Storage
-Create a new migration that:
-- Adds columns to `schools`: `motto`, `current_session`, `current_term`, `grading_system`, `resumption_date`.
-- Creates a public storage bucket `school-logos` with RLS so school admins can upload/replace their own school's logo (path scoped to `<school_id>/...`); everyone can read.
-- Adds new admin-only tables (school-scoped, RLS via `is_school_admin`):
-  - `timetable` (class_id, day_of_week, period, subject, teacher_id, start_time, end_time)
-  - `hostels` (name, capacity, warden, gender)
-  - `transport_routes` (name, driver, vehicle_no, capacity, fee)
-  - `subjects` (name, code, class_id) — used by Classes & Subjects page
+The mockups cover three full dashboards plus many sub-screens. To ship quality (not stubs), I'll split this into 3 phases. I'll execute Phase 1 immediately on approval, then Phase 2 and 3 in follow-up turns so each phase is reviewable.
 
-## 2. Admin pages (new in sidebar)
-Add these routes/pages with simple CRUD using the existing `SectionCard`/table pattern:
-- `Classes & Subjects` — extend existing Classes with a Subjects panel.
-- `Timetable` — weekly grid view + add/edit slot.
-- `Hostel` — list + add/edit hostel.
-- `Transport` — list + add/edit route.
-- `Announcements` — already partial; add an admin management page (list/create/delete).
+## Phase 1 — Foundation (this turn)
 
-Update `AppLayout` admin nav to match the sidebar order in image #4: Dashboard, Students, Teachers, Classes, Attendance, Exams, Results, Library, Fees & Payments, Reports, Hostel, Transport, Announcements, Settings, Users & Roles (existing Invites).
+**Profile photos (all roles)**
+- New page `src/pages/Profile.tsx` accessible from sidebar avatar in `AppLayout`.
+- Upload to existing `avatars` bucket at path `{user_id}/avatar.{ext}`; save public URL to `profiles.photo_url`.
+- Add storage RLS migration so users can upload/replace only their own folder.
+- `ProfileCard` + every header avatar reads `photo_url` from profiles (live, not mock).
 
-## 3. Admin Settings redesign (image #1)
-Rebuild `src/pages/admin/Settings.tsx` with two grouped cards:
-- **School Information** — Name, Address, Phone, Email, **Logo upload** (file input → Supabase Storage `school-logos` bucket → save `logo_url`), Motto.
-- **Academic Settings** — Current Session, Current Term, Grading System, Resumption Date.
-Keep the existing portal URL share block at the top.
+**Student portal — match mockup #1**
+- `student/Dashboard.tsx`: real data only — `Upcoming Exams` (count from `exams` where scheduled_at>now & class enrolled), `Average Score` (avg of `results.score`), `Assignments Pending` (count exams with status='published' user hasn't attempted), `Attendance %` (from `attendance` table).
+- Add Quick Access tile row, real Calendar (from `exams` + `announcements`), real Activity Feed (recent attempts/results/attendance), real Recent Results table, AI Tutor preview using last `ai_chats`.
+- Existing pages — `student/Calendar.tsx`, `Library.tsx`, `Results.tsx` — fully built with live queries (no placeholders).
 
-## 4. Show school logo on portal login
-`SchoolLogin.tsx`, `SchoolAdminLogin.tsx`, `SchoolHome.tsx`, `Join.tsx` already load the school via `SchoolContext`. Render `school.logo_url` (with graceful fallback) above the title, similar to image #2.
+**Teacher portal — match mockup #2**
+- `teacher/Dashboard.tsx`: My Classes count, Total Students (sum enrollments across teacher's classes), Attendance Today %, Pending Tasks (ungraded attempts), Tests This Week, Assignments To Grade — all from real queries.
+- Today's Schedule from `timetable` (filter teacher_id + day_of_week=today), Class Performance bar chart from `results` grouped by class, Pending Assignments from `exams`+`exam_attempts`, Upcoming Tests, Quick Actions, Messages preview.
+- Add `teacher/Calendar.tsx`, `teacher/LessonPlan.tsx`, `teacher/Resources.tsx`, `teacher/Reports.tsx`, `teacher/Messages.tsx`.
 
-## 5. Dashboard redesigns (images #3 and #4)
-Match layouts exactly using existing semantic tokens (no hard-coded colors):
+**Parent portal — match mockup #3**
+- `parent/Dashboard.tsx`: My Children count (from `parent_links`), Average Grade across children's `results`, Attendance %, Fees Due (sum unpaid `fees`), Unread Messages count.
+- Children cards with per-child overall avg + last result + next event.
+- Attendance donut, Recent Results matrix (subjects × children), Fees & Payments live, Upcoming Events from `exams`/`announcements`, Activity Feed, Child Performance trend chart per selected child, Quick Actions.
+- Add `parent/Calendar.tsx`, `parent/SchoolUpdates.tsx` if missing.
 
-- **Admin Dashboard** — Top stat row (Total Students, Total Teachers, Active Classes, Total Revenue) with delta chips; Student Enrollment Trend (line chart, recharts); Recent Activities feed; Recent Students table with action icons; Reports Overview row (Performance by Class bar chart, Attendance donut, Top Performing Students list).
-- **Teacher Dashboard** — Greeting header; stat row (My Classes, Today's Classes, Pending Grading, Attendance Today); Today's Schedule list; Recent Activities; My Classes cards with attendance %; Pending Grading table; Attendance Overview table; Recent Submissions list.
-- **Student Dashboard** — Greeting + date picker; stat row (Upcoming Exams, Attendance %, Recent Score, Assigned Tasks); Upcoming Exams list; Performance Overview line chart; Announcements row.
-- **Parent Dashboard** — Child profile card with overall metrics; stat row (Attendance, Latest Result, Pending Fees, Assignments); Recent Results table; Attendance Overview donut.
+**Shared**
+- New `RoleHeader` component (avatar + greeting + search + bell + date) used by all three dashboards to match mockup chrome.
+- All copy and numbers come from queries; if a query returns empty, show `EmptyState` (no fake numbers).
 
-Charts use `recharts` (already a shadcn dependency via `chart.tsx`). All colors via CSS tokens from `index.css`. Data wired to existing tables; if a table is empty, render `EmptyState`.
+## Phase 2 — Polish & remaining sub-pages (next turn)
+- Messaging UI (compose, thread view) wired to `messages`.
+- Assignments flow for students (list/submit), teacher grading queue.
+- Calendar full-month view component shared across roles.
+- Mobile responsiveness pass on all new dashboards.
+
+## Phase 3 — NECO digital-exam positioning (next turn, after Phase 2 ships)
+Code additions to make the platform NECO-ready:
+1. **Secure CBT exam runner** — fullscreen lock, tab-switch detection, copy/paste blocking, randomized question order per student, server-side timer, auto-submit on timeout. Extends existing `student/ExamInterface.tsx`.
+2. **Proctoring lite** — webcam snapshots every 30s stored in private bucket, flagged for review by exam admin.
+3. **Question bank import** — admin uploads CSV/JSON of past NECO-style MCQs into `exam_questions`; auto-generate mock exams per subject.
+4. **NECO-aligned analytics** — predicted grade per student per subject (rolling avg of last N results), weakness heatmap, AI Tutor auto-suggests topics from weak areas (uses existing Lovable AI gateway).
+5. **Offline-first PWA** — service worker caches exam shell so partial network loss doesn't kill an attempt.
+6. **Result sheets** — printable NECO-style result slips (PDF) generated from `results` for end-of-term.
+7. **School-to-NECO bridge** — export endpoint (`/functions/neco-export`) producing the candidate-registration CSV format schools will need to submit.
+
+These features turn the platform into the obvious choice when NECO mandates CBT — schools that adopt now get a year of mock-CBT practice, proctoring, and analytics, which competitors will scramble to add.
+
+## Out of scope (won't touch this run)
+- Payment gateway integration for fees (UI only).
+- Real-time push notifications (bell shows unread count from DB only).
+- Native mobile apps.
 
 ## Technical notes
-- Logo upload uses `supabase.storage.from('school-logos').upload(\`${school.id}/logo-${Date.now()}.${ext}\`, file, { upsert: true })` → `getPublicUrl` → update `schools.logo_url`.
-- New tables follow existing pattern: `school_id`, `is_member` SELECT policy, `is_school_admin` ALL policy.
-- Sidebar uses existing `AppLayout` nav array; just extend the admin section.
-- Recharts theme reads `hsl(var(--primary))` etc. so dashboards stay on-brand.
-
-## Out of scope (ask if you want them)
-- Real-time payments integration for the Revenue stat (uses sum of `fees` instead).
-- Notifications bell dropdown wiring (UI only for now).
-
-Approve and I'll ship it.
+- All queries use `useSchool()` for `school_id` and existing RLS — no policy changes except `avatars` storage.
+- Charts via `recharts` already installed.
+- No new top-level deps.
+- One migration: `avatars` storage RLS + ensure `profiles.photo_url` writable by owner (already is).

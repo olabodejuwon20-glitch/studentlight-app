@@ -4,7 +4,7 @@ import {
   Bell, ChevronDown, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
   Settings, ClipboardCheck, FilePlus2, Calendar, Library, Sparkles, MessagesSquare,
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
-  Building2, Ticket, Upload, Bus, Megaphone,
+  Building2, Ticket, Upload, Bus, Megaphone, NotebookPen, FolderOpen, UserCog,
 } from "lucide-react";
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
@@ -38,9 +38,14 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Dashboard",   to: "",            icon: LayoutDashboard },
     { label: "My Classes",  to: "classes",     icon: BookOpen },
     { label: "Attendance",  to: "attendance",  icon: ClipboardCheck },
+    { label: "Lesson Plan", to: "lesson-plan", icon: NotebookPen },
     { label: "Test Builder",to: "tests",       icon: FilePlus2 },
     { label: "Grading",     to: "grading",     icon: PencilRuler },
     { label: "Students",    to: "students",    icon: Users },
+    { label: "Messages",    to: "messages",    icon: MessagesSquare },
+    { label: "Calendar",    to: "calendar",    icon: Calendar },
+    { label: "Resources",   to: "resources",   icon: FolderOpen },
+    { label: "Reports",     to: "reports",     icon: FileBarChart },
   ],
   student: [
     { label: "Dashboard",  to: "",          icon: LayoutDashboard },
@@ -87,6 +92,9 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "activity":   { title: "Activity Feed",      sub: "Latest updates" },
   "fees":       { title: "Fees & Payments",    sub: "Pay & track invoices" },
   "messages":   { title: "Messages",           sub: "Conversations" },
+  "lesson-plan":{ title: "Lesson Plan",        sub: "Plan and save your lessons" },
+  "resources":  { title: "Resources",          sub: "Files shared with the school" },
+  "profile":    { title: "My Profile",         sub: "Personal info & photo" },
 };
 
 export default function AppLayout() {
@@ -199,6 +207,12 @@ export default function AppLayout() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>{school.name}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <NavLink to={schoolPath(school.slug, `/app/profile`)} className="flex items-center gap-2 cursor-pointer">
+                      <UserCog className="size-4" /> My profile
+                    </NavLink>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="text-destructive" onClick={signOut}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>

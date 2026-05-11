@@ -1,21 +1,25 @@
 import { useEffect, useState } from "react";
-import { UserSquare2, Star, ClipboardCheck, Wallet, FileText } from "lucide-react";
+import { UserSquare2, Star, ClipboardCheck, Wallet, MessagesSquare, Calendar, FileBarChart } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
+import { schoolPath } from "@/lib/tenant";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { EmptyState } from "@/components/EmptyState";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export default function ParentDashboard() {
-  const { school, user, displayName } = useSchool();
+  const { school, user, displayName, activeRole } = useSchool();
   const [children, setChildren] = useState<any[]>([]);
   const [active, setActive] = useState<any>(null);
   const [results, setResults] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<{ present: number; absent: number; late: number }>({ present: 0, absent: 0, late: 0 });
   const [pendingFees, setPendingFees] = useState(0);
+  const [unread, setUnread] = useState(0);
+  const [events, setEvents] = useState<any[]>([]);
 
   useEffect(() => {
     if (!school || !user) return;
@@ -23,9 +27,13 @@ export default function ParentDashboard() {
       const { data: links } = await supabase.from("parent_links").select("student_user_id").eq("school_id", school.id).eq("parent_user_id", user.id);
       const ids = links?.map(l => l.student_user_id) ?? [];
       if (!ids.length) return setChildren([]);
-      const { data: profs } = await supabase.from("profiles").select("id,full_name,email").in("id", ids);
+      const { data: profs } = await supabase.from("profiles").select("id,full_name,email,photo_url").in("id", ids);
       setChildren(profs ?? []);
       setActive(profs?.[0] ?? null);
+      const { count } = await supabase.from("messages").select("id", { count: "exact", head: true }).eq("school_id", school.id).eq("recipient_id", user.id).is("read_at", null);
+      setUnread(count ?? 0);
+      const { data: ev } = await supabase.from("exams").select("id,title,subject,scheduled_at").eq("school_id", school.id).gte("scheduled_at", new Date().toISOString()).order("scheduled_at").limit(4);
+      setEvents(ev ?? []);
     })();
   }, [school, user]);
 
@@ -52,6 +60,8 @@ export default function ParentDashboard() {
   const attPct = total ? Math.round((attendance.present / total) * 100) : 0;
   const latest = results[0];
   const overall = results.length ? Math.round(results.reduce((s, r) => s + Number(r.score), 0) / results.length) : 0;
+  const base = school && activeRole ? schoolPath(school.slug, `/app/${activeRole}`) : "";
+  const trend = results.slice().reverse().slice(0, 8).map(r => ({ subject: r.subject, score: Number(r.score) }));
   const pieData = [
     { name: "Present", value: attendance.present, color: "hsl(var(--success))" },
     { name: "Absent", value: attendance.absent, color: "hsl(var(--destructive))" },
@@ -86,6 +96,7 @@ export default function ParentDashboard() {
             <SectionCard title="" className="!p-0">
               <div className="flex items-center gap-4 p-5">
                 <Avatar className="size-16">
+                  {active.photo_url && <AvatarImage src={active.photo_url} alt={active.full_name} />}
                   <AvatarFallback className="bg-parent text-white text-lg font-semibold">{(active.full_name || active.email)?.split(" ").map((s: string) => s[0]).join("").slice(0,2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
@@ -102,11 +113,12 @@ export default function ParentDashboard() {
             </SectionCard>
           )}
 
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+            <StatCard label="My Children" value={String(children.length)} icon={UserSquare2} tone="parent" sub="Active students" />
             <StatCard label="Attendance" value={`${attPct}%`} icon={ClipboardCheck} tone="success" sub="This term" />
             <StatCard label="Latest Result" value={latest ? `${Math.round(Number(latest.score))}%` : "—"} icon={Star} tone="warning" sub={latest?.subject ?? "—"} />
             <StatCard label="Pending Fees" value={`₦${pendingFees.toLocaleString()}`} icon={Wallet} tone="parent" sub={pendingFees ? "Outstanding" : "All paid"} />
-            <StatCard label="Assignments" value="0" icon={FileText} tone="info" sub="Pending" />
+            <StatCard label="Unread Messages" value={String(unread)} icon={MessagesSquare} tone="info" sub={unread ? "Tap to read" : "All caught up"} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -151,6 +163,48 @@ export default function ParentDashboard() {
               </div>
             </SectionCard>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <SectionCard title="Upcoming events" action={<Link to={`${base}/activity`} className="text-xs text-primary font-medium">View all</Link>}>
+              {events.length === 0 ? <EmptyState icon={Calendar} title="No events scheduled" /> :
+                <ul className="space-y-2">{events.map(e => (
+                  <li key={e.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
+                    <div className="flex items-center gap-3"><div className="size-9 rounded-lg bg-parent/10 grid place-items-center"><Calendar className="size-4 text-parent" /></div>
+                      <div><div className="font-medium">{e.title}</div><div className="text-xs text-muted-foreground">{e.subject || "—"}</div></div></div>
+                    <div className="text-xs text-muted-foreground">{new Date(e.scheduled_at).toLocaleDateString()}</div>
+                  </li>
+                ))}</ul>}
+            </SectionCard>
+
+            <SectionCard title="Performance trend" action={active ? <span className="text-xs text-muted-foreground">{active.full_name || active.email}</span> : null}>
+              {trend.length === 0 ? <EmptyState icon={FileBarChart} title="No results yet" /> :
+                <div className="h-[220px]"><ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={trend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="subject" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <YAxis domain={[0,100]} stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                    <Line type="monotone" dataKey="score" stroke="hsl(var(--parent))" strokeWidth={2} dot={{ r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer></div>}
+            </SectionCard>
+          </div>
+
+          <SectionCard title="Quick actions">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Pay Fees", icon: Wallet, to: `${base}/fees`, tone: "bg-warning/10 text-warning" },
+                { label: "View Results", icon: FileBarChart, to: `${base}/results`, tone: "bg-success/10 text-success" },
+                { label: "Attendance", icon: ClipboardCheck, to: `${base}/attendance`, tone: "bg-info/10 text-info" },
+                { label: "Message Teacher", icon: MessagesSquare, to: `${base}/messages`, tone: "bg-parent/10 text-parent" },
+              ].map(q => (
+                <Link key={q.label} to={q.to} className="rounded-xl border border-border p-3 bg-card hover:shadow-soft transition flex flex-col items-center text-center gap-2">
+                  <div className={`size-10 rounded-lg grid place-items-center ${q.tone}`}><q.icon className="size-5" /></div>
+                  <div className="text-xs font-medium">{q.label}</div>
+                </Link>
+              ))}
+            </div>
+          </SectionCard>
         </>
       )}
     </div>
