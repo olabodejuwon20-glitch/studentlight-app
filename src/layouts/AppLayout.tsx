@@ -5,6 +5,7 @@ import {
   Settings, ClipboardCheck, FilePlus2, Calendar, Library, Sparkles, MessagesSquare,
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
   Building2, Ticket, Upload, Bus, Megaphone, NotebookPen, FolderOpen, UserCog,
+  BookOpenCheck,
 } from "lucide-react";
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
@@ -25,6 +26,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Classes",   to: "classes",   icon: BookOpen },
     { label: "Timetable", to: "timetable", icon: Calendar },
     { label: "Library",   to: "library",   icon: Library },
+    { label: "Question Bank", to: "question-bank", icon: BookOpenCheck },
     { label: "Fees & Payments", to: "fees", icon: Wallet },
     { label: "Hostel",    to: "hostel",    icon: Building2 },
     { label: "Transport", to: "transport", icon: Bus },
@@ -87,6 +89,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "exams":      { title: "Exam Interface",     sub: "Computer-based test" },
   "results":    { title: "Results",            sub: "Performance summary" },
   "library":    { title: "Library",            sub: "Books & resources" },
+  "question-bank": { title: "Question Bank",   sub: "Reusable NECO-style questions" },
   "ai-tutor":   { title: "AI Tutor",           sub: "Ask anything, learn faster" },
   "calendar":   { title: "Calendar",           sub: "Upcoming events" },
   "children":   { title: "My Children",        sub: "Overview of your children" },
