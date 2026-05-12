@@ -15,6 +15,7 @@ type Role = "student" | "teacher";
 type Tone = "student" | "teacher";
 
 export default function MembersList({ role, tone }: { role: Role; tone: Tone }) {
+  const avatarClass = tone === "student" ? "bg-student/15 text-student" : "bg-teacher/15 text-teacher";
   const { school } = useSchool();
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
@@ -113,7 +114,7 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
                   className="text-left rounded-xl border border-border bg-card hover:bg-secondary/40 hover:border-primary/40 transition-colors p-4 flex items-center gap-3">
                   <Avatar className="size-11 shrink-0">
                     {r.photo_url && <AvatarImage src={r.photo_url} alt={name} />}
-                    <AvatarFallback className={`text-sm font-medium bg-${tone}/15 text-${tone}`}>{initials || "?"}</AvatarFallback>
+                    <AvatarFallback className={`text-sm font-medium ${avatarClass}`}>{initials || "?"}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">{name}</div>
@@ -149,7 +150,7 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
               <div className="flex items-center gap-4">
                 <Avatar className="size-16">
                   {selected.photo_url && <AvatarImage src={selected.photo_url} />}
-                  <AvatarFallback className={`bg-${tone}/15 text-${tone} text-lg`}>
+                  <AvatarFallback className={`${avatarClass} text-lg`}>
                     {(selected.full_name || selected.email || "?").split(/\s+/).slice(0,2).map((p: string) => p[0]?.toUpperCase()).join("")}
                   </AvatarFallback>
                 </Avatar>
