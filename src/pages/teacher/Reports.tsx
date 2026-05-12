@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileBarChart, Users, Target, TrendingUp } from "lucide-react";
+import { FileBarChart, Users, Target, TrendingUp, Download, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { downloadCSV, printToPDF, tableHTML } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -37,8 +39,36 @@ export default function TeacherReports() {
     return <SectionCard title="Class performance"><EmptyState icon={FileBarChart} title="No results recorded yet" desc="Grade students to see NECO-aligned class analytics." /></SectionCard>;
   }
 
+  const exportCSV = () => {
+    downloadCSV(`${school?.slug || "school"}-class-report.csv`,
+      bySubj.map(b => ({ Subject: b.subject, Average: b.avg + "%", "NECO Grade": b.grade, "Credit pass": b.credit + "%" })));
+  };
+  const exportPDF = () => {
+    const html = `<h1>Class Performance Report</h1><div class="sub">${school?.name || ""}</div>
+      <div class="grid">
+        <div class="card"><div class="label">Students graded</div><div class="value">${students}</div></div>
+        <div class="card"><div class="label">Class average</div><div class="value">${s.average}% (${s.grade})</div></div>
+        <div class="card"><div class="label">Credit pass</div><div class="value">${s.credit}%</div></div>
+        <div class="card"><div class="label">Entries</div><div class="value">${s.count}</div></div>
+      </div>
+      <h3>Per-subject breakdown</h3>
+      ${tableHTML(["Subject","Average","NECO","Credit pass"], bySubj.map(b => [b.subject, b.avg+"%", b.grade, b.credit+"%"]))}`;
+    printToPDF(`Class Report – ${school?.name || ""}`, html);
+  };
+
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display font-semibold text-lg">Class performance</h2>
+          <p className="text-sm text-muted-foreground">NECO-aligned analytics for your classes</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={exportCSV}><Download className="size-4" /> <span className="hidden sm:inline ml-1">CSV</span></Button>
+          <Button size="sm" variant="outline" onClick={exportPDF}><FileText className="size-4" /> <span className="hidden sm:inline ml-1">PDF</span></Button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Students graded" value={String(students)} icon={Users} tone="teacher" sub="Unique" />
         <StatCard label="Class average" value={`${s.average}%`} icon={TrendingUp} tone="info" sub={`Grade ${s.grade}`} />
