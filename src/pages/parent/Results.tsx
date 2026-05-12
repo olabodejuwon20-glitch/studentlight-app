@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
-import { FileBarChart } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { FileBarChart, TrendingUp, Target, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
+import { StatCard } from "@/components/dashboard/StatCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
+import { necoGrade, necoDistribution, necoSummary, NECO_GRADE_COLORS } from "@/lib/neco";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 export default function ParentResults() {
   const { school, user } = useSchool();
   const [rows, setRows] = useState<any[]>([]);
-  const [kids, setKids] = useState<Record<string, string>>({});
+  const [kids, setKids] = useState<{ id: string; name: string }[]>([]);
+  const [active, setActive] = useState<string | null>(null);
 
   useEffect(() => {
     if (!school || !user) return;
@@ -21,29 +25,83 @@ export default function ParentResults() {
         supabase.from("profiles").select("id,full_name,email").in("id", ids),
         supabase.from("results").select("*").eq("school_id", school.id).in("student_id", ids).order("created_at", { ascending: false }),
       ]);
-      setKids(Object.fromEntries((profs ?? []).map(p => [p.id, p.full_name || p.email || "?"])));
+      const kidsArr = (profs ?? []).map(p => ({ id: p.id, name: p.full_name || p.email || "Child" }));
+      setKids(kidsArr);
+      setActive(kidsArr[0]?.id ?? null);
       setRows(rs ?? []);
     })();
   }, [school, user]);
 
+  const childRows = useMemo(() => active ? rows.filter(r => r.student_id === active) : rows, [rows, active]);
+  const scores = childRows.map(r => Number(r.score));
+  const s = useMemo(() => necoSummary(scores), [childRows]);
+  const dist = useMemo(() => necoDistribution(scores), [childRows]);
+
+  if (!kids.length) {
+    return <SectionCard title="Academic records"><EmptyState icon={FileBarChart} title="No children linked yet" desc="Ask the school admin to link your account." /></SectionCard>;
+  }
+
   return (
-    <SectionCard title="Academic records">
-      {rows.length === 0 ? <EmptyState icon={FileBarChart} title="No results yet" /> :
-        <div className="overflow-x-auto"><table className="w-full text-sm">
-          <thead className="text-xs text-muted-foreground border-b border-border">
-            <tr><th className="text-left py-2">Child</th><th className="text-left">Subject</th><th className="text-right">Score</th><th>Grade</th><th className="text-left">Term</th><th className="text-left">Date</th></tr>
-          </thead>
-          <tbody>{rows.map(r => (
-            <tr key={r.id} className="border-b border-border last:border-0">
-              <td className="py-3 font-medium">{kids[r.student_id] || "—"}</td>
-              <td>{r.subject}</td>
-              <td className="text-right tabular-nums font-semibold">{Math.round(Number(r.score))}%</td>
-              <td className="text-center"><Badge variant="outline" className="bg-success/10 text-success border-success/30">{r.grade || "—"}</Badge></td>
-              <td className="text-muted-foreground">{r.term}</td>
-              <td className="text-muted-foreground text-xs">{new Date(r.created_at).toLocaleDateString()}</td>
-            </tr>
-          ))}</tbody>
-        </table></div>}
-    </SectionCard>
+    <div className="space-y-6">
+      {kids.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {kids.map(k => (
+            <button key={k.id} onClick={() => setActive(k.id)}
+              className={`px-3 py-1.5 rounded-full text-sm border whitespace-nowrap transition-colors ${active===k.id ? "bg-primary text-primary-foreground border-primary" : "border-border bg-card hover:bg-muted"}`}>
+              {k.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Overall" value={s.count ? `${s.average}%` : "—"} icon={TrendingUp} tone="parent" sub={`Grade ${s.grade}`} />
+        <StatCard label="Credit pass" value={`${s.credit}%`} icon={Target} tone="success" sub="C6 or better" />
+        <StatCard label="Best" value={s.count ? `${s.best}%` : "—"} icon={Award} tone="warning" sub="Top score" />
+        <StatCard label="Records" value={String(s.count)} icon={FileBarChart} tone="info" sub="Total" />
+      </div>
+
+      {childRows.length === 0 ? (
+        <SectionCard title="Academic records"><EmptyState icon={FileBarChart} title="No results yet" /></SectionCard>
+      ) : (
+        <>
+          <SectionCard title="NECO grade distribution" description="A1–F9 across subjects">
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dist}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="grade" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis allowDecimals={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                  <Bar dataKey="count" radius={[6,6,0,0]}>
+                    {dist.map((d,i) => <Cell key={i} fill={d.color} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Academic records">
+            <div className="overflow-x-auto"><table className="w-full text-sm">
+              <thead className="text-xs text-muted-foreground border-b border-border">
+                <tr><th className="text-left py-2">Subject</th><th className="text-right">Score</th><th className="text-center">NECO</th><th className="text-left">Term</th><th className="text-left">Date</th></tr>
+              </thead>
+              <tbody>{childRows.map(r => {
+                const g = necoGrade(Number(r.score));
+                return (
+                  <tr key={r.id} className="border-b border-border last:border-0">
+                    <td className="py-3 font-medium">{r.subject}</td>
+                    <td className="text-right tabular-nums font-semibold">{Math.round(Number(r.score))}%</td>
+                    <td className="text-center"><Badge variant="outline" style={{ background: NECO_GRADE_COLORS[g]+"22", color: NECO_GRADE_COLORS[g], borderColor: NECO_GRADE_COLORS[g]+"55" }}>{g}</Badge></td>
+                    <td className="text-muted-foreground">{r.term}</td>
+                    <td className="text-muted-foreground text-xs">{new Date(r.created_at).toLocaleDateString()}</td>
+                  </tr>
+                );
+              })}</tbody>
+            </table></div>
+          </SectionCard>
+        </>
+      )}
+    </div>
   );
 }
