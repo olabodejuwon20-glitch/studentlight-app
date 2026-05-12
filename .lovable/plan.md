@@ -1,60 +1,77 @@
-# Build Plan — Portal Completion + NECO Strategy
+# Phase 3 — NECO Digital Exam Readiness
 
-The mockups cover three full dashboards plus many sub-screens. To ship quality (not stubs), I'll split this into 3 phases. I'll execute Phase 1 immediately on approval, then Phase 2 and 3 in follow-up turns so each phase is reviewable.
+Goal: turn EduSmart into the obvious choice for secondary schools preparing for Nigeria's NECO digital (CBT) transition. Every feature below is real (DB-backed, RLS-protected), wired to live data, and usable on day one — no mock values.
 
-## Phase 1 — Foundation (this turn)
+## 1. Secure CBT Exam Runner (extends `student/ExamInterface.tsx`)
+- Fullscreen lock on start; auto-submit on exit attempt.
+- Tab/window blur detection — logs `exam_violations` row, warns student, auto-submits after N violations (school setting).
+- Disable copy/paste, right-click, dev-tools shortcuts on the exam page.
+- Server-side timer: `exam_attempts.started_at` + `exams.duration_min`; client just displays, server rejects late submissions.
+- Per-student randomized question order (seeded by `attempt_id`).
+- Autosave each answer on change to `exam_answers` so power loss does not lose progress.
 
-**Profile photos (all roles)**
-- New page `src/pages/Profile.tsx` accessible from sidebar avatar in `AppLayout`.
-- Upload to existing `avatars` bucket at path `{user_id}/avatar.{ext}`; save public URL to `profiles.photo_url`.
-- Add storage RLS migration so users can upload/replace only their own folder.
-- `ProfileCard` + every header avatar reads `photo_url` from profiles (live, not mock).
+## 2. Proctoring Lite
+- Webcam permission prompt before exam start (optional flag on exam).
+- Snapshot every 30s into private `proctor-snapshots` bucket at `{exam_id}/{attempt_id}/{ts}.jpg`.
+- New page `admin/Proctoring.tsx` to review flagged attempts (multiple faces / no face / tab switches).
 
-**Student portal — match mockup #1**
-- `student/Dashboard.tsx`: real data only — `Upcoming Exams` (count from `exams` where scheduled_at>now & class enrolled), `Average Score` (avg of `results.score`), `Assignments Pending` (count exams with status='published' user hasn't attempted), `Attendance %` (from `attendance` table).
-- Add Quick Access tile row, real Calendar (from `exams` + `announcements`), real Activity Feed (recent attempts/results/attendance), real Recent Results table, AI Tutor preview using last `ai_chats`.
-- Existing pages — `student/Calendar.tsx`, `Library.tsx`, `Results.tsx` — fully built with live queries (no placeholders).
+## 3. Question Bank + NECO-style Import
+- New tables: `question_bank` (subject, topic, difficulty, type, body, options jsonb, answer, explanation) and `question_tags`.
+- Admin page `admin/QuestionBank.tsx`: filter, search, manual add, CSV/JSON bulk import (uses existing bulk-onboard pattern).
+- Teacher `TestBuilder.tsx` upgrade: pick from bank by subject/topic/difficulty, auto-generate N random questions, save as exam.
+- Seed script (admin-triggered) to import a starter pack of NECO-style past questions per subject.
 
-**Teacher portal — match mockup #2**
-- `teacher/Dashboard.tsx`: My Classes count, Total Students (sum enrollments across teacher's classes), Attendance Today %, Pending Tasks (ungraded attempts), Tests This Week, Assignments To Grade — all from real queries.
-- Today's Schedule from `timetable` (filter teacher_id + day_of_week=today), Class Performance bar chart from `results` grouped by class, Pending Assignments from `exams`+`exam_attempts`, Upcoming Tests, Quick Actions, Messages preview.
-- Add `teacher/Calendar.tsx`, `teacher/LessonPlan.tsx`, `teacher/Resources.tsx`, `teacher/Reports.tsx`, `teacher/Messages.tsx`.
+## 4. NECO-aligned Analytics
+- `student/Analytics.tsx`: predicted NECO grade per subject (weighted rolling avg of last 5 results), weakness heatmap by topic (joined through `question_bank.topic`).
+- `teacher/Analytics.tsx`: class mastery per topic, students at risk list.
+- `parent/Dashboard.tsx`: add "Predicted NECO grade" card per child.
+- AI Tutor: pull weakest 3 topics from analytics and pre-seed the chat ("Let's practice Quadratic Equations — your weakest topic").
 
-**Parent portal — match mockup #3**
-- `parent/Dashboard.tsx`: My Children count (from `parent_links`), Average Grade across children's `results`, Attendance %, Fees Due (sum unpaid `fees`), Unread Messages count.
-- Children cards with per-child overall avg + last result + next event.
-- Attendance donut, Recent Results matrix (subjects × children), Fees & Payments live, Upcoming Events from `exams`/`announcements`, Activity Feed, Child Performance trend chart per selected child, Quick Actions.
-- Add `parent/Calendar.tsx`, `parent/SchoolUpdates.tsx` if missing.
+## 5. Printable Result Slips (PDF)
+- Edge function `generate-result-slip` returns a NECO-styled PDF (school logo, student, subjects, scores, grades, GPA, signature line).
+- Buttons: student `Results` → "Download slip", admin `Reports` → "Download class slips (zip)".
 
-**Shared**
-- New `RoleHeader` component (avatar + greeting + search + bell + date) used by all three dashboards to match mockup chrome.
-- All copy and numbers come from queries; if a query returns empty, show `EmptyState` (no fake numbers).
+## 6. NECO Candidate Export
+- Edge function `neco-export` produces the CSV format NECO will require for candidate registration (configurable column map in `school_settings`).
+- Admin `Settings → NECO` tab: map fields, preview rows, download CSV.
 
-## Phase 2 — Polish & remaining sub-pages (next turn)
-- Messaging UI (compose, thread view) wired to `messages`.
-- Assignments flow for students (list/submit), teacher grading queue.
-- Calendar full-month view component shared across roles.
-- Mobile responsiveness pass on all new dashboards.
+## 7. Offline-First PWA
+- Add `vite-plugin-pwa`, service worker caches app shell + current exam payload.
+- "Network lost" banner; queued answer submissions retry on reconnect.
 
-## Phase 3 — NECO digital-exam positioning (next turn, after Phase 2 ships)
-Code additions to make the platform NECO-ready:
-1. **Secure CBT exam runner** — fullscreen lock, tab-switch detection, copy/paste blocking, randomized question order per student, server-side timer, auto-submit on timeout. Extends existing `student/ExamInterface.tsx`.
-2. **Proctoring lite** — webcam snapshots every 30s stored in private bucket, flagged for review by exam admin.
-3. **Question bank import** — admin uploads CSV/JSON of past NECO-style MCQs into `exam_questions`; auto-generate mock exams per subject.
-4. **NECO-aligned analytics** — predicted grade per student per subject (rolling avg of last N results), weakness heatmap, AI Tutor auto-suggests topics from weak areas (uses existing Lovable AI gateway).
-5. **Offline-first PWA** — service worker caches exam shell so partial network loss doesn't kill an attempt.
-6. **Result sheets** — printable NECO-style result slips (PDF) generated from `results` for end-of-term.
-7. **School-to-NECO bridge** — export endpoint (`/functions/neco-export`) producing the candidate-registration CSV format schools will need to submit.
+## 8. School Settings additions
+- `exams_violation_limit`, `proctoring_default`, `neco_subject_codes` (jsonb).
+- Editable from `admin/Settings.tsx` new "Exams & NECO" tab.
 
-These features turn the platform into the obvious choice when NECO mandates CBT — schools that adopt now get a year of mock-CBT practice, proctoring, and analytics, which competitors will scramble to add.
+## Database migration (single migration)
+```text
+create table exam_violations (id, attempt_id, type, detail, created_at)
+create table exam_answers     (id, attempt_id, question_id, answer, updated_at, unique(attempt_id,question_id))
+create table question_bank    (id, school_id, subject, topic, difficulty, type, body, options, answer, explanation, created_by)
+create table question_tags    (question_id, tag)
+alter  exams add column duration_min int, randomize bool, proctored bool, violation_limit int
+alter  school_settings add neco_subject_codes jsonb, proctoring_default bool
+storage bucket proctor-snapshots (private) + RLS: owner = student of attempt; admin can read
+RLS on all new tables scoped by school_id + role
+```
 
-## Out of scope (won't touch this run)
-- Payment gateway integration for fees (UI only).
-- Real-time push notifications (bell shows unread count from DB only).
+## Edge functions
+- `generate-result-slip` (PDF via pdf-lib)
+- `neco-export` (CSV builder)
+- `score-attempt` (server authoritative scoring + grade mapping, called on submit)
+
+## Out of scope (separate phase)
+- Real biometric proctoring / live invigilator video.
+- Payment for NECO registration fees.
 - Native mobile apps.
 
-## Technical notes
-- All queries use `useSchool()` for `school_id` and existing RLS — no policy changes except `avatars` storage.
-- Charts via `recharts` already installed.
-- No new top-level deps.
-- One migration: `avatars` storage RLS + ensure `profiles.photo_url` writable by owner (already is).
+## Delivery order inside this phase
+1. DB migration + score-attempt function (foundation).
+2. Secure CBT runner + exam_answers autosave.
+3. Question bank + TestBuilder upgrade.
+4. Proctoring snapshots + admin review page.
+5. Analytics pages (student/teacher/parent additions).
+6. PDF result slips + NECO export.
+7. PWA pass.
+
+Each step ships behind real queries — no mock data, no placeholder values.
