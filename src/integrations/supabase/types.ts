@@ -253,18 +253,21 @@ export type Database = {
           id: string
           question_id: string
           selected_index: number | null
+          updated_at: string
         }
         Insert: {
           attempt_id: string
           id?: string
           question_id: string
           selected_index?: number | null
+          updated_at?: string
         }
         Update: {
           attempt_id?: string
           id?: string
           question_id?: string
           selected_index?: number | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -390,42 +393,81 @@ export type Database = {
           },
         ]
       }
+      exam_violations: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          detail: string | null
+          id: string
+          school_id: string
+          type: string
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          school_id: string
+          type: string
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          school_id?: string
+          type?: string
+        }
+        Relationships: []
+      }
       exams: {
         Row: {
           class_id: string | null
           created_at: string
           created_by: string
+          duration_min: number | null
           duration_minutes: number
           id: string
+          proctored: boolean
+          randomize: boolean
           scheduled_at: string | null
           school_id: string
           status: Database["public"]["Enums"]["exam_status"]
           subject: string | null
           title: string
+          violation_limit: number
         }
         Insert: {
           class_id?: string | null
           created_at?: string
           created_by: string
+          duration_min?: number | null
           duration_minutes?: number
           id?: string
+          proctored?: boolean
+          randomize?: boolean
           scheduled_at?: string | null
           school_id: string
           status?: Database["public"]["Enums"]["exam_status"]
           subject?: string | null
           title: string
+          violation_limit?: number
         }
         Update: {
           class_id?: string | null
           created_at?: string
           created_by?: string
+          duration_min?: number | null
           duration_minutes?: number
           id?: string
+          proctored?: boolean
+          randomize?: boolean
           scheduled_at?: string | null
           school_id?: string
           status?: Database["public"]["Enums"]["exam_status"]
           subject?: string | null
           title?: string
+          violation_limit?: number
         }
         Relationships: [
           {
@@ -802,6 +844,80 @@ export type Database = {
         }
         Relationships: []
       }
+      question_bank: {
+        Row: {
+          answer: Json | null
+          body: string
+          created_at: string
+          created_by: string
+          difficulty: string
+          explanation: string | null
+          id: string
+          options: Json
+          school_id: string
+          subject: string
+          topic: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          answer?: Json | null
+          body: string
+          created_at?: string
+          created_by: string
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          school_id: string
+          subject: string
+          topic?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: Json | null
+          body?: string
+          created_at?: string
+          created_by?: string
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          school_id?: string
+          subject?: string
+          topic?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      question_tags: {
+        Row: {
+          id: string
+          question_id: string
+          tag: string
+        }
+        Insert: {
+          id?: string
+          question_id: string
+          tag: string
+        }
+        Update: {
+          id?: string
+          question_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_tags_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       results: {
         Row: {
           created_at: string
@@ -864,12 +980,15 @@ export type Database = {
           current_session: string | null
           current_term: string | null
           email: string | null
+          exams_violation_limit: number
           grading_system: string | null
           id: string
           logo_url: string | null
           motto: string | null
           name: string
+          neco_subject_codes: Json
           phone: string | null
+          proctoring_default: boolean
           resumption_date: string | null
           settings: Json
           slug: string
@@ -882,12 +1001,15 @@ export type Database = {
           current_session?: string | null
           current_term?: string | null
           email?: string | null
+          exams_violation_limit?: number
           grading_system?: string | null
           id?: string
           logo_url?: string | null
           motto?: string | null
           name: string
+          neco_subject_codes?: Json
           phone?: string | null
+          proctoring_default?: boolean
           resumption_date?: string | null
           settings?: Json
           slug: string
@@ -900,12 +1022,15 @@ export type Database = {
           current_session?: string | null
           current_term?: string | null
           email?: string | null
+          exams_violation_limit?: number
           grading_system?: string | null
           id?: string
           logo_url?: string | null
           motto?: string | null
           name?: string
+          neco_subject_codes?: Json
           phone?: string | null
+          proctoring_default?: boolean
           resumption_date?: string | null
           settings?: Json
           slug?: string
