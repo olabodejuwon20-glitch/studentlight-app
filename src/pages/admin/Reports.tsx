@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
-import { FileBarChart } from "lucide-react";
+import { FileBarChart, Download, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { downloadCSV, printToPDF, tableHTML } from "@/lib/exporters";
 
 export default function AdminReports() {
   const { school } = useSchool();
@@ -27,8 +29,36 @@ export default function AdminReports() {
     })();
   }, [school]);
 
+  const exportAction = (
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant="outline" disabled={!perfData.length && !att.length}
+        onClick={() => {
+          const rows = [
+            ...perfData.map(p => ({ Section: "Performance", Key: p.subject, Value: p.score + "%" })),
+            ...att.map(a => ({ Section: "Attendance", Key: a.name, Value: a.value })),
+          ];
+          downloadCSV(`${school?.slug || "school"}-report.csv`, rows);
+        }}><Download className="size-4" /> <span className="hidden sm:inline ml-1">CSV</span></Button>
+      <Button size="sm" variant="outline" disabled={!perfData.length && !att.length}
+        onClick={() => {
+          const html = `<h1>School Report</h1><div class="sub">${school?.name || ""}</div>
+          <h3>Performance by subject</h3>${tableHTML(["Subject","Average"], perfData.map(p => [p.subject, p.score + "%"]))}
+          <h3 style="margin-top:24px;">Attendance distribution</h3>${tableHTML(["Status","Count"], att.map(a => [a.name, a.value]))}`;
+          printToPDF(`Report – ${school?.name || ""}`, html);
+        }}><FileText className="size-4" /> <span className="hidden sm:inline ml-1">PDF</span></Button>
+    </div>
+  );
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display font-semibold text-lg">School analytics</h2>
+          <p className="text-sm text-muted-foreground">Performance and attendance overview</p>
+        </div>
+        {exportAction}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <SectionCard title="Performance by Subject">
         {perfData.length === 0 ? <EmptyState icon={FileBarChart} title="No results yet" /> :
           <div className="h-[280px]"><ResponsiveContainer width="100%" height="100%">
@@ -50,6 +80,7 @@ export default function AdminReports() {
             </PieChart>
           </ResponsiveContainer></div>}
       </SectionCard>
+      </div>
     </div>
   );
 }
