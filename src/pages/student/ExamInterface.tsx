@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { ListChecks, AlertTriangle, Clock, Maximize2 } from "lucide-react";
+import { ListChecks, AlertTriangle, Clock, Maximize2, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -36,6 +36,10 @@ export default function ExamInterface() {
   const [violationLimit, setViolationLimit] = useState<number>(3);
   const submittingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const snapTimerRef = useRef<number | null>(null);
+  const [proctorOn, setProctorOn] = useState(false);
 
   useEffect(() => {
     if (!school) return;
@@ -75,6 +79,43 @@ export default function ExamInterface() {
     setTimeout(() => {
       containerRef.current?.requestFullscreen?.().catch(() => {});
     }, 50);
+    // Start proctoring if exam requires it
+    if (exam.proctored) {
+      startProctor(exam.id, attempt.id);
+    }
+  }
+
+  async function startProctor(examId: string, attempt: string) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 }, audio: false });
+      streamRef.current = stream;
+      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play().catch(() => {}); }
+      setProctorOn(true);
+      const snap = async () => {
+        try {
+          const v = videoRef.current; if (!v || v.readyState < 2) return;
+          const c = document.createElement("canvas");
+          c.width = 320; c.height = 240;
+          c.getContext("2d")!.drawImage(v, 0, 0, 320, 240);
+          const blob: Blob | null = await new Promise(res => c.toBlob(res, "image/jpeg", 0.6));
+          if (!blob) return;
+          const path = `${examId}/${attempt}/${Date.now()}.jpg`;
+          await supabase.storage.from("proctor-snapshots").upload(path, blob, { contentType: "image/jpeg", upsert: false });
+        } catch {/* ignore */}
+      };
+      snap();
+      snapTimerRef.current = window.setInterval(snap, 30_000);
+    } catch (err: any) {
+      toast.error("Webcam access denied — this exam requires proctoring.");
+      logViolation("webcam_denied");
+    }
+  }
+
+  function stopProctor() {
+    if (snapTimerRef.current) { clearInterval(snapTimerRef.current); snapTimerRef.current = null; }
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    setProctorOn(false);
   }
 
   const submit = useCallback(async (reason?: string) => {
@@ -88,6 +129,7 @@ export default function ExamInterface() {
     const score = Math.round((correct / total) * 100);
     await supabase.from("exam_attempts").update({ submitted_at: new Date().toISOString(), score }).eq("id", attemptId);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    stopProctor();
     toast.success(`${reason ? reason + " — " : ""}Submitted! Score: ${score}%`);
     setActiveExam(null); setQuestions([]); setAnswers({}); setAttemptId(null); setStartedAt(null);
     submittingRef.current = false;
@@ -178,6 +220,12 @@ export default function ExamInterface() {
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-semibold truncate">{activeExam.title}</div>
           <div className="flex items-center gap-3">
+            {proctorOn && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="size-2 rounded-full bg-destructive animate-pulse" />
+                <Video className="size-3.5" /> Proctoring
+              </div>
+            )}
             <div className={`flex items-center gap-1.5 text-sm font-mono px-2.5 py-1 rounded-md border ${remaining < 60 ? "border-destructive text-destructive" : "border-border"}`}>
               <Clock className="size-3.5" /> {timerLabel}
             </div>
@@ -192,6 +240,7 @@ export default function ExamInterface() {
             <Button size="sm" onClick={() => submit()}>Submit</Button>
           </div>
         </div>
+        <video ref={videoRef} muted playsInline className="fixed bottom-3 right-3 w-32 h-24 rounded-md border border-border bg-black/60 z-20" style={{ display: proctorOn ? "block" : "none" }} />
         <div className="max-w-3xl mx-auto p-4">
           <SectionCard title={`Questions (${questions.length})`}>
             <ol className="space-y-5">
