@@ -1,0 +1,157 @@
+import { useEffect, useState } from "react";
+import { Eye, ShieldAlert } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSchool } from "@/contexts/SchoolContext";
+import { SectionCard } from "@/components/dashboard/SectionCard";
+import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+type AttemptRow = {
+  id: string;
+  exam_id: string;
+  student_id: string;
+  started_at: string;
+  submitted_at: string | null;
+  score: number | null;
+  exam_title?: string;
+  student_name?: string;
+  violation_count?: number;
+};
+
+export default function Proctoring() {
+  const { school } = useSchool();
+  const [rows, setRows] = useState<AttemptRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState<AttemptRow | null>(null);
+  const [snapshots, setSnapshots] = useState<{ name: string; url: string }[]>([]);
+  const [violations, setViolations] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      if (!school) return;
+      setLoading(true);
+      const { data: attempts } = await supabase
+        .from("exam_attempts").select("id,exam_id,student_id,started_at,submitted_at,score")
+        .eq("school_id", school.id).order("started_at", { ascending: false }).limit(200);
+      const ids = (attempts ?? []).map(a => a.id);
+      const examIds = Array.from(new Set((attempts ?? []).map(a => a.exam_id)));
+      const studentIds = Array.from(new Set((attempts ?? []).map(a => a.student_id)));
+      const [{ data: exams }, { data: profs }, { data: vios }] = await Promise.all([
+        supabase.from("exams").select("id,title").in("id", examIds.length ? examIds : ["00000000-0000-0000-0000-000000000000"]),
+        supabase.from("profiles").select("id,full_name,email").in("id", studentIds.length ? studentIds : ["00000000-0000-0000-0000-000000000000"]),
+        ids.length ? supabase.from("exam_violations").select("attempt_id").in("attempt_id", ids) : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const examMap = new Map((exams ?? []).map((e: any) => [e.id, e.title]));
+      const profMap = new Map((profs ?? []).map((p: any) => [p.id, p.full_name || p.email]));
+      const vCount = new Map<string, number>();
+      (vios ?? []).forEach((v: any) => vCount.set(v.attempt_id, (vCount.get(v.attempt_id) ?? 0) + 1));
+      setRows((attempts ?? []).map(a => ({
+        ...a,
+        exam_title: examMap.get(a.exam_id) ?? "Exam",
+        student_name: profMap.get(a.student_id) ?? "Student",
+        violation_count: vCount.get(a.id) ?? 0,
+      })));
+      setLoading(false);
+    })();
+  }, [school]);
+
+  async function review(a: AttemptRow) {
+    setOpen(a); setSnapshots([]); setViolations([]);
+    const [{ data: vlist }, { data: files }] = await Promise.all([
+      supabase.from("exam_violations").select("type,detail,created_at").eq("attempt_id", a.id).order("created_at"),
+      supabase.storage.from("proctor-snapshots").list(`${a.exam_id}/${a.id}`, { limit: 200, sortBy: { column: "name", order: "asc" } }),
+    ]);
+    setViolations(vlist ?? []);
+    const items = files ?? [];
+    if (items.length) {
+      const paths = items.map(f => `${a.exam_id}/${a.id}/${f.name}`);
+      const { data: signed } = await supabase.storage.from("proctor-snapshots").createSignedUrls(paths, 60 * 30);
+      setSnapshots((signed ?? []).map((s, i) => ({ name: items[i].name, url: s.signedUrl })));
+    }
+  }
+
+  return (
+    <SectionCard title="Proctoring review">
+      {loading ? <div className="text-sm text-muted-foreground">Loading…</div>
+       : rows.length === 0 ? <EmptyState icon={ShieldAlert} title="No exam attempts yet" />
+       : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground">
+              <tr className="text-left">
+                <th className="py-2 px-2">Student</th>
+                <th className="py-2 px-2">Exam</th>
+                <th className="py-2 px-2">Started</th>
+                <th className="py-2 px-2">Status</th>
+                <th className="py-2 px-2">Score</th>
+                <th className="py-2 px-2">Violations</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(r => (
+                <tr key={r.id} className="border-t border-border">
+                  <td className="py-2 px-2">{r.student_name}</td>
+                  <td className="py-2 px-2">{r.exam_title}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground">{new Date(r.started_at).toLocaleString()}</td>
+                  <td className="py-2 px-2">
+                    {r.submitted_at
+                      ? <span className="px-1.5 py-0.5 rounded bg-secondary text-[11px]">Submitted</span>
+                      : <span className="px-1.5 py-0.5 rounded bg-muted text-[11px]">In progress</span>}
+                  </td>
+                  <td className="py-2 px-2">{r.score ?? "—"}</td>
+                  <td className="py-2 px-2">
+                    {r.violation_count
+                      ? <span className="px-1.5 py-0.5 rounded bg-destructive/15 text-destructive text-[11px]">{r.violation_count}</span>
+                      : <span className="text-muted-foreground text-xs">0</span>}
+                  </td>
+                  <td className="py-2 px-2 text-right">
+                    <Button size="sm" variant="outline" onClick={() => review(r)}><Eye className="size-3.5 mr-1" /> Review</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <Dialog open={!!open} onOpenChange={v => !v && setOpen(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{open?.student_name} — {open?.exam_title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Violations ({violations.length})</h4>
+              {violations.length === 0 ? <div className="text-sm text-muted-foreground">None recorded.</div> : (
+                <ul className="text-xs space-y-1 max-h-32 overflow-y-auto">
+                  {violations.map((v, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="text-muted-foreground">{new Date(v.created_at).toLocaleTimeString()}</span>
+                      <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive">{v.type}</span>
+                      {v.detail && <span className="text-muted-foreground">{v.detail}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Snapshots ({snapshots.length})</h4>
+              {snapshots.length === 0 ? <div className="text-sm text-muted-foreground">No snapshots — this exam may not have been proctored.</div> : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 max-h-[400px] overflow-y-auto">
+                  {snapshots.map(s => (
+                    <a key={s.name} href={s.url} target="_blank" rel="noreferrer" className="block">
+                      <img src={s.url} alt={s.name} className="w-full h-24 object-cover rounded border border-border" />
+                      <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{new Date(Number(s.name.replace(".jpg", ""))).toLocaleTimeString()}</div>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </SectionCard>
+  );
+}
