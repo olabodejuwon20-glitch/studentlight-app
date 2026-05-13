@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getCurrentSchoolSlug, schoolPath, buildSchoolUrl } from "@/lib/tenant";
+import SEO from "@/components/SEO";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -41,6 +42,11 @@ export default function Register() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
+      <SEO
+        title="Register Your School — EduSmart"
+        description="Create your EduSmart school account in minutes — get a dedicated portal for admins, teachers, students and parents."
+        path="/register"
+      />
       <div className="hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-[hsl(var(--admin))] via-[hsl(var(--student))] to-[hsl(var(--teacher))] text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         <Link to="/" className="relative flex items-center gap-3 w-fit">
