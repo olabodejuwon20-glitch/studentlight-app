@@ -40,6 +40,11 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="EduSmart — School Management Platform for Africa"
+        description="Run your school with EduSmart — attendance, CBT exams, grading, results, fees and parent communication in one secure portal."
+        path="/"
+      />
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur sticky top-0 z-30 bg-background/80">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between">
