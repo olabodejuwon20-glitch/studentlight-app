@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { schoolPath } from "@/lib/tenant";
+import SEO from "@/components/SEO";
 
 /** Root admin sign in. School admins can sign in here OR from their /:slug/admin URL. */
 export default function SignIn() {
@@ -39,6 +40,11 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
+      <SEO
+        title="Admin Sign In — EduSmart"
+        description="Sign in to your EduSmart admin portal to manage classes, staff, students and results."
+        path="/signin"
+      />
       <div className="hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-[hsl(var(--admin))] via-[hsl(var(--student))] to-[hsl(var(--teacher))] text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         <Link to="/" className="relative flex items-center gap-3 w-fit">
