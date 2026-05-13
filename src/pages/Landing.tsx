@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useSchool } from "@/contexts/SchoolContext";
 import { schoolPath, getCurrentSchoolSlug } from "@/lib/tenant";
+import SEO from "@/components/SEO";
 
 export default function Landing() {
   const navigate = useNavigate();
