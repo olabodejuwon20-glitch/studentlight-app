@@ -423,15 +423,18 @@ export type Database = {
       exams: {
         Row: {
           class_id: string | null
+          counts_to_results: boolean
           created_at: string
           created_by: string
           duration_min: number | null
           duration_minutes: number
           id: string
+          mode: Database["public"]["Enums"]["exam_mode"]
           proctored: boolean
           randomize: boolean
           scheduled_at: string | null
           school_id: string
+          show_answers_after_each: boolean
           status: Database["public"]["Enums"]["exam_status"]
           subject: string | null
           title: string
@@ -439,15 +442,18 @@ export type Database = {
         }
         Insert: {
           class_id?: string | null
+          counts_to_results?: boolean
           created_at?: string
           created_by: string
           duration_min?: number | null
           duration_minutes?: number
           id?: string
+          mode?: Database["public"]["Enums"]["exam_mode"]
           proctored?: boolean
           randomize?: boolean
           scheduled_at?: string | null
           school_id: string
+          show_answers_after_each?: boolean
           status?: Database["public"]["Enums"]["exam_status"]
           subject?: string | null
           title: string
@@ -455,15 +461,18 @@ export type Database = {
         }
         Update: {
           class_id?: string | null
+          counts_to_results?: boolean
           created_at?: string
           created_by?: string
           duration_min?: number | null
           duration_minutes?: number
           id?: string
+          mode?: Database["public"]["Enums"]["exam_mode"]
           proctored?: boolean
           randomize?: boolean
           scheduled_at?: string | null
           school_id?: string
+          show_answers_after_each?: boolean
           status?: Database["public"]["Enums"]["exam_status"]
           subject?: string | null
           title?: string
@@ -1208,6 +1217,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "teacher" | "student" | "parent"
       attendance_status: "present" | "absent" | "late" | "excused"
+      exam_mode: "neco_sim" | "school" | "practice"
       exam_status: "draft" | "scheduled" | "active" | "closed"
       fee_status: "pending" | "paid" | "overdue"
       member_role: "admin" | "teacher" | "student" | "parent"
@@ -1340,6 +1350,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "teacher", "student", "parent"],
       attendance_status: ["present", "absent", "late", "excused"],
+      exam_mode: ["neco_sim", "school", "practice"],
       exam_status: ["draft", "scheduled", "active", "closed"],
       fee_status: ["pending", "paid", "overdue"],
       member_role: ["admin", "teacher", "student", "parent"],
