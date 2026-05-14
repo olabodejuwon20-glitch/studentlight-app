@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileBarChart, TrendingUp, Target, Award, Download, FileText } from "lucide-react";
+import { FileBarChart, TrendingUp, Target, Award, Download, FileText, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadCSV, printToPDF, tableHTML } from "@/lib/exporters";
+import { downloadResultSlip } from "@/lib/slip";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -16,6 +18,7 @@ export default function ParentResults() {
   const [rows, setRows] = useState<any[]>([]);
   const [kids, setKids] = useState<{ id: string; name: string }[]>([]);
   const [active, setActive] = useState<string | null>(null);
+  const [slipLoading, setSlipLoading] = useState(false);
 
   useEffect(() => {
     if (!school || !user) return;
@@ -70,6 +73,16 @@ export default function ParentResults() {
               printToPDF(`Report – ${childName}`, html);
             }}>
             <FileText className="size-4" /> <span className="hidden sm:inline ml-1">PDF</span>
+          </Button>
+          <Button size="sm" disabled={!childRows.length || slipLoading || !active}
+            onClick={async () => {
+              if (!active) return;
+              setSlipLoading(true);
+              try { await downloadResultSlip(active); toast.success("Result slip downloaded"); }
+              catch (e: any) { toast.error(e.message ?? "Failed to generate slip"); }
+              finally { setSlipLoading(false); }
+            }}>
+            <FileDown className="size-4" /> <span className="hidden sm:inline ml-1">{slipLoading ? "Generating…" : "Result slip"}</span>
           </Button>
         </div>
       </div>
