@@ -4,14 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
-import { FileBarChart, Download, FileText } from "lucide-react";
+import { FileBarChart, Download, FileText, Package, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadCSV, printToPDF, tableHTML } from "@/lib/exporters";
+import { fetchResultSlip } from "@/lib/slip";
+import { toast } from "sonner";
+import JSZip from "jszip";
 
 export default function AdminReports() {
   const { school } = useSchool();
   const [perfData, setPerfData] = useState<any[]>([]);
   const [att, setAtt] = useState<any[]>([]);
+  const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
+  const [classId, setClassId] = useState<string>("");
+  const [zipping, setZipping] = useState(false);
+  const [zipProgress, setZipProgress] = useState<{ done: number; total: number } | null>(null);
 
   useEffect(() => {
     if (!school) return;
@@ -26,8 +34,43 @@ export default function AdminReports() {
       at?.forEach(a => counts[a.status]++);
       const colors: Record<string, string> = { present: "hsl(var(--success))", absent: "hsl(var(--destructive))", late: "hsl(var(--warning))", excused: "hsl(var(--muted-foreground))" };
       setAtt(Object.entries(counts).filter(([,v]) => v > 0).map(([k, v]) => ({ name: k, value: v, color: colors[k] })));
+
+      const { data: cls } = await supabase.from("classes").select("id,name").eq("school_id", school.id).order("name");
+      setClasses(cls ?? []);
     })();
   }, [school]);
+
+  async function downloadClassSlips() {
+    if (!school || !classId) return;
+    setZipping(true); setZipProgress({ done: 0, total: 0 });
+    try {
+      const { data: enr } = await supabase.from("class_enrollments").select("student_id").eq("school_id", school.id).eq("class_id", classId);
+      const ids = (enr ?? []).map(e => e.student_id);
+      if (!ids.length) { toast.info("No students in this class"); return; }
+      setZipProgress({ done: 0, total: ids.length });
+      const zip = new JSZip();
+      let done = 0;
+      for (const id of ids) {
+        try {
+          const { blob, filename } = await fetchResultSlip(id);
+          zip.file(filename, blob);
+        } catch (e: any) {
+          zip.file(`ERROR_${id}.txt`, `Failed: ${e.message ?? e}`);
+        }
+        done++; setZipProgress({ done, total: ids.length });
+      }
+      const out = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(out);
+      const a = document.createElement("a");
+      const cls = classes.find(c => c.id === classId);
+      a.href = url; a.download = `${(cls?.name ?? "class").replace(/\s+/g, "_")}_result_slips.zip`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast.success(`Downloaded ${done} slips`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to bundle slips");
+    } finally { setZipping(false); setZipProgress(null); }
+  }
 
   const exportAction = (
     <div className="flex items-center gap-2">
@@ -58,6 +101,25 @@ export default function AdminReports() {
         </div>
         {exportAction}
       </div>
+
+      <SectionCard title="Class result slips" description="Generate NECO-styled PDF slips for every student in a class and download as a ZIP.">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-[220px]">
+            <Select value={classId} onValueChange={setClassId}>
+              <SelectTrigger><SelectValue placeholder="Choose a class" /></SelectTrigger>
+              <SelectContent>
+                {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={downloadClassSlips} disabled={!classId || zipping}>
+            {zipping ? <Loader2 className="size-4 animate-spin" /> : <Package className="size-4" />}
+            <span className="ml-1">{zipping && zipProgress ? `Generating ${zipProgress.done}/${zipProgress.total}…` : "Download class slips (ZIP)"}</span>
+          </Button>
+          {!classes.length && <p className="text-xs text-muted-foreground">No classes yet — create classes first.</p>}
+        </div>
+      </SectionCard>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <SectionCard title="Performance by Subject">
         {perfData.length === 0 ? <EmptyState icon={FileBarChart} title="No results yet" /> :
