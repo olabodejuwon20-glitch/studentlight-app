@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileBarChart, TrendingUp, Award, Target, Download, FileText } from "lucide-react";
+import { FileBarChart, TrendingUp, Award, Target, Download, FileText, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadCSV, printToPDF, tableHTML } from "@/lib/exporters";
+import { downloadResultSlip } from "@/lib/slip";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -14,6 +16,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 export default function StudentResults() {
   const { school, user } = useSchool();
   const [rows, setRows] = useState<any[]>([]);
+  const [slipLoading, setSlipLoading] = useState(false);
   useEffect(() => {
     if (!school || !user) return;
     supabase.from("results").select("*").eq("school_id", school.id).eq("student_id", user.id).order("created_at", { ascending: false })
@@ -59,6 +62,16 @@ export default function StudentResults() {
               printToPDF(`My Results – ${school?.name || ""}`, html);
             }}>
             <FileText className="size-4" /> <span className="hidden sm:inline ml-1">PDF</span>
+          </Button>
+          <Button size="sm" disabled={!rows.length || slipLoading || !user}
+            onClick={async () => {
+              if (!user) return;
+              setSlipLoading(true);
+              try { await downloadResultSlip(user.id); toast.success("Result slip downloaded"); }
+              catch (e: any) { toast.error(e.message ?? "Failed to generate slip"); }
+              finally { setSlipLoading(false); }
+            }}>
+            <FileDown className="size-4" /> <span className="hidden sm:inline ml-1">{slipLoading ? "Generating…" : "Result slip"}</span>
           </Button>
         </div>
       </div>
