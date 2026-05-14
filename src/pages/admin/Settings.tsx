@@ -5,9 +5,12 @@ import { SectionCard } from "@/components/dashboard/SectionCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { buildSchoolUrl } from "@/lib/tenant";
-import { Copy, Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { Copy, Upload, Loader2, Image as ImageIcon, Plus, Trash2, Eye, Download } from "lucide-react";
 
 export default function AdminSettings() {
   const { school } = useSchool();
@@ -16,10 +19,15 @@ export default function AdminSettings() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [info, setInfo] = useState({ name: "", email: "", phone: "", address: "", motto: "" });
   const [academic, setAcademic] = useState({ current_session: "", current_term: "", grading_system: "", resumption_date: "" });
+  const [exam, setExam] = useState({ exams_violation_limit: 3, proctoring_default: false });
+  const [necoCodes, setNecoCodes] = useState<{ subject: string; code: string }[]>([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState<{ headers: string[]; rows: any[]; total: number } | null>(null);
+  const [necoBusy, setNecoBusy] = useState(false);
 
   useEffect(() => {
     if (!school) return;
-    supabase.from("schools").select("name,email,phone,address,motto,logo_url,current_session,current_term,grading_system,resumption_date").eq("id", school.id).single()
+    supabase.from("schools").select("name,email,phone,address,motto,logo_url,current_session,current_term,grading_system,resumption_date,exams_violation_limit,proctoring_default,neco_subject_codes").eq("id", school.id).single()
       .then(({ data }) => {
         if (!data) return;
         setInfo({ name: data.name, email: data.email ?? "", phone: data.phone ?? "", address: data.address ?? "", motto: data.motto ?? "" });
@@ -30,6 +38,9 @@ export default function AdminSettings() {
           resumption_date: data.resumption_date ?? "",
         });
         setLogoUrl(data.logo_url ?? null);
+        setExam({ exams_violation_limit: data.exams_violation_limit ?? 3, proctoring_default: data.proctoring_default ?? false });
+        const codes = (data.neco_subject_codes as Record<string, string>) ?? {};
+        setNecoCodes(Object.entries(codes).map(([subject, code]) => ({ subject, code })));
       });
   }, [school]);
 
@@ -46,6 +57,43 @@ export default function AdminSettings() {
     const payload = { ...academic, resumption_date: academic.resumption_date || null };
     const { error } = await supabase.from("schools").update(payload).eq("id", school.id);
     if (error) toast.error(error.message); else toast.success("Academic settings saved");
+  }
+
+  async function saveExamSettings(e: React.FormEvent) {
+    e.preventDefault();
+    if (!school) return;
+    const codes = Object.fromEntries(necoCodes.filter(c => c.subject.trim()).map(c => [c.subject.trim(), c.code.trim()]));
+    const { error } = await supabase.from("schools").update({
+      exams_violation_limit: Number(exam.exams_violation_limit) || 3,
+      proctoring_default: exam.proctoring_default,
+      neco_subject_codes: codes,
+    }).eq("id", school.id);
+    if (error) toast.error(error.message); else toast.success("Exam & NECO settings saved");
+  }
+
+  async function callNeco(preview: boolean) {
+    if (!school) return;
+    setNecoBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("neco-export", { body: { school_id: school.id, preview } });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      if (preview) {
+        setPreviewData(data as any);
+        setPreviewOpen(true);
+      } else {
+        const { csv, filename } = data as { csv: string; filename: string };
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast.success("NECO CSV downloaded");
+      }
+    } catch (e: any) {
+      toast.error(e.message ?? "Export failed");
+    } finally { setNecoBusy(false); }
   }
 
   async function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -92,7 +140,15 @@ export default function AdminSettings() {
         </div>
       )}
 
-      <SectionCard title="School Information">
+      <Tabs defaultValue="general" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="academic">Academic</TabsTrigger>
+          <TabsTrigger value="neco">Exams & NECO</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general">
+          <SectionCard title="School Information">
         <form className="grid grid-cols-1 sm:grid-cols-2 gap-4" onSubmit={saveInfo}>
           <div><Label>School Name</Label><Input value={info.name} onChange={e => setInfo({ ...info, name: e.target.value })} placeholder="School Name" /></div>
           <div><Label>Address</Label><Input value={info.address} onChange={e => setInfo({ ...info, address: e.target.value })} placeholder="Address" /></div>
@@ -120,9 +176,11 @@ export default function AdminSettings() {
 
           <div className="sm:col-span-2 flex justify-end"><Button type="submit">Save changes</Button></div>
         </form>
-      </SectionCard>
+          </SectionCard>
+        </TabsContent>
 
-      <SectionCard title="Academic Settings">
+        <TabsContent value="academic">
+          <SectionCard title="Academic Settings">
         <form className="grid grid-cols-1 sm:grid-cols-2 gap-4" onSubmit={saveAcademic}>
           <div><Label>Current Session</Label><Input value={academic.current_session} onChange={e => setAcademic({ ...academic, current_session: e.target.value })} placeholder="2024/2025" /></div>
           <div><Label>Current Term</Label><Input value={academic.current_term} onChange={e => setAcademic({ ...academic, current_term: e.target.value })} placeholder="Term 1" /></div>
@@ -130,7 +188,93 @@ export default function AdminSettings() {
           <div><Label>Resumption Date</Label><Input type="date" value={academic.resumption_date} onChange={e => setAcademic({ ...academic, resumption_date: e.target.value })} /></div>
           <div className="sm:col-span-2 flex justify-end"><Button type="submit">Save changes</Button></div>
         </form>
-      </SectionCard>
+          </SectionCard>
+        </TabsContent>
+
+        <TabsContent value="neco" className="space-y-4">
+          <SectionCard title="Exam security defaults">
+            <form className="grid grid-cols-1 sm:grid-cols-2 gap-4" onSubmit={saveExamSettings}>
+              <div>
+                <Label>Violation limit before auto-submit</Label>
+                <Input type="number" min={1} max={20} value={exam.exams_violation_limit}
+                  onChange={e => setExam({ ...exam, exams_violation_limit: Number(e.target.value) })} />
+                <p className="text-[11px] text-muted-foreground mt-1">Tab switches, blur events, fullscreen exits.</p>
+              </div>
+              <div className="flex items-center gap-3 pt-6">
+                <Switch checked={exam.proctoring_default} onCheckedChange={v => setExam({ ...exam, proctoring_default: v })} />
+                <div>
+                  <Label className="cursor-pointer">Webcam proctoring on by default</Label>
+                  <p className="text-[11px] text-muted-foreground">Teachers can still toggle per-exam.</p>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <Label>NECO subject code mapping</Label>
+                    <p className="text-[11px] text-muted-foreground">Used to label columns in the NECO candidate CSV.</p>
+                  </div>
+                  <Button type="button" size="sm" variant="outline"
+                    onClick={() => setNecoCodes([...necoCodes, { subject: "", code: "" }])}>
+                    <Plus className="size-3.5 mr-1" /> Add row
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {necoCodes.length === 0 && <p className="text-xs text-muted-foreground">No mappings yet — add subject → NECO code rows.</p>}
+                  {necoCodes.map((row, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_120px_auto] gap-2">
+                      <Input value={row.subject} placeholder="Mathematics"
+                        onChange={e => setNecoCodes(necoCodes.map((r, j) => j === i ? { ...r, subject: e.target.value } : r))} />
+                      <Input value={row.code} placeholder="001"
+                        onChange={e => setNecoCodes(necoCodes.map((r, j) => j === i ? { ...r, code: e.target.value } : r))} />
+                      <Button type="button" size="icon" variant="ghost"
+                        onClick={() => setNecoCodes(necoCodes.filter((_, j) => j !== i))}>
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 flex justify-end"><Button type="submit">Save settings</Button></div>
+            </form>
+          </SectionCard>
+
+          <SectionCard title="NECO candidate export" description="Generate the CSV NECO requires for candidate registration.">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" disabled={necoBusy} onClick={() => callNeco(true)}>
+                {necoBusy ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />} Preview rows
+              </Button>
+              <Button disabled={necoBusy} onClick={() => callNeco(false)}>
+                {necoBusy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Download full CSV
+              </Button>
+            </div>
+          </SectionCard>
+        </TabsContent>
+      </Tabs>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader><DialogTitle>NECO export preview {previewData ? `· ${previewData.total} students` : ""}</DialogTitle></DialogHeader>
+          {previewData && (
+            <div className="overflow-auto max-h-[60vh] border border-border rounded-md">
+              <table className="w-full text-xs">
+                <thead className="bg-muted/50 sticky top-0">
+                  <tr>{previewData.headers.map(h => <th key={h} className="text-left px-2 py-1.5 whitespace-nowrap font-medium">{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {previewData.rows.map((r, i) => (
+                    <tr key={i} className="border-t border-border">
+                      {previewData.headers.map(h => <td key={h} className="px-2 py-1.5 whitespace-nowrap">{String(r[h] ?? "")}</td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="flex justify-end"><Button onClick={() => callNeco(false)} disabled={necoBusy}><Download className="size-4" /> Download full CSV</Button></div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
