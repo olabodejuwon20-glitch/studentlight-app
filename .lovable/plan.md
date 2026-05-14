@@ -1,50 +1,62 @@
-## Step 6 — PDF Result Slips + NECO Candidate Export
+## Plan — Three Exam Modes
 
-Build server-side PDF result slips and a configurable NECO candidate CSV export, then wire them into the existing Student, Admin, and Settings pages.
+Introduce a `mode` concept on exams so the platform clearly separates high-stakes simulations, internal school assessments, and risk-free practice.
 
-### 1. Edge function: `generate-result-slip`
-- Input: `{ student_id, term?, session? }` (defaults to school's current term/session).
-- Auth: verify caller is the student, a linked parent, a teacher, or admin of the same school (RLS-style checks via service role + membership lookup).
-- Pulls: school (name, logo, motto, session, term, grading_system), student profile + membership profile_data (class, admission no), results for term, computes NECO grade per subject + overall GPA/credit pass using the same scale as `src/lib/neco.ts`.
-- Renders a NECO-styled PDF using `pdf-lib` (header band with school name + logo, student bio block, subjects table with CA/Exam/Total/Grade/Remark, summary box, signature lines for Class Teacher / Principal).
-- Returns `application/pdf` bytes (base64 JSON for easy client download via `supabase.functions.invoke`).
+### 1. The three modes
 
-### 2. Edge function: `neco-export`
-- Input: `{ class_id?, subject_codes_override? }`.
-- Auth: admin only.
-- Reads `schools.neco_subject_codes` (jsonb map: `{ "Mathematics": "001", ... }`) for column mapping; falls back to subject name when missing.
-- Output rows per student: `CandidateName, AdmissionNo, DOB, Gender, Class, SubjectCode1..N` based on enrolled subjects/results.
-- Returns CSV text.
+| Mode | Key | Purpose | Proctoring | Violations | Timer | Result counted |
+|---|---|---|---|---|---|---|
+| NECO/WAEC Simulation | `neco_sim` | National-exam realism | On (default) | Strict, auto-submit at limit | Fixed, server-authoritative | Yes (separate "Mock" bucket) |
+| School Exam / Test | `school` | CA, midterm, terminal exams | Optional (admin choice) | Standard, auto-submit at limit | Fixed | Yes (counts to term results) |
+| CBT Practice | `practice` | Self-study, no stakes | Off | **None — no warnings, no auto-submit, no logging** | Optional / soft | No (attempt saved, no score in transcript) |
 
-### 3. Client wiring
-- `src/lib/slip.ts` — small helper `downloadResultSlip(studentId, term?)` that invokes the function and triggers a browser download.
-- `src/pages/student/Results.tsx` — add **"Download slip (PDF)"** button next to existing CSV/PDF export.
-- `src/pages/parent/Results.tsx` — same button per child.
-- `src/pages/admin/Reports.tsx` — add **"Download class slips (ZIP)"** for a selected class: loops students client-side, fetches each PDF, zips with `jszip`, triggers download.
-- `src/pages/admin/Settings.tsx` — new **"Exams & NECO"** tab:
-  - Edit `exams_violation_limit`, `proctoring_default`.
-  - Editable table for `neco_subject_codes` (subject → code rows, add/remove).
-  - "Preview CSV" button → calls `neco-export` and shows first 10 rows in a dialog.
-  - "Download full CSV" button.
+### 2. Database
 
-### 4. Dependency
-- Add `jszip` (small, ~100KB) for the class-slips zip. `pdf-lib` is added inside the edge function only (Deno `npm:pdf-lib`).
+Single migration:
+- `exams.mode` enum `exam_mode` with values `neco_sim`, `school`, `practice` (default `school`, backfill all existing rows to `school`).
+- `exams.counts_to_results` boolean (default true; forced false for `practice`).
+- Optional `exams.pass_mark` int (used by NECO sim summary screen).
+- Index on `(school_id, mode, status)`.
 
-### 5. No DB migration required
-All needed columns already exist (`schools.neco_subject_codes`, `proctoring_default`, `exams_violation_limit`, `memberships.profile_data`).
+No changes to `exam_attempts`, `exam_answers`, `exam_violations` — practice mode simply skips writing violations.
+
+### 3. ExamInterface behavior (`src/pages/student/ExamInterface.tsx`)
+
+Branch on `activeExam.mode`:
+- `practice`: skip fullscreen request, skip `logViolation` listeners, skip auto-submit on time-up (just show "time elapsed" and let user keep going or submit). Never start webcam. Show a "Practice mode — answers won't affect your results" banner. Show correct answer + explanation immediately after each question is answered.
+- `school`: current behavior (fullscreen, violations with limit, optional proctor per `exam.proctored`).
+- `neco_sim`: same as school but proctor + randomize default ON, violation limit pulled from `schools.exams_violation_limit`, end screen shows a NECO-style provisional grade card (A1–F9 per subject + aggregate).
+
+### 4. Admin — Exam creation (Test Builder / `src/pages/teacher/TestBuilder.tsx` and admin equivalent)
+
+Add a **Mode** selector at the top with three cards. Selecting a mode locks/unlocks fields:
+- `practice`: hides proctor toggle, hides violation limit, hides "counts to results", shows "Show answers after each question" toggle.
+- `school`: shows proctor toggle, violation limit, schedule, class.
+- `neco_sim`: pre-checks proctor + randomize, exposes "subject paper" picker for the NECO grade card.
+
+### 5. Student-facing surfaces
+
+- `ExamInterface.tsx` exam list grouped into three tabs: **NECO Mock**, **School Exams**, **Practice**. Each tile shows a mode badge.
+- New `src/pages/student/Practice.tsx` route + sidebar entry "CBT Practice" — lists practice exams + question-bank-driven quick drills (filter by subject/topic/difficulty using existing `question_bank`).
+- Results pages and PDF slip filter to `counts_to_results = true` so practice never appears on the slip.
+
+### 6. Admin / Teacher reporting
+
+- `Reports.tsx` and `Grading.tsx` filter attempts by `mode != 'practice'` for grade computation; add a separate "Practice activity" panel showing engagement (attempts, avg score, top topics) without grading impact.
+- Proctoring page already filters by violations — naturally empty for practice.
 
 ### Files to create
-- `supabase/functions/generate-result-slip/index.ts`
-- `supabase/functions/neco-export/index.ts`
-- `src/lib/slip.ts`
+- `supabase/migrations/<ts>_exam_modes.sql`
+- `src/pages/student/Practice.tsx`
 
 ### Files to edit
-- `src/pages/student/Results.tsx`
-- `src/pages/parent/Results.tsx`
-- `src/pages/admin/Reports.tsx`
-- `src/pages/admin/Settings.tsx`
-- `package.json` (add `jszip`)
+- `src/pages/student/ExamInterface.tsx` (mode-aware lockdown + UI)
+- `src/pages/teacher/TestBuilder.tsx` (mode selector + conditional fields)
+- `src/pages/admin/Reports.tsx`, `src/pages/teacher/Reports.tsx`, `src/pages/teacher/Grading.tsx` (exclude practice)
+- `src/pages/student/Results.tsx`, `src/pages/parent/Results.tsx` (exclude practice)
+- `src/layouts/AppLayout.tsx` (sidebar entry for student Practice)
+- `supabase/functions/generate-result-slip/index.ts` (filter to counts_to_results)
 
-### Out of scope (still deferred to step 7)
-- PWA / offline support.
-- Emailing slips to parents (can be a follow-up).
+### Out of scope
+- Question-bank-powered adaptive practice generator (can be a follow-up).
+- Mode-specific PDF certificate for NECO Mock.
