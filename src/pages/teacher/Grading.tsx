@@ -11,7 +11,7 @@ export default function Grading() {
   useEffect(() => {
     if (!school || !user) return;
     (async () => {
-      const { data: exams } = await supabase.from("exams").select("id,title").eq("school_id", school.id).eq("created_by", user.id);
+      const { data: exams } = await supabase.from("exams").select("id,title,mode").eq("school_id", school.id).eq("created_by", user.id).neq("mode", "practice");
       if (!exams?.length) return setRows([]);
       const { data: attempts } = await supabase.from("exam_attempts").select("id,student_id,score,submitted_at,exam_id").in("exam_id", exams.map(e => e.id)).not("submitted_at", "is", null);
       const eMap: Record<string, string> = {}; exams.forEach(e => eMap[e.id] = e.title);

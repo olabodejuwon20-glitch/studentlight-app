@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2, FilePlus2, Library, Shuffle, Eye } from "lucide-react";
+import { Plus, Trash2, FilePlus2, Library, Shuffle, Eye, Award, GraduationCap, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -15,6 +15,13 @@ import { EmptyState } from "@/components/EmptyState";
 
 interface Q { prompt: string; options: string[]; correct_index: number; from_bank_id?: string }
 
+type ExamMode = "neco_sim" | "school" | "practice";
+const MODES: { key: ExamMode; title: string; desc: string; icon: any }[] = [
+  { key: "neco_sim", title: "NECO / WAEC Simulation", desc: "Strict, proctored mock with auto-submit on violations.", icon: Award },
+  { key: "school",   title: "School Exam / Test",     desc: "Counts toward term results. Optional proctoring.",       icon: GraduationCap },
+  { key: "practice", title: "CBT Practice",            desc: "No sanctions, no fullscreen, doesn't affect results.",    icon: Sparkles },
+];
+
 export default function TestBuilder() {
   const { school, user } = useSchool();
   const [classes, setClasses] = useState<any[]>([]);
@@ -25,6 +32,8 @@ export default function TestBuilder() {
   const [randomize, setRandomize] = useState(true);
   const [proctored, setProctored] = useState(true);
   const [violationLimit, setViolationLimit] = useState(3);
+  const [mode, setMode] = useState<ExamMode>("school");
+  const [showAnswersAfterEach, setShowAnswersAfterEach] = useState(true);
   const [questions, setQuestions] = useState<Q[]>([{ prompt: "", options: ["", "", "", ""], correct_index: 0 }]);
   const [bankOpen, setBankOpen] = useState(false);
 
@@ -32,6 +41,12 @@ export default function TestBuilder() {
     if (!school || !user) return;
     supabase.from("classes").select("*").eq("school_id", school.id).eq("teacher_id", user.id).then(({ data }) => setClasses(data ?? []));
   }, [school, user]);
+
+  // Apply mode-specific defaults when mode changes
+  useEffect(() => {
+    if (mode === "neco_sim") { setProctored(true); setRandomize(true); setViolationLimit(3); }
+    else if (mode === "practice") { setProctored(false); setRandomize(false); }
+  }, [mode]);
 
   function update(i: number, patch: Partial<Q>) { setQuestions(qs => qs.map((q, idx) => idx === i ? { ...q, ...patch } : q)); }
 
@@ -43,7 +58,12 @@ export default function TestBuilder() {
     const { data: exam, error } = await supabase.from("exams").insert({
       school_id: school.id, class_id: classId || null, title, subject: subject || null,
       duration_minutes: duration, duration_min: duration,
-      randomize, proctored, violation_limit: violationLimit,
+      randomize: mode === "practice" ? false : randomize,
+      proctored: mode === "practice" ? false : proctored,
+      violation_limit: violationLimit,
+      mode,
+      counts_to_results: mode !== "practice",
+      show_answers_after_each: mode === "practice" ? showAnswersAfterEach : false,
       status: "scheduled", created_by: user.id,
     }).select("id").single();
     if (error) return toast.error(error.message);
@@ -73,6 +93,18 @@ export default function TestBuilder() {
     <SectionCard title="Build a test" action={<Button onClick={publish}>Publish</Button>}>
       {!classes.length ? <EmptyState icon={FilePlus2} title="No classes" desc="Create a class first." /> :
       <div className="space-y-5">
+        <div>
+          <Label className="mb-2 block">Exam mode</Label>
+          <div className="grid sm:grid-cols-3 gap-2">
+            {MODES.map(m => (
+              <button key={m.key} type="button" onClick={() => setMode(m.key)}
+                className={`text-left rounded-xl border p-3 transition-colors ${mode===m.key ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
+                <div className="flex items-center gap-2 font-semibold text-sm"><m.icon className="size-4" /> {m.title}</div>
+                <div className="text-xs text-muted-foreground mt-1">{m.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="grid sm:grid-cols-4 gap-3">
           <div className="sm:col-span-2"><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Mid-term exam" /></div>
           <div><Label>Class</Label>
@@ -82,10 +114,19 @@ export default function TestBuilder() {
           </div>
           <div><Label>Subject</Label><Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Mathematics" /></div>
           <div><Label>Duration (min)</Label><Input type="number" value={duration} onChange={e => setDuration(Number(e.target.value))} /></div>
-          <div><Label>Violation limit</Label><Input type="number" value={violationLimit} onChange={e => setViolationLimit(Number(e.target.value))} /></div>
-          <div className="flex items-end gap-3 sm:col-span-2">
-            <label className="flex items-center gap-2 text-sm"><Switch checked={randomize} onCheckedChange={setRandomize} /> <Shuffle className="size-3.5" /> Randomize order</label>
-            <label className="flex items-center gap-2 text-sm"><Switch checked={proctored} onCheckedChange={setProctored} /> <Eye className="size-3.5" /> Proctored</label>
+          {mode !== "practice" && (
+            <div><Label>Violation limit</Label><Input type="number" value={violationLimit} onChange={e => setViolationLimit(Number(e.target.value))} /></div>
+          )}
+          <div className="flex items-end gap-3 sm:col-span-2 flex-wrap">
+            {mode !== "practice" && (
+              <>
+                <label className="flex items-center gap-2 text-sm"><Switch checked={randomize} onCheckedChange={setRandomize} /> <Shuffle className="size-3.5" /> Randomize order</label>
+                <label className="flex items-center gap-2 text-sm"><Switch checked={proctored} onCheckedChange={setProctored} /> <Eye className="size-3.5" /> Proctored</label>
+              </>
+            )}
+            {mode === "practice" && (
+              <label className="flex items-center gap-2 text-sm"><Switch checked={showAnswersAfterEach} onCheckedChange={setShowAnswersAfterEach} /> Show answer & explanation after each question</label>
+            )}
           </div>
         </div>
 
