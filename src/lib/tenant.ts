@@ -1,4 +1,4 @@
-const RESERVED = new Set(["", "register", "signin", "auth", "app", "bio", "join", "change-pin", "admin-signin", "api", "assets", "favicon.ico"]);
+const RESERVED = new Set(["", "register", "signin", "auth", "app", "bio", "join", "change-pin", "admin-signin", "api", "assets", "favicon.ico", "super"]);
 
 export function getCurrentSchoolSlug(): string | null {
   if (typeof window === "undefined") return null;
