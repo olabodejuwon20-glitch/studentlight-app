@@ -65,6 +65,13 @@ import ParentFees from "./pages/parent/Fees";
 import ParentMessages from "./pages/parent/Messages";
 import ParentCalendar from "./pages/parent/Calendar";
 
+import SuperLayout from "./layouts/SuperLayout";
+import SuperDashboard from "./pages/super/Dashboard";
+import SuperClaim from "./pages/super/Claim";
+import SuperSchools from "./pages/super/Schools";
+import SuperSchoolDetail from "./pages/super/SchoolDetail";
+import ComingSoon from "./pages/super/_ComingSoon";
+
 const queryClient = new QueryClient();
 
 function AppRoot() {
@@ -83,6 +90,27 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/register" element={<Register />} />
             <Route path="/signin" element={<SignIn />} />
+
+          {/* Super Admin OS */}
+          <Route path="/super/claim" element={<SuperClaim />} />
+          <Route path="/super" element={<SuperLayout />}>
+            <Route index element={<SuperDashboard />} />
+            <Route path="schools" element={<SuperSchools />} />
+            <Route path="schools/:id" element={<SuperSchoolDetail />} />
+            <Route path="analytics" element={<ComingSoon title="Analytics" description="Deep platform analytics and revenue trends." />} />
+            <Route path="users" element={<ComingSoon title="Users & Roles" description="Search every user across tenants and manage platform roles." />} />
+            <Route path="modules" element={<ComingSoon title="Modules & Plugins" description="Global module registry, versions, and config schemas." />} />
+            <Route path="licensing" element={<ComingSoon title="Feature Licensing" description="Per-school feature matrix and entitlements." />} />
+            <Route path="configurations" element={<ComingSoon title="Tenant Config" description="Schema-driven configuration overrides per school." />} />
+            <Route path="marketplace" element={<ComingSoon title="Marketplace" description="Module store, requests, and approvals." />} />
+            <Route path="subscriptions" element={<ComingSoon title="Subscriptions" description="All active subscriptions and renewal pipeline." />} />
+            <Route path="billing" element={<ComingSoon title="Billing & Revenue" description="Invoices, MRR, and revenue analytics." />} />
+            <Route path="announcements" element={<ComingSoon title="Platform Announcements" description="Broadcast to all schools, roles, or segments." />} />
+            <Route path="tickets" element={<ComingSoon title="Support Tickets" description="Triage and respond to tenant support tickets." />} />
+            <Route path="security" element={<ComingSoon title="Security Center" description="Login anomalies, IP blocks, and audit summaries." />} />
+            <Route path="logs" element={<ComingSoon title="System Logs" description="Platform-wide audit trail." />} />
+            <Route path="settings" element={<ComingSoon title="Platform Settings" description="Branding, SMTP, integrations, maintenance mode." />} />
+          </Route>
 
             {/* School-scoped routes: /:slug/... */}
             <Route path="/:slug" element={<SchoolHome />} />
