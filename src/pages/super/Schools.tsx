@@ -14,8 +14,8 @@ import { buildSchoolUrl } from "@/lib/tenant";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 25;
-const PLANS = ["trial", "starter", "pro", "enterprise", "custom"];
-const STATUSES = ["trial", "active", "past_due", "suspended", "cancelled"];
+const PLANS = ["trial", "basic", "standard", "premium", "enterprise"];
+const STATUSES = ["trial", "active", "suspended", "expired"];
 
 type School = {
   id: string; name: string; slug: string; logo_url: string | null;
