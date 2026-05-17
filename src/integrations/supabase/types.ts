@@ -1215,7 +1215,7 @@ export type Database = {
       redeem_invite: { Args: { _code: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "teacher" | "student" | "parent"
+      app_role: "admin" | "teacher" | "student" | "parent" | "super_admin"
       attendance_status: "present" | "absent" | "late" | "excused"
       exam_mode: "neco_sim" | "school" | "practice"
       exam_status: "draft" | "scheduled" | "active" | "closed"
@@ -1348,7 +1348,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "teacher", "student", "parent"],
+      app_role: ["admin", "teacher", "student", "parent", "super_admin"],
       attendance_status: ["present", "absent", "late", "excused"],
       exam_mode: ["neco_sim", "school", "practice"],
       exam_status: ["draft", "scheduled", "active", "closed"],
