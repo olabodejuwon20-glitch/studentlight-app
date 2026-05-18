@@ -682,6 +682,60 @@ export type Database = {
           },
         ]
       }
+      lesson_notes: {
+        Row: {
+          admin_feedback: string | null
+          content: string
+          created_at: string
+          duration_min: number | null
+          grade_level: string | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school_id: string
+          status: string
+          subject: string | null
+          teacher_id: string
+          title: string
+          topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_feedback?: string | null
+          content: string
+          created_at?: string
+          duration_min?: number | null
+          grade_level?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id: string
+          status?: string
+          subject?: string | null
+          teacher_id: string
+          title: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_feedback?: string | null
+          content?: string
+          created_at?: string
+          duration_min?: number | null
+          grade_level?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string
+          status?: string
+          subject?: string | null
+          teacher_id?: string
+          title?: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       library_files: {
         Row: {
           category: string | null

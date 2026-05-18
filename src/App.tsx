@@ -34,7 +34,8 @@ import AdminAnnouncements from "./pages/admin/Announcements";
 import AdminFees from "./pages/admin/Fees";
 import AdminQuestionBank from "./pages/admin/QuestionBank";
 import AdminProctoring from "./pages/admin/Proctoring";
-import LibraryPage from "./pages/student/Library";
+import AdminLessonNotes from "./pages/admin/LessonNotes";
+import LibraryManager from "./pages/shared/LibraryManager";
 
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import TeacherClasses from "./pages/teacher/Classes";
@@ -47,6 +48,7 @@ import TeacherMessages from "./pages/teacher/Messages";
 import TeacherResources from "./pages/teacher/Resources";
 import TeacherReports from "./pages/teacher/Reports";
 import TeacherLessonPlan from "./pages/teacher/LessonPlan";
+import TeacherLessonNotes from "./pages/teacher/LessonNotes";
 
 import StudentDashboard from "./pages/student/Dashboard";
 import StudentClasses from "./pages/student/Classes";
@@ -134,7 +136,8 @@ const App = () => (
               <Route path="admin/transport" element={<RoleGate allow="admin"><AdminTransport /></RoleGate>} />
               <Route path="admin/announcements" element={<RoleGate allow="admin"><AdminAnnouncements /></RoleGate>} />
               <Route path="admin/fees" element={<RoleGate allow="admin"><AdminFees /></RoleGate>} />
-              <Route path="admin/library" element={<RoleGate allow="admin"><LibraryPage /></RoleGate>} />
+              <Route path="admin/library" element={<RoleGate allow="admin"><LibraryManager /></RoleGate>} />
+              <Route path="admin/lesson-notes" element={<RoleGate allow="admin"><AdminLessonNotes /></RoleGate>} />
               <Route path="admin/question-bank" element={<RoleGate allow="admin"><AdminQuestionBank /></RoleGate>} />
               <Route path="admin/proctoring" element={<RoleGate allow="admin"><AdminProctoring /></RoleGate>} />
               <Route path="admin/settings" element={<RoleGate allow="admin"><AdminSettings /></RoleGate>} />
@@ -147,6 +150,8 @@ const App = () => (
               <Route path="teacher/students" element={<RoleGate allow="teacher"><TeacherStudents /></RoleGate>} />
               <Route path="teacher/calendar" element={<RoleGate allow="teacher"><TeacherCalendar /></RoleGate>} />
               <Route path="teacher/lesson-plan" element={<RoleGate allow="teacher"><TeacherLessonPlan /></RoleGate>} />
+              <Route path="teacher/lesson-notes" element={<RoleGate allow="teacher"><TeacherLessonNotes /></RoleGate>} />
+              <Route path="teacher/library" element={<RoleGate allow="teacher"><LibraryManager /></RoleGate>} />
               <Route path="teacher/resources" element={<RoleGate allow="teacher"><TeacherResources /></RoleGate>} />
               <Route path="teacher/reports" element={<RoleGate allow="teacher"><TeacherReports /></RoleGate>} />
               <Route path="teacher/messages" element={<RoleGate allow="teacher"><TeacherMessages /></RoleGate>} />
