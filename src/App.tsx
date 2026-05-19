@@ -57,6 +57,7 @@ import StudentResults from "./pages/student/Results";
 import Library from "./pages/student/Library";
 import AITutor from "./pages/student/AITutor";
 import StudentCalendar from "./pages/student/Calendar";
+import StudentLessonNotes from "./pages/student/LessonNotes";
 
 import ParentDashboard from "./pages/parent/Dashboard";
 import ParentChildren from "./pages/parent/Children";
@@ -161,6 +162,7 @@ const App = () => (
               <Route path="student/exams" element={<RoleGate allow="student"><ExamInterface /></RoleGate>} />
               <Route path="student/results" element={<RoleGate allow="student"><StudentResults /></RoleGate>} />
               <Route path="student/library" element={<RoleGate allow="student"><Library /></RoleGate>} />
+              <Route path="student/lesson-notes" element={<RoleGate allow="student"><StudentLessonNotes /></RoleGate>} />
               <Route path="student/ai-tutor" element={<RoleGate allow="student"><AITutor /></RoleGate>} />
               <Route path="student/calendar" element={<RoleGate allow="student"><StudentCalendar /></RoleGate>} />
 

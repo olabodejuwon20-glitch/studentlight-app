@@ -69,6 +69,7 @@ export default function LibraryManager() {
   );
 
   const canDelete = (r: any) => activeRole === "admin" || r.uploaded_by === user?.id;
+  const canManage = activeRole === "admin" || activeRole === "teacher";
 
   const stats = {
     total: rows.length,
@@ -84,7 +85,7 @@ export default function LibraryManager() {
         <Stat label="Categories" value={stats.categories} />
       </div>
 
-      <SectionCard
+      {canManage && <SectionCard
         title="Upload to library"
         description="Share textbooks, notes, past questions and other resources with the school."
       >
@@ -99,7 +100,7 @@ export default function LibraryManager() {
             Upload file
           </Button>
         </div>
-      </SectionCard>
+      </SectionCard>}
 
       <SectionCard
         title="All resources"
@@ -138,7 +139,7 @@ export default function LibraryManager() {
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <Button size="sm" variant="outline" onClick={() => open(r)}><Download className="size-4 mr-2" />Open</Button>
-                  {canDelete(r) && (
+                  {canManage && canDelete(r) && (
                     <Button size="icon" variant="ghost" onClick={() => remove(r)}>
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
