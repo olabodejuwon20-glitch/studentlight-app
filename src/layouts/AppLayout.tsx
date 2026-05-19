@@ -93,7 +93,6 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "exams":      { title: "Exam Interface",     sub: "Computer-based test" },
   "results":    { title: "Results",            sub: "Performance summary" },
   "library":    { title: "Library",            sub: "Books & resources" },
-  "lesson-notes": { title: "Lesson Notes",     sub: "Approved class notes from your teachers" },
   "question-bank": { title: "Question Bank",   sub: "Reusable NECO-style questions" },
   "ai-tutor":   { title: "AI Tutor",           sub: "Ask anything, learn faster" },
   "calendar":   { title: "Calendar",           sub: "Upcoming events" },
