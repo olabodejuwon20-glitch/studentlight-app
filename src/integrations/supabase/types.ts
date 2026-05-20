@@ -98,6 +98,93 @@ export type Database = {
           },
         ]
       }
+      assignment_submissions: {
+        Row: {
+          assignment_id: string
+          attachments: Json
+          content: string | null
+          feedback: string | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          school_id: string
+          score: number | null
+          student_id: string
+          submitted_at: string
+        }
+        Insert: {
+          assignment_id: string
+          attachments?: Json
+          content?: string | null
+          feedback?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          school_id: string
+          score?: number | null
+          student_id: string
+          submitted_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          attachments?: Json
+          content?: string | null
+          feedback?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          school_id?: string
+          score?: number | null
+          student_id?: string
+          submitted_at?: string
+        }
+        Relationships: []
+      }
+      assignments: {
+        Row: {
+          attachments: Json
+          class_id: string | null
+          created_at: string
+          description: string | null
+          due_at: string | null
+          id: string
+          max_score: number
+          school_id: string
+          subject: string | null
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json
+          class_id?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          max_score?: number
+          school_id: string
+          subject?: string | null
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json
+          class_id?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          max_score?: number
+          school_id?: string
+          subject?: string | null
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           class_id: string
@@ -152,6 +239,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      behavior_notes: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          note: string
+          school_id: string
+          severity: string
+          student_id: string
+          teacher_id: string
+          type: string
+          visible_to_parent: boolean
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          note: string
+          school_id: string
+          severity?: string
+          student_id: string
+          teacher_id: string
+          type?: string
+          visible_to_parent?: boolean
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          note?: string
+          school_id?: string
+          severity?: string
+          student_id?: string
+          teacher_id?: string
+          type?: string
+          visible_to_parent?: boolean
+        }
+        Relationships: []
       }
       class_enrollments: {
         Row: {
@@ -549,6 +675,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gradebook_entries: {
+        Row: {
+          category: string
+          class_id: string
+          created_at: string
+          id: string
+          max_score: number
+          recorded_at: string
+          school_id: string
+          score: number
+          student_id: string
+          subject: string
+          teacher_id: string
+          term: string
+          title: string
+        }
+        Insert: {
+          category?: string
+          class_id: string
+          created_at?: string
+          id?: string
+          max_score?: number
+          recorded_at?: string
+          school_id: string
+          score?: number
+          student_id: string
+          subject: string
+          teacher_id: string
+          term?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          class_id?: string
+          created_at?: string
+          id?: string
+          max_score?: number
+          recorded_at?: string
+          school_id?: string
+          score?: number
+          student_id?: string
+          subject?: string
+          teacher_id?: string
+          term?: string
+          title?: string
+        }
+        Relationships: []
       }
       hostels: {
         Row: {
@@ -986,6 +1160,42 @@ export type Database = {
           status?: string
           updated_at?: string
           version?: string
+        }
+        Relationships: []
+      }
+      parent_comms: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          parent_id: string
+          read_at: string | null
+          school_id: string
+          student_id: string
+          subject: string
+          teacher_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          parent_id: string
+          read_at?: string | null
+          school_id: string
+          student_id: string
+          subject: string
+          teacher_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          parent_id?: string
+          read_at?: string | null
+          school_id?: string
+          student_id?: string
+          subject?: string
+          teacher_id?: string
         }
         Relationships: []
       }
