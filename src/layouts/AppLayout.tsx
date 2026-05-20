@@ -5,7 +5,7 @@ import {
   Settings, ClipboardCheck, FilePlus2, Calendar, Library, Sparkles, MessagesSquare,
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
   Building2, Ticket, Upload, Bus, Megaphone, NotebookPen, FolderOpen, UserCog,
-  BookOpenCheck,
+  BookOpenCheck, ClipboardList, BarChart3, Award, Mail,
 } from "lucide-react";
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
@@ -40,13 +40,17 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
   teacher: [
     { label: "Dashboard",   to: "",            icon: LayoutDashboard },
     { label: "My Classes",  to: "classes",     icon: BookOpen },
+    { label: "Students",    to: "students",    icon: Users },
     { label: "Attendance",  to: "attendance",  icon: ClipboardCheck },
+    { label: "Assignments", to: "assignments", icon: ClipboardList },
+    { label: "Gradebook",   to: "gradebook",   icon: BarChart3 },
+    { label: "Behavior",    to: "behavior",    icon: Award },
+    { label: "Parent Comms",to: "parent-comms",icon: Mail },
     { label: "Lesson Plan", to: "lesson-plan", icon: NotebookPen },
     { label: "Lesson Notes", to: "lesson-notes", icon: BookOpenCheck },
     { label: "Library",     to: "library",     icon: Library },
     { label: "Test Builder",to: "tests",       icon: FilePlus2 },
     { label: "Grading",     to: "grading",     icon: PencilRuler },
-    { label: "Students",    to: "students",    icon: Users },
     { label: "Messages",    to: "messages",    icon: MessagesSquare },
     { label: "Calendar",    to: "calendar",    icon: Calendar },
     { label: "Resources",   to: "resources",   icon: FolderOpen },
@@ -55,6 +59,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
   student: [
     { label: "Dashboard",  to: "",          icon: LayoutDashboard },
     { label: "My Classes", to: "classes",   icon: BookOpen },
+    { label: "Assignments",to: "assignments", icon: ClipboardList },
     { label: "Exams",      to: "exams",     icon: ListChecks },
     { label: "Results",    to: "results",   icon: FileBarChart },
     { label: "Library",    to: "library",   icon: Library },
@@ -67,6 +72,8 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "My Children",     to: "children",    icon: UserSquare2 },
     { label: "Academic Records",to: "results",     icon: FileBarChart },
     { label: "Attendance",      to: "attendance",  icon: ClipboardCheck },
+    { label: "Behavior",        to: "behavior",    icon: Award },
+    { label: "Teacher Comms",   to: "teacher-comms", icon: Mail },
     { label: "Activity Feed",   to: "activity",    icon: Activity },
     { label: "Fees & Payments", to: "fees",        icon: Wallet },
     { label: "Messages",        to: "messages",    icon: MessagesSquare },
@@ -104,6 +111,11 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "lesson-notes":{ title: "Lesson Notes",      sub: "AI-generated lesson notes with admin approval" },
   "resources":  { title: "Resources",          sub: "Files shared with the school" },
   "profile":    { title: "My Profile",         sub: "Personal info & photo" },
+  "assignments":{ title: "Assignments",        sub: "Homework and projects" },
+  "gradebook":  { title: "Gradebook",          sub: "Continuous-assessment scores" },
+  "behavior":   { title: "Behavior",           sub: "Commendations & incidents" },
+  "parent-comms":{ title: "Parent Communications", sub: "Direct updates to parents" },
+  "teacher-comms":{ title: "Teacher Messages", sub: "Updates from your child's teachers" },
 };
 
 export default function AppLayout() {
