@@ -63,6 +63,10 @@ import AITutor from "./pages/student/AITutor";
 import StudentCalendar from "./pages/student/Calendar";
 import StudentLessonNotes from "./pages/student/LessonNotes";
 import StudentAssignments from "./pages/student/Assignments";
+import StudentMessages from "./pages/student/Messages";
+import StudentFees from "./pages/student/Fees";
+import StudentBehavior from "./pages/student/Behavior";
+import StudentGradebook from "./pages/student/Gradebook";
 
 import ParentDashboard from "./pages/parent/Dashboard";
 import ParentChildren from "./pages/parent/Children";
@@ -177,6 +181,10 @@ const App = () => (
               <Route path="student/ai-tutor" element={<RoleGate allow="student"><AITutor /></RoleGate>} />
               <Route path="student/calendar" element={<RoleGate allow="student"><StudentCalendar /></RoleGate>} />
               <Route path="student/assignments" element={<RoleGate allow="student"><StudentAssignments /></RoleGate>} />
+              <Route path="student/gradebook" element={<RoleGate allow="student"><StudentGradebook /></RoleGate>} />
+              <Route path="student/behavior" element={<RoleGate allow="student"><StudentBehavior /></RoleGate>} />
+              <Route path="student/fees" element={<RoleGate allow="student"><StudentFees /></RoleGate>} />
+              <Route path="student/messages" element={<RoleGate allow="student"><StudentMessages /></RoleGate>} />
 
               <Route path="parent" element={<RoleGate allow="parent"><ParentDashboard /></RoleGate>} />
               <Route path="parent/children" element={<RoleGate allow="parent"><ParentChildren /></RoleGate>} />
