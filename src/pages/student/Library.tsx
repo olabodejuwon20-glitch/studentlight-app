@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileText, Download, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
@@ -6,11 +6,13 @@ import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Library() {
   const { school } = useSchool();
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
+  const [cat, setCat] = useState("all");
   useEffect(() => {
     if (!school) return;
     supabase.from("library_files").select("*").eq("school_id", school.id).order("created_at", { ascending: false }).then(({ data }) => setRows(data ?? []));
@@ -21,13 +23,23 @@ export default function Library() {
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
 
-  const filtered = rows.filter(r => !q || r.name.toLowerCase().includes(q.toLowerCase()));
+  const cats = useMemo(() => Array.from(new Set(rows.map(r => r.category).filter(Boolean))), [rows]);
+  const filtered = rows.filter(r => (!q || r.name.toLowerCase().includes(q.toLowerCase())) && (cat === "all" || r.category === cat));
 
   return (
-    <SectionCard title="Library" action={
-      <div className="relative w-56">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search resources" className="pl-9 h-9" />
+    <SectionCard title="Library" description={`${filtered.length} of ${rows.length} resources`} action={
+      <div className="flex gap-2">
+        <div className="relative w-56">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search" className="pl-9 h-9" />
+        </div>
+        <Select value={cat} onValueChange={setCat}>
+          <SelectTrigger className="w-[150px] h-9"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {cats.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
     }>
       {filtered.length === 0 ? <EmptyState icon={FileText} title="No resources yet" desc="Teachers and admins can upload files here." /> :
