@@ -62,9 +62,13 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Assignments",to: "assignments", icon: ClipboardList },
     { label: "Exams",      to: "exams",     icon: ListChecks },
     { label: "Results",    to: "results",   icon: FileBarChart },
+    { label: "Gradebook",  to: "gradebook", icon: BarChart3 },
+    { label: "Behavior",   to: "behavior",  icon: Award },
     { label: "Library",    to: "library",   icon: Library },
     { label: "Lesson Notes", to: "lesson-notes", icon: BookOpen },
     { label: "AI Tutor",   to: "ai-tutor",  icon: Sparkles },
+    { label: "Fees",       to: "fees",      icon: Wallet },
+    { label: "Messages",   to: "messages",  icon: MessagesSquare },
     { label: "Calendar",   to: "calendar",  icon: Calendar },
   ],
   parent: [
