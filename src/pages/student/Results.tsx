@@ -34,8 +34,8 @@ export default function StudentResults() {
   ), [rows, termFilter, subjectFilter]);
 
   const scores = filtered.map(r => Number(r.score));
-  const s = useMemo(() => necoSummary(scores), [rows]);
-  const dist = useMemo(() => necoDistribution(scores), [rows]);
+  const s = useMemo(() => necoSummary(scores), [filtered]);
+  const dist = useMemo(() => necoDistribution(scores), [filtered]);
   const bySubj = useMemo(() => {
     const m: Record<string, number[]> = {};
     filtered.forEach(r => { (m[r.subject] ||= []).push(Number(r.score)); });
