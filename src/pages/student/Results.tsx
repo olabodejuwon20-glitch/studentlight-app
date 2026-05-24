@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileBarChart, TrendingUp, Award, Target, Download, FileText, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadCSV, printToPDF, tableHTML } from "@/lib/exporters";
 import { downloadResultSlip } from "@/lib/slip";
 import { toast } from "sonner";
@@ -17,24 +18,33 @@ export default function StudentResults() {
   const { school, user } = useSchool();
   const [rows, setRows] = useState<any[]>([]);
   const [slipLoading, setSlipLoading] = useState(false);
+  const [termFilter, setTermFilter] = useState<string>("all");
+  const [subjectFilter, setSubjectFilter] = useState<string>("all");
   useEffect(() => {
     if (!school || !user) return;
     supabase.from("results").select("*").eq("school_id", school.id).eq("student_id", user.id).order("created_at", { ascending: false })
       .then(({ data }) => setRows(data ?? []));
   }, [school, user]);
 
-  const scores = rows.map(r => Number(r.score));
-  const s = useMemo(() => necoSummary(scores), [rows]);
-  const dist = useMemo(() => necoDistribution(scores), [rows]);
+  const terms = useMemo(() => Array.from(new Set(rows.map(r => r.term).filter(Boolean))), [rows]);
+  const subjects = useMemo(() => Array.from(new Set(rows.map(r => r.subject).filter(Boolean))), [rows]);
+  const filtered = useMemo(() => rows.filter(r =>
+    (termFilter === "all" || r.term === termFilter) &&
+    (subjectFilter === "all" || r.subject === subjectFilter)
+  ), [rows, termFilter, subjectFilter]);
+
+  const scores = filtered.map(r => Number(r.score));
+  const s = useMemo(() => necoSummary(scores), [filtered]);
+  const dist = useMemo(() => necoDistribution(scores), [filtered]);
   const bySubj = useMemo(() => {
     const m: Record<string, number[]> = {};
-    rows.forEach(r => { (m[r.subject] ||= []).push(Number(r.score)); });
+    filtered.forEach(r => { (m[r.subject] ||= []).push(Number(r.score)); });
     return Object.entries(m).map(([subject, arr]) => ({
       subject,
       avg: Math.round(arr.reduce((a,b)=>a+b,0)/arr.length),
       grade: necoGrade(arr.reduce((a,b)=>a+b,0)/arr.length),
     }));
-  }, [rows]);
+  }, [filtered]);
 
   return (
     <div className="space-y-6">
@@ -44,12 +54,12 @@ export default function StudentResults() {
           <p className="text-sm text-muted-foreground">NECO-aligned academic performance</p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" disabled={!rows.length}
+          <Button size="sm" variant="outline" disabled={!filtered.length}
             onClick={() => downloadCSV(`${school?.slug || "school"}-my-results.csv`,
-              rows.map(r => ({ Subject: r.subject, Score: Math.round(Number(r.score))+"%", Grade: necoGrade(Number(r.score)), Term: r.term, Date: new Date(r.created_at).toLocaleDateString() })))}>
+              filtered.map(r => ({ Subject: r.subject, Score: Math.round(Number(r.score))+"%", Grade: necoGrade(Number(r.score)), Term: r.term, Date: new Date(r.created_at).toLocaleDateString() })))}>
             <Download className="size-4" /> <span className="hidden sm:inline ml-1">CSV</span>
           </Button>
-          <Button size="sm" variant="outline" disabled={!rows.length}
+          <Button size="sm" variant="outline" disabled={!filtered.length}
             onClick={() => {
               const html = `<h1>Academic Report</h1><div class="sub">${school?.name || ""}</div>
               <div class="grid">
@@ -58,7 +68,7 @@ export default function StudentResults() {
                 <div class="card"><div class="label">Best</div><div class="value">${s.best}%</div></div>
                 <div class="card"><div class="label">Subjects</div><div class="value">${bySubj.length}</div></div>
               </div>
-              ${tableHTML(["Subject","Score","NECO","Term","Date"], rows.map(r => [r.subject, Math.round(Number(r.score))+"%", necoGrade(Number(r.score)), r.term, new Date(r.created_at).toLocaleDateString()]))}`;
+              ${tableHTML(["Subject","Score","NECO","Term","Date"], filtered.map(r => [r.subject, Math.round(Number(r.score))+"%", necoGrade(Number(r.score)), r.term, new Date(r.created_at).toLocaleDateString()]))}`;
               printToPDF(`My Results – ${school?.name || ""}`, html);
             }}>
             <FileText className="size-4" /> <span className="hidden sm:inline ml-1">PDF</span>
@@ -76,6 +86,30 @@ export default function StudentResults() {
         </div>
       </div>
 
+      {rows.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Filter:</span>
+          <Select value={termFilter} onValueChange={setTermFilter}>
+            <SelectTrigger className="h-8 w-[160px]"><SelectValue placeholder="Term" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All terms</SelectItem>
+              {terms.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+            <SelectTrigger className="h-8 w-[180px]"><SelectValue placeholder="Subject" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All subjects</SelectItem>
+              {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {(termFilter !== "all" || subjectFilter !== "all") && (
+            <Button size="sm" variant="ghost" onClick={() => { setTermFilter("all"); setSubjectFilter("all"); }}>Clear</Button>
+          )}
+          <span className="text-xs text-muted-foreground ml-auto">{filtered.length} of {rows.length} records</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Overall average" value={s.count ? `${s.average}%` : "—"} icon={TrendingUp} tone="student" sub={`Grade ${s.grade}`} />
         <StatCard label="Credit pass rate" value={`${s.credit}%`} icon={Target} tone="success" sub="C6 or better" />
@@ -83,8 +117,8 @@ export default function StudentResults() {
         <StatCard label="Subjects" value={String(bySubj.length)} icon={FileBarChart} tone="info" sub="Recorded" />
       </div>
 
-      {rows.length === 0 ? (
-        <SectionCard title="My results"><EmptyState icon={FileBarChart} title="No results yet" /></SectionCard>
+      {filtered.length === 0 ? (
+        <SectionCard title="My results"><EmptyState icon={FileBarChart} title={rows.length === 0 ? "No results yet" : "No results match these filters"} /></SectionCard>
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -118,7 +152,7 @@ export default function StudentResults() {
           </div>
 
           <SectionCard title="My results" description="NECO grading: A1–F9">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{rows.map(r => {
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{filtered.map(r => {
               const g = necoGrade(Number(r.score));
               return (
                 <div key={r.id} className="rounded-xl border border-border p-5 bg-card">
