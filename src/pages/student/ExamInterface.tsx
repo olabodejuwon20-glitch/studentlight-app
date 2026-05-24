@@ -6,6 +6,7 @@ import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 // Deterministic shuffle seeded by attempt_id so order is stable per student
@@ -42,6 +43,9 @@ export default function ExamInterface() {
   const streamRef = useRef<MediaStream | null>(null);
   const snapTimerRef = useRef<number | null>(null);
   const [proctorOn, setProctorOn] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const questionRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const isPractice = activeExam?.mode === "practice";
 
   useEffect(() => {
@@ -78,6 +82,7 @@ export default function ExamInterface() {
     setViolationLimit(exam.violation_limit ?? 3);
     setViolations(0);
     setActiveExam(exam);
+    setCurrent(0);
     if (exam.mode !== "practice") {
       // Request fullscreen
       setTimeout(() => {
@@ -228,6 +233,13 @@ export default function ExamInterface() {
   }, [remaining]);
 
   if (activeExam) {
+    const answeredCount = questions.filter(q => answers[q.id] !== undefined).length;
+    const jumpTo = (i: number) => {
+      setCurrent(i);
+      const q = questions[i];
+      const el = q && questionRefs.current[q.id];
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
     return (
       <div ref={containerRef} className="bg-background min-h-screen select-none" style={{ userSelect: "none" }}>
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center justify-between gap-4">
@@ -236,6 +248,9 @@ export default function ExamInterface() {
             {isPractice && <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-semibold">PRACTICE</span>}
           </div>
           <div className="flex items-center gap-3">
+            <div className="hidden md:block text-xs text-muted-foreground">
+              {answeredCount}/{questions.length} answered
+            </div>
             {proctorOn && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className="size-2 rounded-full bg-destructive animate-pulse" />
@@ -255,11 +270,12 @@ export default function ExamInterface() {
                 <Maximize2 className="size-3.5 mr-1" /> Fullscreen
               </Button>
             )}
-            <Button size="sm" onClick={() => submit()}>Submit</Button>
+            <Button size="sm" onClick={() => setConfirmOpen(true)}>Finish</Button>
           </div>
         </div>
         <video ref={videoRef} muted playsInline className="fixed bottom-3 right-3 w-32 h-24 rounded-md border border-border bg-black/60 z-20" style={{ display: proctorOn ? "block" : "none" }} />
-        <div className="max-w-3xl mx-auto p-4">
+        <div className="max-w-6xl mx-auto p-4 grid lg:grid-cols-[1fr_240px] gap-4">
+          <div className="min-w-0">
           {isPractice && (
             <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
               <span className="font-semibold">Practice mode</span> — answers won't affect your results. No fullscreen, no warnings.
@@ -269,7 +285,7 @@ export default function ExamInterface() {
           <SectionCard title={`Questions (${questions.length})`}>
             <ol className="space-y-5">
               {questions.map((q, i) => (
-                <li key={q.id}>
+                <li key={q.id} ref={(el) => { questionRefs.current[q.id] = el; }} className={current === i ? "scroll-mt-20" : "scroll-mt-20"}>
                   <div className="font-medium">{i + 1}. {q.prompt}</div>
                   <div className="mt-2 space-y-1.5">
                     {(q.options as string[]).map((o, oi) => {
@@ -282,7 +298,7 @@ export default function ExamInterface() {
                         : "border-border hover:bg-secondary/40";
                       return (
                         <label key={oi} className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer ${cls}`}>
-                          <input type="radio" name={q.id} checked={picked === oi} onChange={() => selectAnswer(q.id, oi)} />
+                          <input type="radio" name={q.id} checked={picked === oi} onChange={() => { selectAnswer(q.id, oi); setCurrent(i); }} />
                           <span className="text-sm flex-1">{o}</span>
                           {reveal && isCorrect && <CheckCircle2 className="size-4 text-success" />}
                           {reveal && !isCorrect && picked === oi && <XCircle className="size-4 text-destructive" />}
@@ -290,11 +306,61 @@ export default function ExamInterface() {
                       );
                     })}
                   </div>
+                  <div className="mt-3 flex justify-between">
+                    <Button size="sm" variant="outline" disabled={i === 0} onClick={() => jumpTo(i - 1)}>Previous</Button>
+                    {i < questions.length - 1
+                      ? <Button size="sm" variant="outline" onClick={() => jumpTo(i + 1)}>Next</Button>
+                      : <Button size="sm" onClick={() => setConfirmOpen(true)}>Review & finish</Button>}
+                  </div>
                 </li>
               ))}
             </ol>
           </SectionCard>
+          </div>
+          <aside className="lg:sticky lg:top-[68px] lg:self-start">
+            <SectionCard title="Question navigator" description={`${answeredCount}/${questions.length} answered`}>
+              <div className="grid grid-cols-6 lg:grid-cols-5 gap-1.5">
+                {questions.map((q, i) => {
+                  const answered = answers[q.id] !== undefined;
+                  const isCurrent = current === i;
+                  return (
+                    <button
+                      key={q.id}
+                      onClick={() => jumpTo(i)}
+                      className={`aspect-square rounded-md text-xs font-semibold border transition ${
+                        isCurrent ? "ring-2 ring-primary " : ""
+                      }${
+                        answered ? "bg-success/15 border-success/40 text-success" : "bg-secondary/40 border-border text-muted-foreground hover:bg-secondary"
+                      }`}
+                      title={answered ? "Answered" : "Unanswered"}
+                    >{i + 1}</button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex flex-col gap-1 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm bg-success/40 border border-success/60" /> Answered</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm bg-secondary border border-border" /> Unanswered</span>
+              </div>
+              <Button className="w-full mt-4" onClick={() => setConfirmOpen(true)}>Finish exam</Button>
+            </SectionCard>
+          </aside>
         </div>
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Submit your exam?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You have answered <span className="font-semibold text-foreground">{answeredCount}</span> of <span className="font-semibold text-foreground">{questions.length}</span> questions.
+                {answeredCount < questions.length && <> You still have <span className="font-semibold text-destructive">{questions.length - answeredCount}</span> unanswered.</>}
+                {" "}This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep working</AlertDialogCancel>
+              <AlertDialogAction onClick={() => { setConfirmOpen(false); submit(); }}>Submit now</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
