@@ -7,6 +7,7 @@ import {
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
+import { schoolPath } from "@/lib/tenant";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -775,7 +776,7 @@ export default function ExamInterface() {
             title="NECO CBT Simulation"
             description="Pick 9 of 15 subjects. 20 questions each. UTME-style runner with subject tabs, navigator and timer."
             cta="Open NECO Mock"
-            to="../mock?body=neco"
+            to="/app/student/mock?body=neco"
             tone="warning"
           />
         </TabsContent>
@@ -785,7 +786,7 @@ export default function ExamInterface() {
             title="JAMB UTME Simulation"
             description="Pick 4 subjects (English compulsory). 20 questions per subject. Switch between subjects just like the real UTME."
             cta="Open JAMB Mock"
-            to="../mock?body=jamb"
+            to="/app/student/mock?body=jamb"
             tone="primary"
           />
         </TabsContent>
@@ -796,7 +797,7 @@ export default function ExamInterface() {
             title="Practice Mode"
             description="Study from your school library or upload your own materials. No timer, no scoring — just learn."
             cta="Open Practice"
-            to="../practice"
+            to="/app/student/practice"
             tone="success"
           />
         </TabsContent>
@@ -809,6 +810,7 @@ function SimCallout({ icon: Icon, title, description, cta, to, tone }: {
   icon: any; title: string; description: string; cta: string; to: string;
   tone: "primary" | "warning" | "success";
 }) {
+  const { school } = useSchool();
   const toneCls =
     tone === "warning" ? "from-warning/15 to-warning/5 border-warning/30" :
     tone === "success" ? "from-success/15 to-success/5 border-success/30" :
@@ -827,7 +829,7 @@ function SimCallout({ icon: Icon, title, description, cta, to, tone }: {
         <p className="text-sm text-muted-foreground mt-1">{description}</p>
       </div>
       <Button asChild size="lg">
-        <Link to={to}>{cta}<ArrowUpRight className="size-4 ml-1.5" /></Link>
+        <Link to={schoolPath(school?.slug, to)}>{cta}<ArrowUpRight className="size-4 ml-1.5" /></Link>
       </Button>
     </div>
   );
