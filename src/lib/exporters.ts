@@ -1,4 +1,9 @@
 // CSV + print-to-PDF helpers
+const escapeHtml = (v: any) => {
+  const s = v === null || v === undefined ? "" : String(v);
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+};
+
 export function downloadCSV(filename: string, rows: Array<Record<string, any>>) {
   if (!rows.length) return;
   const headers = Object.keys(rows[0]);
@@ -18,7 +23,7 @@ export function downloadCSV(filename: string, rows: Array<Record<string, any>>) 
 export function printToPDF(title: string, html: string) {
   const w = window.open("", "_blank", "width=900,height=700");
   if (!w) return;
-  w.document.write(`<!doctype html><html><head><title>${title}</title>
+  w.document.write(`<!doctype html><html><head><title>${escapeHtml(title)}</title>
   <style>
     body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;padding:32px;}
     h1{font-size:22px;margin:0 0 4px;} .sub{color:#64748b;font-size:12px;margin-bottom:24px;}
@@ -37,6 +42,6 @@ export function printToPDF(title: string, html: string) {
 }
 
 export function tableHTML(headers: string[], rows: Array<Array<string | number>>) {
-  return `<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead>
-  <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c ?? ""}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  return `<table><thead><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}</tr></thead>
+  <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${escapeHtml(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 }
