@@ -529,6 +529,29 @@ export default function ExamInterface() {
               </div>
             </div>
 
+            {/* Progress bar — full width, beneath the top status row */}
+            <div className="border-b border-border bg-background/95 backdrop-blur px-4 md:px-6 py-2.5 flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+                  <span>Progress</span>
+                  <span className="tabular-nums font-semibold text-foreground">{answeredCount} of {questions.length} answered · {progressPct}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-primary to-success transition-[width] duration-500 ease-out" style={{ width: `${progressPct}%` }} />
+                </div>
+              </div>
+              <div className="hidden md:flex items-center gap-4 text-[11px] text-muted-foreground">
+                <div className="leading-tight text-right">
+                  <div className="uppercase tracking-wider font-semibold">Elapsed</div>
+                  <div className="font-mono text-foreground tabular-nums">{fmtClock(elapsed)}</div>
+                </div>
+                <div className="leading-tight text-right">
+                  <div className="uppercase tracking-wider font-semibold">On this Q</div>
+                  <div className="font-mono text-foreground tabular-nums">{fmtClock(currentSpent)}</div>
+                </div>
+              </div>
+            </div>
+
             {/* Question */}
             <main className="flex-1 px-4 md:px-8 py-6 max-w-4xl w-full mx-auto">
               {isPractice && (
