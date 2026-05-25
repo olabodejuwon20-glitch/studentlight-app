@@ -69,6 +69,9 @@ import StudentMessages from "./pages/student/Messages";
 import StudentFees from "./pages/student/Fees";
 import StudentBehavior from "./pages/student/Behavior";
 import StudentGradebook from "./pages/student/Gradebook";
+import MockPicker from "./pages/student/MockPicker";
+import MockRunner from "./pages/student/MockRunner";
+import Practice from "./pages/student/Practice";
 
 import ParentDashboard from "./pages/parent/Dashboard";
 import ParentChildren from "./pages/parent/Children";
@@ -193,6 +196,9 @@ const App = () => (
               <Route path="student" element={<RoleGate allow="student"><StudentDashboard /></RoleGate>} />
               <Route path="student/classes" element={<RoleGate allow="student"><StudentClasses /></RoleGate>} />
               <Route path="student/exams" element={<RoleGate allow="student"><ExamInterface /></RoleGate>} />
+              <Route path="student/mock" element={<RoleGate allow="student"><MockPicker /></RoleGate>} />
+              <Route path="student/mock/:sessionId" element={<RoleGate allow="student"><MockRunner /></RoleGate>} />
+              <Route path="student/practice" element={<RoleGate allow="student"><Practice /></RoleGate>} />
               <Route path="student/results" element={<RoleGate allow="student"><StudentResults /></RoleGate>} />
               <Route path="student/library" element={<RoleGate allow="student"><Library /></RoleGate>} />
               <Route path="student/lesson-notes" element={<RoleGate allow="student"><StudentLessonNotes /></RoleGate>} />
