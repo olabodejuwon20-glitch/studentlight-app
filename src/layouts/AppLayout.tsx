@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useEnabledModules } from "@/modules/useModules";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -126,11 +127,27 @@ export default function AppLayout() {
   const { school, activeRole, theme, toggleTheme, signOut, displayName, email, photoUrl } = useSchool();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: enabledModules } = useEnabledModules(school?.id);
 
   if (!school || !activeRole) return <Navigate to={schoolPath(school?.slug, "/signin")} replace />;
 
   const meta = ROLE_META[activeRole];
-  const items = NAV[activeRole];
+  // Build sidebar dynamically from enabled module manifests; fall back to static NAV
+  // until module data has hydrated (prevents an empty sidebar flash).
+  const moduleItems = (enabledModules ?? [])
+    .flatMap(m => m.sidebar.map(item => ({ ...item, _slug: m.slug })))
+    .filter(item => item.roles.includes(activeRole));
+  const seen = new Set<string>();
+  const items = moduleItems.length
+    ? moduleItems
+        .filter(it => {
+          const key = `${it.to}|${it.label}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .map(({ label, to, icon }) => ({ label, to, icon }))
+    : NAV[activeRole];
   const userLabel = displayName || email || "User";
   const initials = userLabel.split(/[\s@]/).filter(Boolean).map(s => s[0]).slice(0, 2).join("").toUpperCase();
 
