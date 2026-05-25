@@ -370,19 +370,67 @@ export default function ExamInterface() {
 
   // ===================== SUMMARY VIEW =====================
   if (activeExam && summary) {
+    const correctCount = breakdown.filter(b => b.isCorrect).length;
     return (
-      <div className="min-h-[calc(100vh-120px)] grid place-items-center px-4">
-        <div className="max-w-md w-full rounded-2xl border border-border bg-card p-8 shadow-card text-center">
+      <div className="min-h-[calc(100vh-120px)] px-4 py-8 animate-fade-in">
+        <div className="max-w-3xl mx-auto rounded-2xl border border-border bg-card p-8 shadow-card">
+          <div className="text-center">
           <div className="size-14 rounded-full bg-success/15 text-success grid place-items-center mx-auto mb-4">
             <Trophy className="size-7" />
           </div>
           <h2 className="font-display text-2xl font-bold">Exam submitted</h2>
           <p className="text-sm text-muted-foreground mt-1">{activeExam.title}</p>
-          <div className="mt-6 grid grid-cols-3 gap-2">
+          </div>
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2">
             <Stat label="Score" value={`${summary.score}%`} />
+            <Stat label="Correct" value={`${correctCount}/${summary.total}`} />
             <Stat label="Answered" value={`${summary.answered}/${summary.total}`} />
             <Stat label="Time used" value={fmtDuration(summary.durationSec)} />
           </div>
+
+          {breakdown.length > 0 && (
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-semibold">Question-by-question</div>
+                <div className="text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 mr-3"><span className="size-2.5 rounded-sm bg-success" /> Correct</span>
+                  <span className="inline-flex items-center gap-1 mr-3"><span className="size-2.5 rounded-sm bg-destructive" /> Wrong</span>
+                  <span className="inline-flex items-center gap-1"><span className="size-2.5 rounded-sm bg-muted" /> Skipped</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 gap-1.5 mb-5">
+                {breakdown.map((b, i) => {
+                  const tone = b.pickedIdx === null
+                    ? "bg-muted text-muted-foreground border-border"
+                    : b.isCorrect
+                      ? "bg-success text-success-foreground border-success"
+                      : "bg-destructive text-destructive-foreground border-destructive";
+                  return (
+                    <div key={b.id} title={`Q${i+1} • ${b.pickedIdx === null ? "Skipped" : b.isCorrect ? "Correct" : "Wrong"}`}
+                      className={cn("aspect-square rounded text-[10px] font-semibold border grid place-items-center", tone)}>
+                      {i+1}
+                    </div>
+                  );
+                })}
+              </div>
+              <ul className="divide-y divide-border border border-border rounded-lg max-h-72 overflow-y-auto">
+                {breakdown.map((b, i) => (
+                  <li key={b.id} className="px-3 py-2 flex items-start gap-3 text-sm">
+                    <span className="text-[11px] font-mono text-muted-foreground w-8 shrink-0 mt-0.5">Q{i+1}</span>
+                    <span className="flex-1 min-w-0 line-clamp-2 text-foreground/90">{b.prompt}</span>
+                    <span className="shrink-0 text-[11px] font-medium">
+                      {b.pickedIdx === null
+                        ? <span className="text-muted-foreground">— / {String.fromCharCode(65 + b.correctIdx)}</span>
+                        : b.isCorrect
+                          ? <span className="text-success">{String.fromCharCode(65 + b.pickedIdx)} ✓</span>
+                          : <span className="text-destructive">{String.fromCharCode(65 + b.pickedIdx)} ✗ <span className="text-muted-foreground">/ {String.fromCharCode(65 + b.correctIdx)}</span></span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <Button className="w-full mt-6" onClick={backToPicker}>Back to exams</Button>
         </div>
       </div>
