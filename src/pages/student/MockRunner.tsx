@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 type Subject = { id: string; code: string; name: string; color: string; sort: number };
-type Question = { id: string; subject_id: string; position: number; prompt: string; options: any; correct_index: number };
+type Question = { id: string; subject_id: string; position: number; prompt: string; options: any };
 type AnswerMap = Record<string, { selected_index: number | null; marked: boolean }>;
 
 function fmtClock(secs: number) {
@@ -46,16 +46,20 @@ export default function MockRunner() {
         .order("sort");
       if (e2) throw e2;
       const subjectIds = sessSubs.map(s => s.subject_id);
-      const [{ data: subjects }, { data: questions }, { data: ans }] = await Promise.all([
+      const [{ data: subjects }, qRes, { data: ans }] = await Promise.all([
         supabase.from("mock_subjects").select("id, code, name, color, sort").in("id", subjectIds),
-        supabase.from("mock_questions").select("id, subject_id, position, prompt, options, correct_index").in("subject_id", subjectIds).order("position"),
+        supabase.rpc("get_mock_questions_for_session", { _session_id: sessionId! }),
         supabase.from("mock_answers").select("question_id, subject_id, selected_index, marked_for_review").eq("session_id", sessionId!),
       ]);
+      const questions = (qRes.data ?? []).map((r: any) => ({
+        id: r.q_id, subject_id: r.q_subject_id, position: r.q_position,
+        prompt: r.q_prompt, options: r.q_options,
+      }));
       const orderedSubjects = (subjects ?? []).sort((a, b) => sessSubs.findIndex(x => x.subject_id === a.id) - sessSubs.findIndex(x => x.subject_id === b.id));
       return {
         session,
         subjects: orderedSubjects as Subject[],
-        questions: (questions ?? []) as Question[],
+        questions: questions as Question[],
         answers: ans ?? [],
       };
     },
@@ -140,28 +144,11 @@ export default function MockRunner() {
         upsertQueue.current.clear();
         await supabase.from("mock_answers").upsert(batch, { onConflict: "session_id,question_id" });
       }
-      // Score
-      let total = 0;
-      const perSubject: Record<string, { score: number; answered: number }> = {};
-      for (const q of allQuestions) {
-        const a = answers[q.id];
-        const correct = a?.selected_index === q.correct_index;
-        perSubject[q.subject_id] = perSubject[q.subject_id] ?? { score: 0, answered: 0 };
-        if (a?.selected_index != null) perSubject[q.subject_id].answered++;
-        if (correct) { total++; perSubject[q.subject_id].score++; }
-      }
-      await supabase.from("mock_sessions").update({
-        status: auto ? "expired" : "submitted",
-        submitted_at: new Date().toISOString(),
-        total_score: total,
-        total_questions: allQuestions.length,
-      }).eq("id", sessionId!);
-      for (const [subject_id, v] of Object.entries(perSubject)) {
-        await supabase.from("mock_session_subjects")
-          .update({ score: v.score, answered_count: v.answered })
-          .eq("session_id", sessionId!).eq("subject_id", subject_id);
-      }
-      toast.success(auto ? "Time up — auto-submitted" : `Submitted. Score: ${total}/${allQuestions.length}`);
+      const { data: graded, error: gErr } = await supabase.rpc("grade_mock_session", { _session_id: sessionId!, _auto: auto });
+      if (gErr) throw gErr;
+      const total = (graded as any)?.total_score ?? 0;
+      const totalQ = (graded as any)?.total_questions ?? allQuestions.length;
+      toast.success(auto ? "Time up — auto-submitted" : `Submitted. Score: ${total}/${totalQ}`);
       nav(schoolPath(slug, "/app/student/mock"));
     } catch (e: any) {
       toast.error(e.message ?? "Submit failed");
