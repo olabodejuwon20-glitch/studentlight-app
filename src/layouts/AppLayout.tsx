@@ -65,6 +65,8 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "My Classes", to: "classes",   icon: BookOpen },
     { label: "Assignments",to: "assignments", icon: ClipboardList },
     { label: "Exams",      to: "exams",     icon: ListChecks },
+    { label: "NECO/JAMB Mock", to: "mock",  icon: Award },
+    { label: "Practice",   to: "practice",  icon: Sparkles },
     { label: "Results",    to: "results",   icon: FileBarChart },
     { label: "Gradebook",  to: "gradebook", icon: BarChart3 },
     { label: "Behavior",   to: "behavior",  icon: Award },
@@ -127,6 +129,8 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "parent-comms":{ title: "Parent Communications", sub: "Direct updates to parents" },
   "teacher-comms":{ title: "Teacher Messages", sub: "Updates from your child's teachers" },
   "inbox":      { title: "Inbox",              sub: "All your conversations" },
+  "mock":       { title: "NECO / JAMB Mock",   sub: "Pick subjects and sit a UTME-style timed mock" },
+  "practice":   { title: "Practice Mode",      sub: "Study from your library — no timer, no score" },
 };
 
 export default function AppLayout() {
