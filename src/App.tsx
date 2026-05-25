@@ -92,6 +92,12 @@ import SuperTenantConfig from "./pages/super/TenantConfig";
 import SuperLicensing from "./pages/super/Licensing";
 import SuperSubscriptions from "./pages/super/Subscriptions";
 import SuperBilling from "./pages/super/Billing";
+import SuperUsers from "./pages/super/Users";
+import SuperAnnouncements from "./pages/super/Announcements";
+import SuperTickets from "./pages/super/Tickets";
+import SuperSecurity from "./pages/super/Security";
+import SuperLogs from "./pages/super/Logs";
+import SuperSettings from "./pages/super/Settings";
 import ComingSoon from "./pages/super/_ComingSoon";
 
 const queryClient = new QueryClient();
@@ -120,18 +126,18 @@ const App = () => (
             <Route path="schools" element={<SuperSchools />} />
             <Route path="schools/:id" element={<SuperSchoolDetail />} />
             <Route path="analytics" element={<SuperAnalytics />} />
-            <Route path="users" element={<ComingSoon title="Users & Roles" description="Search every user across tenants and manage platform roles." />} />
+            <Route path="users" element={<SuperUsers />} />
             <Route path="modules" element={<SuperModules />} />
             <Route path="licensing" element={<SuperLicensing />} />
             <Route path="configurations" element={<SuperTenantConfig />} />
             <Route path="marketplace" element={<SuperMarketplace />} />
             <Route path="subscriptions" element={<SuperSubscriptions />} />
             <Route path="billing" element={<SuperBilling />} />
-            <Route path="announcements" element={<ComingSoon title="Platform Announcements" description="Broadcast to all schools, roles, or segments." />} />
-            <Route path="tickets" element={<ComingSoon title="Support Tickets" description="Triage and respond to tenant support tickets." />} />
-            <Route path="security" element={<ComingSoon title="Security Center" description="Login anomalies, IP blocks, and audit summaries." />} />
-            <Route path="logs" element={<ComingSoon title="System Logs" description="Platform-wide audit trail." />} />
-            <Route path="settings" element={<ComingSoon title="Platform Settings" description="Branding, SMTP, integrations, maintenance mode." />} />
+            <Route path="announcements" element={<SuperAnnouncements />} />
+            <Route path="tickets" element={<SuperTickets />} />
+            <Route path="security" element={<SuperSecurity />} />
+            <Route path="logs" element={<SuperLogs />} />
+            <Route path="settings" element={<SuperSettings />} />
           </Route>
 
             {/* School-scoped routes: /:slug/... */}
