@@ -20,6 +20,27 @@ import { Math as MathText } from "@/components/exam/Math";
 import { TimerRing } from "@/components/exam/TimerRing";
 import { cn } from "@/lib/utils";
 
+const LS_KEY = (attemptId: string) => `cbt:attempt:${attemptId}`;
+
+type LocalDraft = {
+  answers: Record<string, number>;
+  marked: Record<string, boolean>;
+  spent: Record<string, number>; // seconds per question
+  current: number;
+  savedAt: number;
+};
+
+function loadLocalDraft(attemptId: string): LocalDraft | null {
+  try { const raw = localStorage.getItem(LS_KEY(attemptId)); return raw ? JSON.parse(raw) as LocalDraft : null; }
+  catch { return null; }
+}
+function saveLocalDraft(attemptId: string, draft: LocalDraft) {
+  try { localStorage.setItem(LS_KEY(attemptId), JSON.stringify(draft)); } catch { /* quota */ }
+}
+function clearLocalDraft(attemptId: string) {
+  try { localStorage.removeItem(LS_KEY(attemptId)); } catch { /* noop */ }
+}
+
 // Deterministic shuffle seeded by attempt_id so order is stable per student
 function seededShuffle<T>(arr: T[], seed: string): T[] {
   let h = 2166136261;
@@ -66,6 +87,10 @@ export default function ExamInterface() {
   const [endOpen, setEndOpen] = useState(false);
   const [current, setCurrent] = useState(0);
   const [summary, setSummary] = useState<{ score: number; answered: number; total: number; durationSec: number } | null>(null);
+  const [breakdown, setBreakdown] = useState<{ id: string; prompt: string; pickedIdx: number | null; correctIdx: number; isCorrect: boolean; points: number }[]>([]);
+  // Per-question time tracking
+  const [spent, setSpent] = useState<Record<string, number>>({});
+  const focusStartRef = useRef<number>(Date.now());
   const isPractice = activeExam?.mode === "practice";
 
   useEffect(() => {
@@ -98,8 +123,17 @@ export default function ExamInterface() {
       if (r.selected_index !== null) restored[r.question_id] = r.selected_index;
       if (r.marked_for_review) markedRestored[r.question_id] = true;
     });
-    setAnswers(restored);
-    setMarked(markedRestored);
+
+    // Merge with local draft (local wins if newer than what we got from the DB, since DB is eventual after refresh)
+    const local = loadLocalDraft(attempt.id);
+    const mergedAnswers = { ...restored, ...(local?.answers ?? {}) };
+    const mergedMarked  = { ...markedRestored, ...(local?.marked ?? {}) };
+    setAnswers(mergedAnswers);
+    setMarked(mergedMarked);
+    setSpent(local?.spent ?? {});
+    if (local && typeof local.current === "number") setCurrent(local.current);
+    else setCurrent(0);
+    if (local) toast.info("Resumed from your last saved progress.");
 
     const { data: att } = await supabase.from("exam_attempts").select("started_at").eq("id", attempt.id).single();
     const startTs = att?.started_at ? new Date(att.started_at).getTime() : Date.now();
@@ -109,8 +143,10 @@ export default function ExamInterface() {
     setViolationLimit(exam.violation_limit ?? cfg.violationLimit ?? 3);
     setViolations(0);
     setSummary(null);
+    setBreakdown([]);
+    focusStartRef.current = Date.now();
     setActiveExam(exam);
-    setCurrent(0);
+    // current already set above
     if (exam.mode !== "practice") {
       setTimeout(() => { containerRef.current?.requestFullscreen?.().catch(() => {}); }, 50);
       const proctorRequested = exam.proctored ?? cfg.webcamProctoring ?? false;
@@ -169,7 +205,22 @@ export default function ExamInterface() {
     stopProctor();
     toast.success(`${reason ? reason + " — " : ""}Submitted! Score: ${score}%`);
     const durationSec = startedAt ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : 0;
+    // Build per-question breakdown using correct_index visible via RLS to members
+    const correctMap = new Map<string, { correct: number; points: number; prompt: string }>(
+      questions.map(q => [q.id, { correct: q.correct_index ?? 0, points: q.points ?? 1, prompt: q.prompt }]),
+    );
+    const bd = questions.map(q => {
+      const meta = correctMap.get(q.id)!;
+      const picked = answers[q.id];
+      return {
+        id: q.id, prompt: meta.prompt, points: meta.points, correctIdx: meta.correct,
+        pickedIdx: picked === undefined ? null : picked,
+        isCorrect: picked !== undefined && picked === meta.correct,
+      };
+    });
+    setBreakdown(bd);
     setSummary({ score, answered: Object.keys(answers).length, total: questions.length, durationSec });
+    clearLocalDraft(attemptId);
     submittingRef.current = false;
   }, [attemptId, activeExam, answers, marked, questions, startedAt]);
 
@@ -266,12 +317,56 @@ export default function ExamInterface() {
   const answeredCount = useMemo(() => questions.filter(q => answers[q.id] !== undefined).length, [questions, answers]);
   const markedCount = useMemo(() => questions.filter(q => marked[q.id]).length, [questions, marked]);
   const totalMarks = useMemo(() => questions.reduce((s, q) => s + (q.points ?? 1), 0), [questions]);
+  const progressPct = questions.length ? Math.round((answeredCount / questions.length) * 100) : 0;
+  const elapsed = startedAt ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : 0;
+  // tick state to refresh elapsed displays each second without remounting children
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!activeExam || summary) return;
+    const id = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [activeExam, summary]);
+  const currentQ = questions[current];
+  const currentSpent = currentQ
+    ? (spent[currentQ.id] ?? 0) + Math.max(0, Math.floor((Date.now() - focusStartRef.current) / 1000))
+    : 0;
 
-  function jumpTo(i: number) { setCurrent(Math.max(0, Math.min(questions.length - 1, i))); }
+  function jumpTo(i: number) {
+    // Flush time on the question we're leaving
+    const leaving = questions[current];
+    if (leaving) {
+      const delta = Math.max(0, Math.floor((Date.now() - focusStartRef.current) / 1000));
+      if (delta > 0) setSpent(prev => ({ ...prev, [leaving.id]: (prev[leaving.id] ?? 0) + delta }));
+    }
+    focusStartRef.current = Date.now();
+    setCurrent(Math.max(0, Math.min(questions.length - 1, i)));
+  }
   function backToPicker() {
     setActiveExam(null); setQuestions([]); setAnswers({}); setMarked({});
-    setAttemptId(null); setStartedAt(null); setSummary(null); setCurrent(0);
+    setAttemptId(null); setStartedAt(null); setSummary(null); setBreakdown([]); setSpent({}); setCurrent(0);
   }
+
+  // Local autosave — debounced by simple state diff via interval
+  useEffect(() => {
+    if (!attemptId || summary) return;
+    saveLocalDraft(attemptId, { answers, marked, spent, current, savedAt: Date.now() });
+  }, [attemptId, summary, answers, marked, spent, current]);
+  useEffect(() => {
+    if (!attemptId || summary) return;
+    const id = setInterval(() => {
+      // Persist running clock for the active question too
+      const q = questions[current];
+      if (q) {
+        const delta = Math.max(0, Math.floor((Date.now() - focusStartRef.current) / 1000));
+        if (delta > 0) {
+          const nextSpent = { ...spent, [q.id]: (spent[q.id] ?? 0) + delta };
+          focusStartRef.current = Date.now();
+          setSpent(nextSpent);
+        }
+      }
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [attemptId, summary, questions, current, spent]);
 
   // ===================== SUMMARY VIEW =====================
   if (activeExam && summary) {
