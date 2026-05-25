@@ -2436,6 +2436,32 @@ export type Database = {
       }
     }
     Functions: {
+      get_exam_questions_for_attempt: {
+        Args: { _attempt_id: string }
+        Returns: {
+          q_exam_id: string
+          q_id: string
+          q_options: Json
+          q_points: number
+          q_position: number
+          q_prompt: string
+          q_school_id: string
+        }[]
+      }
+      get_mock_questions_for_session: {
+        Args: { _session_id: string }
+        Returns: {
+          q_id: string
+          q_options: Json
+          q_position: number
+          q_prompt: string
+          q_subject_id: string
+        }[]
+      }
+      grade_mock_session: {
+        Args: { _auto?: boolean; _session_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
