@@ -133,11 +133,13 @@ export default function ExamInterface() {
     submittingRef.current = true;
     const rows = Object.entries(answers).map(([question_id, selected_index]) => ({ attempt_id: attemptId, question_id, selected_index }));
     if (rows.length) await supabase.from("exam_answers").upsert(rows, { onConflict: "attempt_id,question_id" });
-    let correct = 0;
-    questions.forEach(q => { if (answers[q.id] === q.correct_index) correct += q.points; });
-    const total = questions.reduce((s, q) => s + q.points, 0) || 1;
-    const score = Math.round((correct / total) * 100);
-    await supabase.from("exam_attempts").update({ submitted_at: new Date().toISOString(), score }).eq("id", attemptId);
+    const { data: graded, error: gErr } = await supabase.functions.invoke("grade-exam-attempt", { body: { attempt_id: attemptId } });
+    if (gErr) {
+      toast.error(gErr.message || "Submission failed");
+      submittingRef.current = false;
+      return;
+    }
+    const score = graded?.score ?? 0;
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     stopProctor();
     toast.success(`${reason ? reason + " — " : ""}Submitted! Score: ${score}%`);
