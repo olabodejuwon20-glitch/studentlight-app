@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   ListChecks, AlertTriangle, Clock, Maximize2, Video, Award, GraduationCap, Sparkles,
   CheckCircle2, LogOut, ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, ShieldCheck,
-  User as UserIcon, BookOpen, Layers, Timer, Trophy,
+  User as UserIcon, BookOpen, Layers, Timer, Trophy, BookMarked, ArrowUpRight,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { EmptyState } from "@/components/EmptyState";
@@ -67,7 +68,7 @@ export default function ExamInterface() {
   const cfg = useModuleConfig<CbtConfig>(school?.id, "cbt") ?? {};
 
   const [exams, setExams] = useState<any[]>([]);
-  const [tab, setTab] = useState<"neco_sim" | "school" | "practice">("school");
+  const [tab, setTab] = useState<"neco_sim" | "jamb_sim" | "school" | "practice">("school");
   const [activeExam, setActiveExam] = useState<any | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -763,14 +764,71 @@ export default function ExamInterface() {
       </div>
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
         <TabsList>
-          <TabsTrigger value="neco_sim"><Award className="size-3.5 mr-1.5" /> NECO Mock ({grouped.neco_sim.length})</TabsTrigger>
+          <TabsTrigger value="neco_sim"><Award className="size-3.5 mr-1.5" /> NECO Mock</TabsTrigger>
+          <TabsTrigger value="jamb_sim"><BookMarked className="size-3.5 mr-1.5" /> JAMB Mock</TabsTrigger>
           <TabsTrigger value="school"><GraduationCap className="size-3.5 mr-1.5" /> School Exams ({grouped.school.length})</TabsTrigger>
-          <TabsTrigger value="practice"><Sparkles className="size-3.5 mr-1.5" /> Practice ({grouped.practice.length})</TabsTrigger>
+          <TabsTrigger value="practice"><Sparkles className="size-3.5 mr-1.5" /> Practice</TabsTrigger>
         </TabsList>
-        <TabsContent value="neco_sim" className="mt-4">{renderGrid(grouped.neco_sim)}</TabsContent>
+        <TabsContent value="neco_sim" className="mt-4">
+          <SimCallout
+            icon={Award}
+            title="NECO CBT Simulation"
+            description="Pick 9 of 15 subjects. 20 questions each. UTME-style runner with subject tabs, navigator and timer."
+            cta="Open NECO Mock"
+            to="../mock?body=neco"
+            tone="warning"
+          />
+        </TabsContent>
+        <TabsContent value="jamb_sim" className="mt-4">
+          <SimCallout
+            icon={BookMarked}
+            title="JAMB UTME Simulation"
+            description="Pick 4 subjects (English compulsory). 20 questions per subject. Switch between subjects just like the real UTME."
+            cta="Open JAMB Mock"
+            to="../mock?body=jamb"
+            tone="primary"
+          />
+        </TabsContent>
         <TabsContent value="school"   className="mt-4">{renderGrid(grouped.school)}</TabsContent>
-        <TabsContent value="practice" className="mt-4">{renderGrid(grouped.practice)}</TabsContent>
+        <TabsContent value="practice" className="mt-4">
+          <SimCallout
+            icon={Sparkles}
+            title="Practice Mode"
+            description="Study from your school library or upload your own materials. No timer, no scoring — just learn."
+            cta="Open Practice"
+            to="../practice"
+            tone="success"
+          />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function SimCallout({ icon: Icon, title, description, cta, to, tone }: {
+  icon: any; title: string; description: string; cta: string; to: string;
+  tone: "primary" | "warning" | "success";
+}) {
+  const toneCls =
+    tone === "warning" ? "from-warning/15 to-warning/5 border-warning/30" :
+    tone === "success" ? "from-success/15 to-success/5 border-success/30" :
+    "from-primary/15 to-primary/5 border-primary/30";
+  const iconCls =
+    tone === "warning" ? "bg-warning/20 text-warning-foreground" :
+    tone === "success" ? "bg-success/20 text-success-foreground" :
+    "bg-primary/20 text-primary";
+  return (
+    <div className={cn("rounded-xl border bg-gradient-to-br p-6 shadow-card flex flex-col md:flex-row md:items-center gap-4", toneCls)}>
+      <div className={cn("size-12 rounded-xl grid place-items-center shrink-0", iconCls)}>
+        <Icon className="size-6" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="font-display font-semibold text-lg leading-tight">{title}</h3>
+        <p className="text-sm text-muted-foreground mt-1">{description}</p>
+      </div>
+      <Button asChild size="lg">
+        <Link to={to}>{cta}<ArrowUpRight className="size-4 ml-1.5" /></Link>
+      </Button>
     </div>
   );
 }

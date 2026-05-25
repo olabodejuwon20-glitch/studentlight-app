@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Award, GraduationCap, Loader2, Play, Sparkles, History, BookOpenCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,9 @@ export default function MockPicker() {
   const { school, user } = useSchool();
   const nav = useNavigate();
   const qc = useQueryClient();
-  const [mode, setMode] = useState<Mode>("neco_sim");
+  const [params] = useSearchParams();
+  const initialMode: Mode = params.get("body") === "jamb" ? "jamb_sim" : "neco_sim";
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [starting, setStarting] = useState(false);
 
