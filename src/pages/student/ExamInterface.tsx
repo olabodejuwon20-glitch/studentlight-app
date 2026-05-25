@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   ListChecks, AlertTriangle, Clock, Maximize2, Video, Award, GraduationCap, Sparkles,
   CheckCircle2, LogOut, ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, ShieldCheck,
-  User as UserIcon, BookOpen, Layers, Timer, Trophy,
+  User as UserIcon, BookOpen, Layers, Timer, Trophy, BookMarked, ArrowUpRight,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { EmptyState } from "@/components/EmptyState";
