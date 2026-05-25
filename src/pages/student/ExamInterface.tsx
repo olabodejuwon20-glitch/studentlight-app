@@ -776,7 +776,7 @@ export default function ExamInterface() {
             title="NECO CBT Simulation"
             description="Pick 9 of 15 subjects. 20 questions each. UTME-style runner with subject tabs, navigator and timer."
             cta="Open NECO Mock"
-            to="../mock?body=neco"
+            to="/app/student/mock?body=neco"
             tone="warning"
           />
         </TabsContent>
@@ -786,7 +786,7 @@ export default function ExamInterface() {
             title="JAMB UTME Simulation"
             description="Pick 4 subjects (English compulsory). 20 questions per subject. Switch between subjects just like the real UTME."
             cta="Open JAMB Mock"
-            to="../mock?body=jamb"
+            to="/app/student/mock?body=jamb"
             tone="primary"
           />
         </TabsContent>
@@ -797,7 +797,7 @@ export default function ExamInterface() {
             title="Practice Mode"
             description="Study from your school library or upload your own materials. No timer, no scoring — just learn."
             cta="Open Practice"
-            to="../practice"
+            to="/app/student/practice"
             tone="success"
           />
         </TabsContent>
