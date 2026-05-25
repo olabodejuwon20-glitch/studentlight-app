@@ -87,6 +87,8 @@ import SuperSchools from "./pages/super/Schools";
 import SuperSchoolDetail from "./pages/super/SchoolDetail";
 import SuperModules from "./pages/super/Modules";
 import SuperMarketplace from "./pages/super/Marketplace";
+import SuperAnalytics from "./pages/super/Analytics";
+import SuperTenantConfig from "./pages/super/TenantConfig";
 import ComingSoon from "./pages/super/_ComingSoon";
 
 const queryClient = new QueryClient();
@@ -114,11 +116,11 @@ const App = () => (
             <Route index element={<SuperDashboard />} />
             <Route path="schools" element={<SuperSchools />} />
             <Route path="schools/:id" element={<SuperSchoolDetail />} />
-            <Route path="analytics" element={<ComingSoon title="Analytics" description="Deep platform analytics and revenue trends." />} />
+            <Route path="analytics" element={<SuperAnalytics />} />
             <Route path="users" element={<ComingSoon title="Users & Roles" description="Search every user across tenants and manage platform roles." />} />
             <Route path="modules" element={<SuperModules />} />
             <Route path="licensing" element={<ComingSoon title="Feature Licensing" description="Per-school feature matrix and entitlements." />} />
-            <Route path="configurations" element={<ComingSoon title="Tenant Config" description="Schema-driven configuration overrides per school." />} />
+            <Route path="configurations" element={<SuperTenantConfig />} />
             <Route path="marketplace" element={<SuperMarketplace />} />
             <Route path="subscriptions" element={<ComingSoon title="Subscriptions" description="All active subscriptions and renewal pipeline." />} />
             <Route path="billing" element={<ComingSoon title="Billing & Revenue" description="Invoices, MRR, and revenue analytics." />} />
