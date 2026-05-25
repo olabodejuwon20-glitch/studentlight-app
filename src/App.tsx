@@ -37,6 +37,7 @@ import AdminProctoring from "./pages/admin/Proctoring";
 import AdminLessonNotes from "./pages/admin/LessonNotes";
 import AdminModules from "./pages/admin/Modules";
 import LibraryManager from "./pages/shared/LibraryManager";
+import Inbox from "./pages/shared/Inbox";
 
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import TeacherClasses from "./pages/teacher/Classes";
@@ -167,6 +168,7 @@ const App = () => (
               <Route path="admin/question-bank" element={<RoleGate allow="admin"><AdminQuestionBank /></RoleGate>} />
               <Route path="admin/proctoring" element={<RoleGate allow="admin"><AdminProctoring /></RoleGate>} />
               <Route path="admin/modules" element={<RoleGate allow="admin"><AdminModules /></RoleGate>} />
+              <Route path="admin/inbox" element={<RoleGate allow="admin"><Inbox /></RoleGate>} />
               <Route path="admin/settings" element={<RoleGate allow="admin"><AdminSettings /></RoleGate>} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
@@ -186,6 +188,7 @@ const App = () => (
               <Route path="teacher/gradebook" element={<RoleGate allow="teacher"><TeacherGradebook /></RoleGate>} />
               <Route path="teacher/behavior" element={<RoleGate allow="teacher"><TeacherBehavior /></RoleGate>} />
               <Route path="teacher/parent-comms" element={<RoleGate allow="teacher"><TeacherParentComms /></RoleGate>} />
+              <Route path="teacher/inbox" element={<RoleGate allow="teacher"><Inbox /></RoleGate>} />
 
               <Route path="student" element={<RoleGate allow="student"><StudentDashboard /></RoleGate>} />
               <Route path="student/classes" element={<RoleGate allow="student"><StudentClasses /></RoleGate>} />
@@ -200,6 +203,7 @@ const App = () => (
               <Route path="student/behavior" element={<RoleGate allow="student"><StudentBehavior /></RoleGate>} />
               <Route path="student/fees" element={<RoleGate allow="student"><StudentFees /></RoleGate>} />
               <Route path="student/messages" element={<RoleGate allow="student"><StudentMessages /></RoleGate>} />
+              <Route path="student/inbox" element={<RoleGate allow="student"><Inbox /></RoleGate>} />
 
               <Route path="parent" element={<RoleGate allow="parent"><ParentDashboard /></RoleGate>} />
               <Route path="parent/children" element={<RoleGate allow="parent"><ParentChildren /></RoleGate>} />
@@ -211,6 +215,7 @@ const App = () => (
               <Route path="parent/calendar" element={<RoleGate allow="parent"><ParentCalendar /></RoleGate>} />
               <Route path="parent/behavior" element={<RoleGate allow="parent"><ParentBehavior /></RoleGate>} />
               <Route path="parent/teacher-comms" element={<RoleGate allow="parent"><ParentTeacherComms /></RoleGate>} />
+              <Route path="parent/inbox" element={<RoleGate allow="parent"><Inbox /></RoleGate>} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
