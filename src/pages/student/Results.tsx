@@ -46,6 +46,9 @@ export default function StudentResults() {
     }));
   }, [filtered]);
 
+  // Key forces both charts (and the list) to remount + replay enter animation on every filter change.
+  const animKey = `${termFilter}|${subjectFilter}|${filtered.length}`;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -120,7 +123,7 @@ export default function StudentResults() {
       {filtered.length === 0 ? (
         <SectionCard title="My results"><EmptyState icon={FileBarChart} title={rows.length === 0 ? "No results yet" : "No results match these filters"} /></SectionCard>
       ) : (
-        <>
+        <div key={animKey} className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <SectionCard title="NECO grade distribution" description="A1–F9 across all subjects">
               <div className="h-[260px]">
@@ -130,7 +133,7 @@ export default function StudentResults() {
                     <XAxis dataKey="grade" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                     <YAxis allowDecimals={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
                     <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                    <Bar dataKey="count" radius={[6,6,0,0]}>
+                    <Bar dataKey="count" radius={[6,6,0,0]} isAnimationActive animationDuration={700} animationEasing="ease-out">
                       {dist.map((d,i) => <Cell key={i} fill={d.color} />)}
                     </Bar>
                   </BarChart>
@@ -144,7 +147,7 @@ export default function StudentResults() {
                     <PolarGrid stroke="hsl(var(--border))" />
                     <PolarAngleAxis dataKey="subject" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                     <PolarRadiusAxis domain={[0,100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
-                    <Radar dataKey="avg" stroke="hsl(var(--student))" fill="hsl(var(--student))" fillOpacity={0.35} />
+                    <Radar dataKey="avg" stroke="hsl(var(--student))" fill="hsl(var(--student))" fillOpacity={0.35} isAnimationActive animationDuration={700} animationEasing="ease-out" />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
@@ -152,10 +155,10 @@ export default function StudentResults() {
           </div>
 
           <SectionCard title="My results" description="NECO grading: A1–F9">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{filtered.map(r => {
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{filtered.map((r, i) => {
               const g = necoGrade(Number(r.score));
               return (
-                <div key={r.id} className="rounded-xl border border-border p-5 bg-card">
+                <div key={r.id} className="rounded-xl border border-border p-5 bg-card animate-fade-in" style={{ animationDelay: `${Math.min(i, 12) * 35}ms`, animationFillMode: "backwards" }}>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">{r.subject}</div>
                     <Badge variant="outline" style={{ background: NECO_GRADE_COLORS[g] + "22", color: NECO_GRADE_COLORS[g], borderColor: NECO_GRADE_COLORS[g] + "55" }}>{g}</Badge>
@@ -167,7 +170,7 @@ export default function StudentResults() {
               );
             })}</div>
           </SectionCard>
-        </>
+        </div>
       )}
     </div>
   );
