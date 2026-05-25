@@ -1279,6 +1279,202 @@ export type Database = {
           },
         ]
       }
+      mock_answers: {
+        Row: {
+          answered_at: string
+          id: string
+          marked_for_review: boolean
+          question_id: string
+          selected_index: number | null
+          session_id: string
+          subject_id: string
+        }
+        Insert: {
+          answered_at?: string
+          id?: string
+          marked_for_review?: boolean
+          question_id: string
+          selected_index?: number | null
+          session_id: string
+          subject_id: string
+        }
+        Update: {
+          answered_at?: string
+          id?: string
+          marked_for_review?: boolean
+          question_id?: string
+          selected_index?: number | null
+          session_id?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "mock_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_questions: {
+        Row: {
+          correct_index: number
+          created_at: string
+          explanation: string | null
+          id: string
+          options: Json
+          position: number
+          prompt: string
+          school_id: string
+          subject_id: string
+        }
+        Insert: {
+          correct_index?: number
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          position?: number
+          prompt: string
+          school_id: string
+          subject_id: string
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          position?: number
+          prompt?: string
+          school_id?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_questions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "mock_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_session_subjects: {
+        Row: {
+          answered_count: number
+          id: string
+          score: number
+          session_id: string
+          sort: number
+          subject_id: string
+        }
+        Insert: {
+          answered_count?: number
+          id?: string
+          score?: number
+          session_id: string
+          sort?: number
+          subject_id: string
+        }
+        Update: {
+          answered_count?: number
+          id?: string
+          score?: number
+          session_id?: string
+          sort?: number
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_session_subjects_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "mock_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_session_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "mock_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_sessions: {
+        Row: {
+          duration_minutes: number
+          id: string
+          mode: string
+          school_id: string
+          started_at: string
+          status: string
+          student_id: string
+          submitted_at: string | null
+          total_questions: number | null
+          total_score: number | null
+        }
+        Insert: {
+          duration_minutes?: number
+          id?: string
+          mode: string
+          school_id: string
+          started_at?: string
+          status?: string
+          student_id: string
+          submitted_at?: string | null
+          total_questions?: number | null
+          total_score?: number | null
+        }
+        Update: {
+          duration_minutes?: number
+          id?: string
+          mode?: string
+          school_id?: string
+          started_at?: string
+          status?: string
+          student_id?: string
+          submitted_at?: string | null
+          total_questions?: number | null
+          total_score?: number | null
+        }
+        Relationships: []
+      }
+      mock_subjects: {
+        Row: {
+          code: string
+          color: string
+          created_at: string
+          exam_body: string
+          id: string
+          name: string
+          school_id: string
+          sort: number
+        }
+        Insert: {
+          code: string
+          color?: string
+          created_at?: string
+          exam_body: string
+          id?: string
+          name: string
+          school_id: string
+          sort?: number
+        }
+        Update: {
+          code?: string
+          color?: string
+          created_at?: string
+          exam_body?: string
+          id?: string
+          name?: string
+          school_id?: string
+          sort?: number
+        }
+        Relationships: []
+      }
       module_requests: {
         Row: {
           created_at: string
@@ -2266,6 +2462,7 @@ export type Database = {
       }
       is_super_admin: { Args: { _user: string }; Returns: boolean }
       redeem_invite: { Args: { _code: string }; Returns: string }
+      seed_mock_bank: { Args: { _school: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "teacher" | "student" | "parent" | "super_admin"
