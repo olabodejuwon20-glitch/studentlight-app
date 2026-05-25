@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CreditCard, Search, AlertTriangle, TrendingUp, DollarSign, Calendar } from "lucide-react";
 
-type Plan = "trial" | "starter" | "pro" | "enterprise";
+type Plan = "trial" | "basic" | "standard" | "premium" | "enterprise";
 type School = {
   id: string; name: string; slug: string; status: string;
   plan: Plan; plan_started_at: string; plan_expires_at: string | null;
@@ -17,7 +17,7 @@ type School = {
 type Mod = { id: string; monthly_price_cents: number };
 type SM = { school_id: string; module_id: string; enabled: boolean };
 
-const PLAN_BASE: Record<Plan, number> = { trial: 0, starter: 4900, pro: 14900, enterprise: 49900 };
+const PLAN_BASE: Record<Plan, number> = { trial: 0, basic: 2900, standard: 9900, premium: 19900, enterprise: 49900 };
 
 export default function SuperSubscriptions() {
   const [schools, setSchools] = useState<School[] | null>(null);
@@ -26,7 +26,7 @@ export default function SuperSubscriptions() {
   const [q, setQ] = useState("");
   const [planFilter, setPlanFilter] = useState<string>("all");
   const [editing, setEditing] = useState<School | null>(null);
-  const [newPlan, setNewPlan] = useState<Plan>("starter");
+  const [newPlan, setNewPlan] = useState<Plan>("basic");
   const [newExpiry, setNewExpiry] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
@@ -108,8 +108,9 @@ export default function SuperSubscriptions() {
           <SelectContent>
             <SelectItem value="all">All plans</SelectItem>
             <SelectItem value="trial">Trial</SelectItem>
-            <SelectItem value="starter">Starter</SelectItem>
-            <SelectItem value="pro">Pro</SelectItem>
+            <SelectItem value="basic">Basic</SelectItem>
+            <SelectItem value="standard">Standard</SelectItem>
+            <SelectItem value="premium">Premium</SelectItem>
             <SelectItem value="enterprise">Enterprise</SelectItem>
           </SelectContent>
         </Select>
@@ -183,8 +184,9 @@ export default function SuperSubscriptions() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="trial">Trial — Free</SelectItem>
-                  <SelectItem value="starter">Starter — $49/mo</SelectItem>
-                  <SelectItem value="pro">Pro — $149/mo</SelectItem>
+                  <SelectItem value="basic">Basic — $29/mo</SelectItem>
+                  <SelectItem value="standard">Standard — $99/mo</SelectItem>
+                  <SelectItem value="premium">Premium — $199/mo</SelectItem>
                   <SelectItem value="enterprise">Enterprise — $499/mo</SelectItem>
                 </SelectContent>
               </Select>
