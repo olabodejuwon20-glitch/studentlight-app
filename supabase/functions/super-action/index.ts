@@ -195,6 +195,41 @@ Deno.serve(async (req) => {
         await audit(null);
         return json({ ok: true });
       }
+      case "grant_super": {
+        const { user_id } = payload;
+        const { error } = await admin.from("user_roles").insert({ user_id, role: "super_admin" });
+        if (error && !error.message.includes("duplicate")) throw error;
+        await audit(null, { target_user: user_id });
+        return json({ ok: true });
+      }
+      case "revoke_super": {
+        const { user_id } = payload;
+        const { error } = await admin.from("user_roles").delete().eq("user_id", user_id).eq("role", "super_admin");
+        if (error) throw error;
+        await audit(null, { target_user: user_id });
+        return json({ ok: true });
+      }
+      case "set_membership_status": {
+        const { membership_id, status } = payload;
+        const { error } = await admin.from("memberships").update({ status }).eq("id", membership_id);
+        if (error) throw error;
+        await audit(null, { membership_id });
+        return json({ ok: true });
+      }
+      case "force_pin_reset": {
+        const { membership_id } = payload;
+        const { error } = await admin.from("memberships").update({ must_change_pin: true }).eq("id", membership_id);
+        if (error) throw error;
+        await audit(null, { membership_id });
+        return json({ ok: true });
+      }
+      case "delete_announcement": {
+        const { id } = payload;
+        const { error } = await admin.from("platform_announcements").delete().eq("id", id);
+        if (error) throw error;
+        await audit(null, { id });
+        return json({ ok: true });
+      }
       default:
         return json({ error: "unknown action" }, 400);
     }
