@@ -292,12 +292,9 @@ export default function ExamInterface() {
                   <div className="mt-2 space-y-1.5">
                     {(q.options as string[]).map((o, oi) => {
                       const picked = answers[q.id];
-                      const reveal = isPractice && activeExam.show_answers_after_each && picked !== undefined;
-                      const isCorrect = oi === q.correct_index;
-                      const cls = reveal
-                        ? isCorrect ? "border-success bg-success/10"
-                          : (picked === oi ? "border-destructive bg-destructive/10" : "border-border")
-                        : "border-border hover:bg-secondary/40";
+                      const reveal = false; // answer keys are server-side only
+                      const isCorrect = false;
+                      const cls = "border-border hover:bg-secondary/40";
                       return (
                         <label key={oi} className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer ${cls}`}>
                           <input type="radio" name={q.id} checked={picked === oi} onChange={() => { selectAnswer(q.id, oi); setCurrent(i); }} />
