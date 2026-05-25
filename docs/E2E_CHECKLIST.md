@@ -1,4 +1,4 @@
-# EduSmart — End-to-End Verification Checklist
+# Legacyskool — End-to-End Verification Checklist
 
 Use this checklist after each major change to confirm a clean school can be
 spun up, branded, populated with users, and that every portal loads with the

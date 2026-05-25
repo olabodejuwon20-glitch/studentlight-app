@@ -112,7 +112,7 @@ export default function Bio() {
           <div className="flex items-center gap-2">
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
             <div>
-              <div className="font-display font-bold text-lg leading-none">EduSmart</div>
+              <div className="font-display font-bold text-lg leading-none">Legacyskool</div>
               <div className="text-[11px] text-muted-foreground mt-1">{school.name} · <span className="capitalize">{activeRole}</span></div>
             </div>
           </div>

@@ -53,7 +53,7 @@ export default function SuperClaim() {
     <div className="min-h-screen grid place-items-center bg-background p-6">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-md">
         <div className="size-10 rounded-lg bg-foreground text-background grid place-items-center mb-4"><ShieldCheck className="size-5" /></div>
-        <h1 className="text-xl font-semibold tracking-tight">EduSmart OS · Platform Access</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Legacyskool OS · Platform Access</h1>
         <p className="text-sm text-muted-foreground mt-1">{hasAny ? "Sign in to the Super Admin console." : "No platform owner exists yet. Sign in (or create your account) — the first claimer becomes the owner."}</p>
 
         {user && hasAny === false ? (

@@ -81,7 +81,7 @@ export default function SuperLayout() {
         <aside className={cn("border-r border-border bg-card flex flex-col transition-[width] duration-200", collapsed ? "w-[68px]" : "w-[240px]")}>
           <div className="h-14 px-4 flex items-center gap-2 border-b border-border">
             <div className="size-7 rounded-md bg-foreground text-background grid place-items-center text-xs font-bold">E</div>
-            {!collapsed && <div className="text-sm font-semibold tracking-tight">EduSmart <span className="text-muted-foreground font-normal">OS</span></div>}
+            {!collapsed && <div className="text-sm font-semibold tracking-tight">Legacyskool <span className="text-muted-foreground font-normal">OS</span></div>}
           </div>
           <nav className="flex-1 overflow-y-auto py-3 space-y-4">
             {NAV.map(group => (

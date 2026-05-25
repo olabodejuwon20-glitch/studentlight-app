@@ -26,7 +26,7 @@ export default function SchoolHome() {
         <div className="mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
-            <span className="font-display font-bold text-lg tracking-tight">EduSmart</span>
+            <span className="font-display font-bold text-lg tracking-tight">Legacyskool</span>
           </Link>
           <Link to={schoolPath(school.slug, "/admin")} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5">
             <ShieldCheck className="size-3.5" /> Admin sign in
