@@ -105,8 +105,9 @@ export default function SuperLicensing() {
           <SelectContent>
             <SelectItem value="all">All plans</SelectItem>
             <SelectItem value="trial">Trial</SelectItem>
-            <SelectItem value="starter">Starter</SelectItem>
-            <SelectItem value="pro">Pro</SelectItem>
+            <SelectItem value="basic">Basic</SelectItem>
+            <SelectItem value="standard">Standard</SelectItem>
+            <SelectItem value="premium">Premium</SelectItem>
             <SelectItem value="enterprise">Enterprise</SelectItem>
           </SelectContent>
         </Select>
