@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Outlet, NavLink, useLocation, Navigate } from "react-router-dom";
 import {
-  Bell, ChevronDown, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
+  ChevronDown, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
   Settings, ClipboardCheck, FilePlus2, Calendar, Library, Sparkles, MessagesSquare,
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
   Building2, Ticket, Upload, Bus, Megaphone, NotebookPen, FolderOpen, UserCog,
-  BookOpenCheck, ClipboardList, BarChart3, Award, Mail,
+  BookOpenCheck, ClipboardList, BarChart3, Award, Mail, Inbox as InboxIcon,
 } from "lucide-react";
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
@@ -18,6 +18,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { NotificationBell } from "@/components/comms/NotificationBell";
 
 const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
   admin: [
@@ -33,6 +34,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Hostel",    to: "hostel",    icon: Building2 },
     { label: "Transport", to: "transport", icon: Bus },
     { label: "Announcements", to: "announcements", icon: Megaphone },
+    { label: "Inbox",     to: "inbox",     icon: InboxIcon },
     { label: "Reports",   to: "reports",   icon: FileBarChart },
     { label: "Invites",   to: "invites",   icon: Ticket },
     { label: "Bulk Upload", to: "bulk",    icon: Upload },
@@ -47,6 +49,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Gradebook",   to: "gradebook",   icon: BarChart3 },
     { label: "Behavior",    to: "behavior",    icon: Award },
     { label: "Parent Comms",to: "parent-comms",icon: Mail },
+    { label: "Inbox",       to: "inbox",       icon: InboxIcon },
     { label: "Lesson Plan", to: "lesson-plan", icon: NotebookPen },
     { label: "Lesson Notes", to: "lesson-notes", icon: BookOpenCheck },
     { label: "Library",     to: "library",     icon: Library },
@@ -69,6 +72,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Lesson Notes", to: "lesson-notes", icon: BookOpen },
     { label: "AI Tutor",   to: "ai-tutor",  icon: Sparkles },
     { label: "Fees",       to: "fees",      icon: Wallet },
+    { label: "Inbox",      to: "inbox",     icon: InboxIcon },
     { label: "Messages",   to: "messages",  icon: MessagesSquare },
     { label: "Calendar",   to: "calendar",  icon: Calendar },
   ],
@@ -79,6 +83,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Attendance",      to: "attendance",  icon: ClipboardCheck },
     { label: "Behavior",        to: "behavior",    icon: Award },
     { label: "Teacher Comms",   to: "teacher-comms", icon: Mail },
+    { label: "Inbox",           to: "inbox",         icon: InboxIcon },
     { label: "Activity Feed",   to: "activity",    icon: Activity },
     { label: "Fees & Payments", to: "fees",        icon: Wallet },
     { label: "Messages",        to: "messages",    icon: MessagesSquare },
@@ -121,6 +126,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "behavior":   { title: "Behavior",           sub: "Commendations & incidents" },
   "parent-comms":{ title: "Parent Communications", sub: "Direct updates to parents" },
   "teacher-comms":{ title: "Teacher Messages", sub: "Updates from your child's teachers" },
+  "inbox":      { title: "Inbox",              sub: "All your conversations" },
 };
 
 export default function AppLayout() {
@@ -232,7 +238,7 @@ export default function AppLayout() {
                 <Input placeholder="Search anything..." className="pl-9 w-[260px] bg-secondary/60 border-transparent focus-visible:bg-card" />
               </div>
               <Button variant="ghost" size="icon" onClick={toggleTheme}>{theme === "light" ? <Moon className="size-5" /> : <Sun className="size-5" />}</Button>
-              <Button variant="ghost" size="icon"><Bell className="size-5" /></Button>
+              <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-secondary/60">
