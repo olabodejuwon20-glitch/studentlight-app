@@ -1,82 +1,172 @@
-# Phase 2 — Super Admin: Tenants (Schools)
 
-Wire up the `/super` route tree and ship the first vertical slice: full Schools management (list + detail + admin actions) plus a one-time bootstrap so the first super admin can claim the role.
+# LEGACYSchools — Education SaaS Transformation Plan
 
-## 1. Route plumbing
+The codebase already has solid foundations: multi-tenant `school_id` scoping on every table, RLS via `is_member` / `has_school_role` / `is_school_admin`, a `modules` + `school_modules` + `module_requests` schema, an `exam_*` stack with server-side grading edge function, and role layouts. The work below builds on those rather than rewriting them.
 
-**Edit `src/App.tsx`**
-- Import `SuperLayout` + `SuperGuard` from `@/layouts/SuperLayout` and the Phase-2 pages.
-- Add (above the `/:slug` block, so it's matched first):
+To keep risk low and reviews tight, I'll ship in 6 focused phases. Each phase is independently shippable — you can stop after any one and the app still works.
+
+---
+
+## Phase 1 — Stabilization & Foundation (no visual redesign)
+
+Goal: clean the base so later phases plug in safely.
+
+- Folder structure
+  - `src/modules/<slug>/` for self-contained module bundles (routes, sidebar entries, settings panels, hooks)
+  - `src/lib/tenant/` — consolidate `tenant.ts`, school context helpers, role guards
+  - `src/lib/api/` — typed thin wrappers around Supabase queries per domain (results, exams, gradebook…)
+  - `src/components/dashboard/` stays; promote repeated patterns (filter bar, export bar, status pill) into shared primitives
+- Reusable UI primitives (extract from existing pages, no redesign)
+  - `<PageHeader>`, `<FilterBar>`, `<ExportBar>`, `<StatusPill>`, `<DataTable>`, `<LoadingBlock>`, `<ErrorBlock>`
+  - Standard empty/loading/error states everywhere using existing `EmptyState`
+- Route protection
+  - Single `<RoleGuard roles={[...]}>` wrapper; replace ad-hoc checks in `App.tsx`
+  - `<ModuleGuard slug="cbt">` that reads `school_modules` (Phase 3 unlocks this)
+- State
+  - Introduce `@tanstack/react-query` (already common in shadcn stack) for cached tenant-scoped reads; keep Supabase client direct for mutations
+- Responsiveness & typography pass on the heaviest pages (Dashboard, Results, Gradebook, ExamInterface) — spacing tokens only, no palette change
+- Error handling: a `<RootErrorBoundary>` + toast on Supabase errors via a small wrapper
+
+No DB changes in this phase.
+
+---
+
+## Phase 2 — Multi-Tenant Hardening
+
+Most of this exists; this phase closes gaps.
+
+- Tenant routing
+  - Keep current `/s/:slug/...` style; add a `<TenantProvider>` that resolves slug → `school` once and exposes it via context (already partially in `SchoolContext`)
+  - Guard: if user is not a member of the slug's school, redirect to their default school
+- Subdomain support (optional, behind a feature flag)
+  - `school.legacyschools.app` resolves via the public `school_directory` view already exposed to `anon`
+- Audit columns: ensure new tables in later phases include `school_id`, `created_by`, `created_at`, `updated_at` + the `set_updated_at` trigger
+- Permissions matrix doc in `docs/PERMISSIONS.md` (which role can do what) — used to drive Phase 3 module manifests
+
+---
+
+## Phase 3 — Module / Plugin System (the core architectural shift)
+
+This is the biggest leverage point. The DB tables `modules`, `school_modules`, `module_requests` already exist — we wire them to the frontend.
+
+- Module manifest (TypeScript, in-repo)
+  ```text
+  src/modules/<slug>/manifest.ts
+    - slug, name, icon, category
+    - routes: [{ path, element, roles }]
+    - sidebar: [{ label, icon, path, roles }]
+    - settingsPanel?: ReactComponent   // rendered in school settings
+    - defaultConfig: Record<string, unknown>
+    - configSchema: JSONSchema-ish for the settings UI
   ```
-  <Route path="/super/claim" element={<SuperClaim />} />
-  <Route path="/super" element={<SuperGuard><SuperLayout /></SuperGuard>}>
-    <Route index element={<SuperDashboard />} />
-    <Route path="schools" element={<SuperSchools />} />
-    <Route path="schools/:id" element={<SuperSchoolDetail />} />
-    {/* placeholders rendering <ComingSoon/> for analytics, modules, licensing,
-        configurations, marketplace, subscriptions, billing, announcements,
-        tickets, security, logs, settings, users */}
-  </Route>
+- Module registry (`src/modules/registry.ts`) imports all manifests and exposes `getEnabledModules(schoolId)` which:
+  1. fetches `school_modules` rows for the school
+  2. intersects with in-repo manifests
+  3. returns enabled modules + merged config
+- Dynamic rendering
+  - `AppLayout` sidebar is generated from enabled modules per role
+  - `App.tsx` route tree mounts module routes lazily via `React.lazy`
+  - `<ModuleGate slug="...">` wraps premium routes
+- Seed manifests for what already exists: `cbt`, `gradebook`, `assignments`, `behavior`, `parent-comms`, `library`, `ai-tutor`, `hostel`, `transport`, `fees`, `lesson-notes`
+- Module config UI: a generic settings renderer that reads `configSchema` and writes to `school_modules.config`
+- Module request flow: school admin clicks "Request module" → row in `module_requests` → super admin approves → toggles `school_modules.enabled`
+
+This is the change that converts the app from "school management system" to "education OS".
+
+---
+
+## Phase 4 — Feature Licensing & Tenant Configuration
+
+Builds directly on Phase 3.
+
+- Plans
+  - Use existing `schools.plan` (`trial` / paid tiers); add a plan→modules matrix in `src/lib/plans.ts`
+  - `getEnabledModules` enforces: a module is enabled only if (in school_modules AND plan allows) OR (super-granted)
+- Per-school module config drives behavior, e.g. CBT:
+  ```text
+  cbt.config = {
+    webcamProctoring: true,
+    aiProctoring: false,
+    negativeMarking: false,
+    randomizeQuestions: true,
+    violationLimit: 3,
+    showAnswersAfterEach: false
+  }
   ```
+  ExamInterface and grade-exam-attempt read from config instead of hardcoding.
+- Billing surface: read-only invoices view for school admins (table exists); super admin can mark paid
+- Trial expiry banner driven by `plan_expires_at`
 
-**Edit `src/lib/tenant.ts`**
-- Add `"super"` to the `RESERVED` set so `/super/...` is never treated as a school slug.
+---
 
-**Edit `src/layouts/SuperLayout.tsx`**
-- Confirm it renders `<Outlet />` (already imported). No structural changes.
+## Phase 5 — CBT Ecosystem polish (match uploaded mockup)
 
-## 2. Schools list — `src/pages/super/Schools.tsx`
+The uploaded `image-3.png` is a high-quality NECO CBT layout. Current `ExamInterface.tsx` has the logic; this phase brings it to the mockup's visual + flow quality.
 
-Server-driven table over `public.schools`.
+- Three-pane layout
+  - Left rail: school logo, exam meta, exam details (questions, marks, duration, start/end), legend, "End Exam" destructive button
+  - Center: top status bar (Subject, Mode, Student, Time Remaining ring, Submit Exam), single-question view with "Mark for Review" checkbox, Previous/Next
+  - Right rail: 6-column question navigator with color states (answered/marked/current/unanswered), progress bar, "NECO Time Guide" tip card
+- Behavior already present that we keep: auto-save, server-side grading via `grade-exam-attempt`, finish confirmation, violation tracking
+- Add: single-question paging mode (current is scroll-all), "Mark for review" state stored in `exam_answers` (new nullable `marked_for_review boolean default false`), KaTeX/MathJax rendering for math prompts, auto-submit on timer expiry
+- Question bank → exam builder: pull from existing `question_bank` into `exam_questions` with one-click; tag filtering already supported
+- Exam review mode (post-submit): show correct answers only if `show_answers_after_each` is true or exam is closed
+- Anti-cheating: tab-visibility violations already logged; add fullscreen-exit and right-click block, count toward `violation_limit`, auto-submit when exceeded
 
-- Header: title "Schools", subtitle "Manage every tenant on the platform", right-side `Button` "Export CSV".
-- Toolbar row:
-  - Search input (name/slug/email, debounced 250ms, ilike).
-  - Plan filter (`trial`, `starter`, `pro`, `enterprise`, `custom`).
-  - Status filter (`trial`, `active`, `past_due`, `suspended`, `cancelled`).
-  - Sort: `created_at desc | name asc | plan_expires_at asc`.
-- Stats strip (4 `MetricCard`s from `primitives.tsx`): Total schools, Active, Trial, Suspended (cheap `head:true count:exact` queries).
-- Table columns: School (logo + name + slug), Plan badge, Status badge, Members (count via `memberships` head query, per-row lazy or aggregated query), Expires, Created, Actions (`Eye → /super/schools/:id`, dropdown: Suspend/Reactivate, Change plan, Open portal in new tab).
-- Pagination: 25/page using `range()`; show `Showing X–Y of Z`.
-- Empty state and skeleton rows.
-- All mutating actions call `superAction(...)` then `refetch()`; success toast.
+DB change: `ALTER TABLE exam_answers ADD COLUMN marked_for_review boolean NOT NULL DEFAULT false;`
 
-## 3. School detail — `src/pages/super/SchoolDetail.tsx`
+---
 
-Load by `id`. Layout: sticky header (logo, name, slug, plan/status pills, "Open portal" + "Impersonate admin (soon)" buttons), then 6 tabs (`Tabs` from shadcn):
+## Phase 6 — Super Admin Control Center + AI + Hardening
 
-1. **Overview** — KPI cards (members by role from `memberships` group; exams count; results count; storage used = sum of `library_files.size_bytes`). Recent audit entries from `platform_audit where school_id=:id` (latest 10).
-2. **Profile** — form: name, slug, email, phone, address, motto, logo_url, platform_notice (textarea). Save → `superAction("update_school", { school_id, fields })`.
-3. **Plan & Billing** — current plan/status/dates; "Change plan" dialog (plan select + optional expiry date + monthly amount NGN) → `set_plan`; "Suspend" (reason textarea) → `suspend_school`; "Reactivate" → `reactivate_school`. List recent rows from `subscriptions` + `invoices` for this school.
-4. **Modules** — list of all rows in `modules` left-joined with `school_modules` for this school. Each row: toggle (enabled), beta switch, "Configure" button (opens drawer; for now a JSON textarea bound to `config` — schema-driven form lands in Phase 3). Calls `assign_module` / `toggle_module` / `update_module_config`.
-5. **Members** — table of `memberships` joined to `profiles` (name/email/role/status/created_at). Row action "Force logout" → `force_logout_user`.
-6. **Danger zone** — destructive card: type-`DELETE`-to-confirm → `delete_school`.
+Three small phases combined since each is incremental.
 
-## 4. Claim page — `src/pages/super/Claim.tsx`
+Super Admin (Stripe/Linear/Vercel feel — reuses existing `super/*` pages)
+- Schools table: status, plan, MAU, last activity, quick actions (suspend, extend trial, impersonate)
+- Subscriptions & invoices view (existing `invoices` table)
+- Module marketplace: list all `modules`, toggle per school, set `expires_at`
+- Audit log viewer (`platform_audit`)
+- Security center (re-uses scan results), announcement center (`platform_announcements`), support inbox (new lightweight `support_tickets` table)
+- Impersonation: super-only edge function that issues a short-lived session for a target school admin, logged to `platform_audit`
 
-Already exists as a stub. Implement: if no row exists in `user_roles` with role `super_admin` and the visitor is signed in, allow them to insert `{ user_id: auth.uid(), role: 'super_admin' }` (RLS already permits self-insert). After claim → navigate to `/super`. If a super admin already exists, show "Super admin already provisioned" and link to `/signin`. `SuperGuard` redirects unauthenticated/no-role users to `/super/claim` when `hasAny === false`, else to `/signin`.
+AI & Learning Intelligence (extends existing `ai-tutor` function)
+- Homework helper: per-assignment chat scoped to submission
+- Weak-subject detection: derive from `gradebook_entries` + `results` (server-side aggregate)
+- Smart revision: surface lowest-mastery topics on student dashboard
+- Exam recommendations: suggest practice exams matching weak subjects
 
-## 5. Shared bits
+Production hardening
+- Route-level `React.lazy` + `Suspense`
+- React Query caching with sane staleTime per domain
+- Bundle analyzer pass; trim recharts where Sparkline suffices
+- Sentry-style error boundary → write to `security_events` for admin errors
+- Add indexes for hot paths: `exam_attempts(student_id, exam_id)`, `gradebook_entries(school_id, student_id, term)`, `results(school_id, student_id, term)`
 
-**`src/components/super/SchoolBadges.tsx`** — small helpers `<PlanBadge plan />` and `<StatusBadge status />` mapping to semantic tokens (`bg-primary/10 text-primary`, `bg-destructive/10`, `bg-muted` etc.) — no raw hex.
+---
 
-**`src/pages/super/_ComingSoon.tsx`** — reusable empty state for the placeholder routes so the whole nav is navigable.
+## Technical details
 
-## Files
+DB migrations introduced across phases:
+- Phase 5: `exam_answers.marked_for_review`
+- Phase 6: `support_tickets` table, indexes
 
-Create:
-- `src/pages/super/Schools.tsx`
-- `src/pages/super/SchoolDetail.tsx`
-- `src/pages/super/_ComingSoon.tsx`
-- `src/components/super/SchoolBadges.tsx`
+No destructive migrations. All RLS additions follow the existing `is_member` / `has_school_role` pattern. The `school_modules` model is already the source of truth for module enablement.
 
-Edit:
-- `src/App.tsx` (routes)
-- `src/lib/tenant.ts` (reserve `super`)
-- `src/pages/super/Claim.tsx` (implement)
+Out of scope for this plan (call out so we don't over-scope):
+- True subdomain DNS automation (manual until Phase 6+)
+- Stripe billing automation (we surface invoices, but charging stays manual unless you want Stripe enabled separately)
+- Mobile native apps
 
-No DB migrations, no edge-function changes — Phase 1's `super-action` already covers every mutation used here.
+---
 
-## Out of scope (later phases)
+## Suggested execution order for the next few turns
 
-Modules registry CRUD page, Licensing matrix, Schema-driven ConfigForm, Subscriptions/Billing pages, Announcements, Tickets, Security center, Logs viewer, Platform settings, Analytics deep-dive, Users & Roles, Impersonation edge function.
+If you approve, I'll implement in this order and stop for review after each:
+
+1. Phase 1 stabilization (UI primitives, RoleGuard, React Query, error boundary)
+2. Phase 3 module registry + dynamic sidebar/routes (highest architectural payoff)
+3. Phase 5 CBT visual + UX upgrade to match the mockup
+4. Phase 4 licensing + per-school CBT config wired into the interface
+5. Phase 6 Super Admin + AI + perf
+
+Tell me to start with Phase 1, or pick a different starting phase.
