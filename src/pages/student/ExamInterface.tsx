@@ -68,7 +68,7 @@ export default function ExamInterface() {
   const cfg = useModuleConfig<CbtConfig>(school?.id, "cbt") ?? {};
 
   const [exams, setExams] = useState<any[]>([]);
-  const [tab, setTab] = useState<"neco_sim" | "school" | "practice">("school");
+  const [tab, setTab] = useState<"neco_sim" | "jamb_sim" | "school" | "practice">("school");
   const [activeExam, setActiveExam] = useState<any | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<string, number>>({});
