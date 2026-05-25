@@ -1,0 +1,2 @@
+ALTER TABLE public.exam_answers ADD COLUMN IF NOT EXISTS marked_for_review boolean NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_exam_answers_attempt_review ON public.exam_answers(attempt_id, marked_for_review);

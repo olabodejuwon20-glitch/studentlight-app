@@ -412,6 +412,7 @@ export type Database = {
         Row: {
           attempt_id: string
           id: string
+          marked_for_review: boolean
           question_id: string
           selected_index: number | null
           updated_at: string
@@ -419,6 +420,7 @@ export type Database = {
         Insert: {
           attempt_id: string
           id?: string
+          marked_for_review?: boolean
           question_id: string
           selected_index?: number | null
           updated_at?: string
@@ -426,6 +428,7 @@ export type Database = {
         Update: {
           attempt_id?: string
           id?: string
+          marked_for_review?: boolean
           question_id?: string
           selected_index?: number | null
           updated_at?: string

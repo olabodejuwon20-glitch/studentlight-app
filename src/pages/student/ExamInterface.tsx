@@ -1,22 +1,30 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { ListChecks, AlertTriangle, Clock, Maximize2, Video, Award, GraduationCap, Sparkles, CheckCircle2, XCircle } from "lucide-react";
+import {
+  ListChecks, AlertTriangle, Clock, Maximize2, Video, Award, GraduationCap, Sparkles,
+  CheckCircle2, LogOut, ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, ShieldCheck,
+  User as UserIcon, BookOpen, Layers, Timer, Trophy,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
-import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { useModuleConfig } from "@/modules/useModules";
+import { Math as MathText } from "@/components/exam/Math";
+import { TimerRing } from "@/components/exam/TimerRing";
+import { cn } from "@/lib/utils";
 
 // Deterministic shuffle seeded by attempt_id so order is stable per student
 function seededShuffle<T>(arr: T[], seed: string): T[] {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); }
-  const rand = () => {
-    h ^= h << 13; h ^= h >>> 17; h ^= h << 5;
-    return ((h >>> 0) % 100000) / 100000;
-  };
+  const rand = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; };
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
@@ -25,13 +33,24 @@ function seededShuffle<T>(arr: T[], seed: string): T[] {
   return a;
 }
 
+interface CbtConfig {
+  webcamProctoring?: boolean;
+  randomizeQuestions?: boolean;
+  violationLimit?: number;
+  showAnswersAfterEach?: boolean;
+  autoSubmitOnTimeout?: boolean;
+}
+
 export default function ExamInterface() {
-  const { school, user } = useSchool();
+  const { school, user, displayName } = useSchool();
+  const cfg = useModuleConfig<CbtConfig>(school?.id, "cbt") ?? {};
+
   const [exams, setExams] = useState<any[]>([]);
   const [tab, setTab] = useState<"neco_sim" | "school" | "practice">("school");
   const [activeExam, setActiveExam] = useState<any | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [marked, setMarked] = useState<Record<string, boolean>>({});
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [remaining, setRemaining] = useState<number>(0);
@@ -44,13 +63,14 @@ export default function ExamInterface() {
   const snapTimerRef = useRef<number | null>(null);
   const [proctorOn, setProctorOn] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
   const [current, setCurrent] = useState(0);
-  const questionRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const [summary, setSummary] = useState<{ score: number; answered: number; total: number; durationSec: number } | null>(null);
   const isPractice = activeExam?.mode === "practice";
 
   useEffect(() => {
     if (!school) return;
-    supabase.from("exams").select("*").eq("school_id", school.id).in("status", ["scheduled","active"]).then(({ data }) => setExams(data ?? []));
+    supabase.from("exams").select("*").eq("school_id", school.id).in("status", ["scheduled", "active"]).then(({ data }) => setExams(data ?? []));
   }, [school]);
 
   async function start(exam: any) {
@@ -66,32 +86,35 @@ export default function ExamInterface() {
     setAttemptId(attempt.id);
     const { data: qs } = await supabase.from("exam_questions").select("*").eq("exam_id", exam.id).order("position");
     let list = qs ?? [];
-    if (exam.randomize) list = seededShuffle(list, attempt.id);
+    const shouldShuffle = exam.randomize ?? cfg.randomizeQuestions ?? false;
+    if (shouldShuffle) list = seededShuffle(list, attempt.id);
     setQuestions(list);
-    // Load any previously saved answers (resume)
-    const { data: prior } = await supabase.from("exam_answers").select("question_id,selected_index").eq("attempt_id", attempt.id);
+
+    // Load any previously saved answers + review marks (resume)
+    const { data: prior } = await supabase.from("exam_answers").select("question_id,selected_index,marked_for_review").eq("attempt_id", attempt.id);
     const restored: Record<string, number> = {};
-    (prior ?? []).forEach((r: any) => { if (r.selected_index !== null) restored[r.question_id] = r.selected_index; });
+    const markedRestored: Record<string, boolean> = {};
+    (prior ?? []).forEach((r: any) => {
+      if (r.selected_index !== null) restored[r.question_id] = r.selected_index;
+      if (r.marked_for_review) markedRestored[r.question_id] = true;
+    });
     setAnswers(restored);
-    // Server-authoritative start time
+    setMarked(markedRestored);
+
     const { data: att } = await supabase.from("exam_attempts").select("started_at").eq("id", attempt.id).single();
-    const start = att?.started_at ? new Date(att.started_at).getTime() : Date.now();
-    setStartedAt(start);
+    const startTs = att?.started_at ? new Date(att.started_at).getTime() : Date.now();
+    setStartedAt(startTs);
     const dur = (exam.duration_min ?? exam.duration_minutes ?? 60) * 60;
-    setRemaining(Math.max(0, Math.floor(start / 1000 + dur - Date.now() / 1000)));
-    setViolationLimit(exam.violation_limit ?? 3);
+    setRemaining(Math.max(0, Math.floor(startTs / 1000 + dur - Date.now() / 1000)));
+    setViolationLimit(exam.violation_limit ?? cfg.violationLimit ?? 3);
     setViolations(0);
+    setSummary(null);
     setActiveExam(exam);
     setCurrent(0);
     if (exam.mode !== "practice") {
-      // Request fullscreen
-      setTimeout(() => {
-        containerRef.current?.requestFullscreen?.().catch(() => {});
-      }, 50);
-      // Start proctoring if exam requires it
-      if (exam.proctored) {
-        startProctor(exam.id, attempt.id);
-      }
+      setTimeout(() => { containerRef.current?.requestFullscreen?.().catch(() => {}); }, 50);
+      const proctorRequested = exam.proctored ?? cfg.webcamProctoring ?? false;
+      if (proctorRequested) startProctor(exam.id, attempt.id);
     }
   }
 
@@ -115,7 +138,7 @@ export default function ExamInterface() {
       };
       snap();
       snapTimerRef.current = window.setInterval(snap, 30_000);
-    } catch (err: any) {
+    } catch {
       toast.error("Webcam access denied — this exam requires proctoring.");
       logViolation("webcam_denied");
     }
@@ -131,7 +154,9 @@ export default function ExamInterface() {
   const submit = useCallback(async (reason?: string) => {
     if (!attemptId || !activeExam || submittingRef.current) return;
     submittingRef.current = true;
-    const rows = Object.entries(answers).map(([question_id, selected_index]) => ({ attempt_id: attemptId, question_id, selected_index }));
+    const rows = Object.entries(answers).map(([question_id, selected_index]) => ({
+      attempt_id: attemptId, question_id, selected_index, marked_for_review: !!marked[question_id],
+    }));
     if (rows.length) await supabase.from("exam_answers").upsert(rows, { onConflict: "attempt_id,question_id" });
     const { data: graded, error: gErr } = await supabase.functions.invoke("grade-exam-attempt", { body: { attempt_id: attemptId } });
     if (gErr) {
@@ -143,24 +168,33 @@ export default function ExamInterface() {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     stopProctor();
     toast.success(`${reason ? reason + " — " : ""}Submitted! Score: ${score}%`);
-    setActiveExam(null); setQuestions([]); setAnswers({}); setAttemptId(null); setStartedAt(null);
+    const durationSec = startedAt ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : 0;
+    setSummary({ score, answered: Object.keys(answers).length, total: questions.length, durationSec });
     submittingRef.current = false;
-  }, [attemptId, activeExam, answers, questions]);
+  }, [attemptId, activeExam, answers, marked, questions, startedAt]);
 
-  // Autosave individual answer
   async function selectAnswer(questionId: string, idx: number) {
     setAnswers(prev => ({ ...prev, [questionId]: idx }));
     if (!attemptId) return;
     await supabase.from("exam_answers").upsert(
-      { attempt_id: attemptId, question_id: questionId, selected_index: idx },
+      { attempt_id: attemptId, question_id: questionId, selected_index: idx, marked_for_review: !!marked[questionId] },
       { onConflict: "attempt_id,question_id" }
     );
   }
 
-  // Log a violation, warn, auto-submit on limit
+  async function toggleMark(questionId: string) {
+    const next = !marked[questionId];
+    setMarked(prev => ({ ...prev, [questionId]: next }));
+    if (!attemptId) return;
+    await supabase.from("exam_answers").upsert(
+      { attempt_id: attemptId, question_id: questionId, selected_index: answers[questionId] ?? null, marked_for_review: next },
+      { onConflict: "attempt_id,question_id" }
+    );
+  }
+
   const logViolation = useCallback(async (type: string, detail?: string) => {
     if (!attemptId || !school || !activeExam || submittingRef.current) return;
-    if (activeExam.mode === "practice") return; // No sanctions in practice
+    if (activeExam.mode === "practice") return;
     await supabase.from("exam_violations").insert({ attempt_id: attemptId, school_id: school.id, type, detail: detail ?? null });
     setViolations(v => {
       const next = v + 1;
@@ -175,7 +209,7 @@ export default function ExamInterface() {
 
   // Timer
   useEffect(() => {
-    if (!activeExam || !startedAt) return;
+    if (!activeExam || !startedAt || summary) return;
     const dur = (activeExam.duration_min ?? activeExam.duration_minutes ?? 60) * 60;
     const id = setInterval(() => {
       const left = Math.max(0, Math.floor(startedAt / 1000 + dur - Date.now() / 1000));
@@ -184,17 +218,17 @@ export default function ExamInterface() {
         clearInterval(id);
         if (activeExam.mode === "practice") {
           toast.info("Time elapsed — practice mode, you can keep going.");
-        } else {
+        } else if (cfg.autoSubmitOnTimeout !== false) {
           submit("Time up");
         }
       }
     }, 1000);
     return () => clearInterval(id);
-  }, [activeExam, startedAt, submit]);
+  }, [activeExam, startedAt, summary, submit, cfg.autoSubmitOnTimeout]);
 
-  // Lockdown: blur, visibility, fullscreen exit, copy/paste, context menu, devtools shortcuts
+  // Lockdown
   useEffect(() => {
-    if (!activeExam || activeExam.mode === "practice") return;
+    if (!activeExam || activeExam.mode === "practice" || summary) return;
     const onBlur = () => logViolation("window_blur");
     const onVisibility = () => { if (document.visibilityState === "hidden") logViolation("tab_hidden"); };
     const onFsChange = () => { if (!document.fullscreenElement) logViolation("fullscreen_exit"); };
@@ -203,7 +237,7 @@ export default function ExamInterface() {
     const onPaste = (e: ClipboardEvent) => { e.preventDefault(); logViolation("paste_attempt"); };
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
-      if (k === "f12" || (e.ctrlKey && e.shiftKey && ["i","j","c"].includes(k)) || (e.ctrlKey && ["u","s","p"].includes(k))) {
+      if (k === "f12" || (e.ctrlKey && e.shiftKey && ["i", "j", "c"].includes(k)) || (e.ctrlKey && ["u", "s", "p"].includes(k))) {
         e.preventDefault(); logViolation("devtools_shortcut", k);
       }
     };
@@ -226,124 +260,279 @@ export default function ExamInterface() {
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("beforeunload", onBeforeUnload);
     };
-  }, [activeExam, logViolation]);
+  }, [activeExam, logViolation, summary]);
 
-  const timerLabel = useMemo(() => {
-    const m = Math.floor(remaining / 60).toString().padStart(2, "0");
-    const s = (remaining % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
-  }, [remaining]);
+  const totalSeconds = activeExam ? (activeExam.duration_min ?? activeExam.duration_minutes ?? 60) * 60 : 0;
+  const answeredCount = useMemo(() => questions.filter(q => answers[q.id] !== undefined).length, [questions, answers]);
+  const markedCount = useMemo(() => questions.filter(q => marked[q.id]).length, [questions, marked]);
+  const totalMarks = useMemo(() => questions.reduce((s, q) => s + (q.points ?? 1), 0), [questions]);
 
+  function jumpTo(i: number) { setCurrent(Math.max(0, Math.min(questions.length - 1, i))); }
+  function backToPicker() {
+    setActiveExam(null); setQuestions([]); setAnswers({}); setMarked({});
+    setAttemptId(null); setStartedAt(null); setSummary(null); setCurrent(0);
+  }
+
+  // ===================== SUMMARY VIEW =====================
+  if (activeExam && summary) {
+    return (
+      <div className="min-h-[calc(100vh-120px)] grid place-items-center px-4">
+        <div className="max-w-md w-full rounded-2xl border border-border bg-card p-8 shadow-card text-center">
+          <div className="size-14 rounded-full bg-success/15 text-success grid place-items-center mx-auto mb-4">
+            <Trophy className="size-7" />
+          </div>
+          <h2 className="font-display text-2xl font-bold">Exam submitted</h2>
+          <p className="text-sm text-muted-foreground mt-1">{activeExam.title}</p>
+          <div className="mt-6 grid grid-cols-3 gap-2">
+            <Stat label="Score" value={`${summary.score}%`} />
+            <Stat label="Answered" value={`${summary.answered}/${summary.total}`} />
+            <Stat label="Time used" value={fmtDuration(summary.durationSec)} />
+          </div>
+          <Button className="w-full mt-6" onClick={backToPicker}>Back to exams</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ===================== EXAM SHELL =====================
   if (activeExam) {
-    const answeredCount = questions.filter(q => answers[q.id] !== undefined).length;
-    const jumpTo = (i: number) => {
-      setCurrent(i);
-      const q = questions[i];
-      const el = q && questionRefs.current[q.id];
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
+    const q = questions[current];
+    const picked = q ? answers[q.id] : undefined;
     return (
       <div ref={containerRef} className="bg-background min-h-screen select-none" style={{ userSelect: "none" }}>
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 font-semibold truncate">
-            {activeExam.title}
-            {isPractice && <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-semibold">PRACTICE</span>}
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:block text-xs text-muted-foreground">
-              {answeredCount}/{questions.length} answered
-            </div>
-            {proctorOn && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="size-2 rounded-full bg-destructive animate-pulse" />
-                <Video className="size-3.5" /> Proctoring
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_320px] min-h-screen">
+          {/* ---------------- LEFT RAIL ---------------- */}
+          <aside className="hidden lg:flex flex-col border-r border-border bg-sidebar">
+            <div className="p-5 border-b border-sidebar-border flex items-center gap-3">
+              {school?.logo_url
+                ? <img src={school.logo_url} alt={school.name} className="size-10 rounded-lg object-cover" />
+                : <div className="size-10 rounded-lg bg-primary/15 text-primary grid place-items-center font-display font-bold">{(school?.name?.[0] ?? "S").toUpperCase()}</div>}
+              <div className="min-w-0 leading-tight">
+                <div className="font-display font-bold truncate">{school?.name ?? "School"}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{activeExam.mode === "neco_sim" ? "NECO CBT Mock" : activeExam.mode === "practice" ? "Practice" : "School Exam"}</div>
               </div>
-            )}
-            <div className={`flex items-center gap-1.5 text-sm font-mono px-2.5 py-1 rounded-md border ${remaining < 60 ? "border-destructive text-destructive" : "border-border"}`}>
-              <Clock className="size-3.5" /> {timerLabel}
             </div>
-            {!isPractice && violations > 0 && (
-              <div className="flex items-center gap-1.5 text-xs text-destructive">
-                <AlertTriangle className="size-3.5" /> {violations}/{violationLimit}
+
+            <div className="p-5 border-b border-sidebar-border">
+              <div className="rounded-lg bg-primary/10 border border-primary/20 p-3">
+                <div className="text-xs text-muted-foreground">Exam</div>
+                <div className="font-display font-semibold leading-tight mt-0.5">{activeExam.title}</div>
+                {activeExam.subject && <div className="text-xs text-muted-foreground mt-0.5">{activeExam.subject}</div>}
+                <div className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary text-primary-foreground uppercase tracking-wide">
+                  {activeExam.mode === "neco_sim" ? "NECO CBT Mode" : activeExam.mode === "practice" ? "Practice" : "Live"}
+                </div>
               </div>
-            )}
-            {!isPractice && (
-              <Button size="sm" variant="outline" onClick={() => containerRef.current?.requestFullscreen?.().catch(() => {})}>
-                <Maximize2 className="size-3.5 mr-1" /> Fullscreen
+            </div>
+
+            <div className="p-5 border-b border-sidebar-border space-y-3">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Exam details</div>
+              <Detail icon={Layers} label="Total Questions" value={String(questions.length)} />
+              <Detail icon={Award} label="Total Marks" value={String(totalMarks)} />
+              <Detail icon={Timer} label="Duration" value={fmtDurationCompact(totalSeconds)} />
+              <Detail icon={Clock} label="Started" value={startedAt ? new Date(startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"} />
+            </div>
+
+            <div className="p-5 border-b border-sidebar-border">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">Legend</div>
+              <div className="space-y-2 text-xs">
+                <Legend swatch="bg-card border-border" label="Not answered" />
+                <Legend swatch="bg-success border-success" label="Answered" />
+                <Legend swatch="bg-warning border-warning" label="Marked for review" />
+                <Legend swatch="bg-primary border-primary" label="Current question" />
+              </div>
+            </div>
+
+            <div className="mt-auto p-5">
+              <Button variant="destructive" className="w-full" onClick={() => setEndOpen(true)}>
+                <LogOut className="size-4 mr-2" /> End Exam
               </Button>
-            )}
-            <Button size="sm" onClick={() => setConfirmOpen(true)}>Finish</Button>
-          </div>
-        </div>
-        <video ref={videoRef} muted playsInline className="fixed bottom-3 right-3 w-32 h-24 rounded-md border border-border bg-black/60 z-20" style={{ display: proctorOn ? "block" : "none" }} />
-        <div className="max-w-6xl mx-auto p-4 grid lg:grid-cols-[1fr_240px] gap-4">
-          <div className="min-w-0">
-          {isPractice && (
-            <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
-              <span className="font-semibold">Practice mode</span> — answers won't affect your results. No fullscreen, no warnings.
-              {activeExam.show_answers_after_each && " Correct answer is revealed after each pick."}
             </div>
-          )}
-          <SectionCard title={`Questions (${questions.length})`}>
-            <ol className="space-y-5">
-              {questions.map((q, i) => (
-                <li key={q.id} ref={(el) => { questionRefs.current[q.id] = el; }} className={current === i ? "scroll-mt-20" : "scroll-mt-20"}>
-                  <div className="font-medium">{i + 1}. {q.prompt}</div>
-                  <div className="mt-2 space-y-1.5">
-                    {(q.options as string[]).map((o, oi) => {
-                      const picked = answers[q.id];
-                      const reveal = false; // answer keys are server-side only
-                      const isCorrect = false;
-                      const cls = "border-border hover:bg-secondary/40";
-                      return (
-                        <label key={oi} className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer ${cls}`}>
-                          <input type="radio" name={q.id} checked={picked === oi} onChange={() => { selectAnswer(q.id, oi); setCurrent(i); }} />
-                          <span className="text-sm flex-1">{o}</span>
-                          {reveal && isCorrect && <CheckCircle2 className="size-4 text-success" />}
-                          {reveal && !isCorrect && picked === oi && <XCircle className="size-4 text-destructive" />}
-                        </label>
-                      );
-                    })}
+          </aside>
+
+          {/* ---------------- CENTER ---------------- */}
+          <div className="flex flex-col min-w-0">
+            {/* Top status bar */}
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap">
+              <Pill icon={BookOpen} label="Subject" value={activeExam.subject || "—"} />
+              <Pill icon={ShieldCheck} label="Mode" value={activeExam.mode === "neco_sim" ? "NECO CBT Mock" : activeExam.mode === "practice" ? "Practice" : "School"} />
+              <Pill icon={UserIcon} label="Student" value={displayName || "Student"} />
+              <div className="ml-auto flex items-center gap-3">
+                {proctorOn && (
+                  <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="size-2 rounded-full bg-destructive animate-pulse" />
+                    <Video className="size-3.5" /> Proctoring
                   </div>
-                  <div className="mt-3 flex justify-between">
-                    <Button size="sm" variant="outline" disabled={i === 0} onClick={() => jumpTo(i - 1)}>Previous</Button>
-                    {i < questions.length - 1
-                      ? <Button size="sm" variant="outline" onClick={() => jumpTo(i + 1)}>Next</Button>
-                      : <Button size="sm" onClick={() => setConfirmOpen(true)}>Review & finish</Button>}
+                )}
+                {!isPractice && violations > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs text-destructive">
+                    <AlertTriangle className="size-3.5" /> {violations}/{violationLimit}
                   </div>
-                </li>
-              ))}
-            </ol>
-          </SectionCard>
+                )}
+                <div className="flex items-center gap-2">
+                  <div className="text-right hidden sm:block leading-tight">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Time Remaining</div>
+                    <div className={cn("text-xs font-mono font-bold", remaining < 60 && "text-destructive")}>{fmtClock(remaining)}</div>
+                  </div>
+                  <TimerRing remaining={remaining} total={totalSeconds} />
+                </div>
+                {!isPractice && (
+                  <Button size="sm" variant="outline" className="hidden md:inline-flex" onClick={() => containerRef.current?.requestFullscreen?.().catch(() => {})}>
+                    <Maximize2 className="size-3.5 mr-1" /> Fullscreen
+                  </Button>
+                )}
+                <Button size="sm" onClick={() => setConfirmOpen(true)}>
+                  <CheckCircle2 className="size-4 mr-1.5" /> Submit Exam
+                </Button>
+              </div>
+            </div>
+
+            {/* Question */}
+            <main className="flex-1 px-4 md:px-8 py-6 max-w-4xl w-full mx-auto">
+              {isPractice && (
+                <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+                  <span className="font-semibold">Practice mode</span> — answers won't affect your results. No fullscreen, no warnings.
+                </div>
+              )}
+
+              {q ? (
+                <div className="rounded-xl border border-border bg-card shadow-card">
+                  <div className="px-5 md:px-6 py-4 border-b border-border flex items-center gap-3 flex-wrap">
+                    <div className="font-semibold">Question {current + 1} of {questions.length}</div>
+                    <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-md bg-primary/10 text-primary font-medium">
+                      {q.points ?? 1} Mark{(q.points ?? 1) > 1 ? "s" : ""}
+                    </span>
+                    <label className="ml-auto flex items-center gap-2 text-sm cursor-pointer text-muted-foreground hover:text-foreground">
+                      <Checkbox checked={!!marked[q.id]} onCheckedChange={() => toggleMark(q.id)} />
+                      {marked[q.id] ? <BookmarkCheck className="size-4 text-warning" /> : <Bookmark className="size-4" />}
+                      Mark for Review
+                    </label>
+                  </div>
+                  <div className="px-5 md:px-6 py-6">
+                    <div className="text-base leading-relaxed">
+                      <MathText>{q.prompt}</MathText>
+                    </div>
+                    <div className="mt-5 space-y-2">
+                      {(q.options as string[]).map((o, oi) => {
+                        const isPicked = picked === oi;
+                        const letter = String.fromCharCode(65 + oi);
+                        return (
+                          <button
+                            key={oi}
+                            type="button"
+                            onClick={() => selectAnswer(q.id, oi)}
+                            className={cn(
+                              "w-full flex items-center gap-3 p-3 md:p-4 rounded-lg border text-left transition group",
+                              isPicked
+                                ? "border-success bg-success/10 ring-2 ring-success/20"
+                                : "border-border hover:border-primary/40 hover:bg-secondary/50",
+                            )}
+                          >
+                            <span className={cn(
+                              "size-8 shrink-0 rounded-full grid place-items-center font-semibold text-sm border transition",
+                              isPicked ? "bg-success text-success-foreground border-success" : "bg-card border-border text-muted-foreground group-hover:border-primary/50",
+                            )}>{letter}</span>
+                            <span className="text-sm flex-1"><MathText>{o}</MathText></span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-6 flex items-center justify-between gap-2">
+                      <Button variant="outline" disabled={current === 0} onClick={() => jumpTo(current - 1)}>
+                        <ArrowLeft className="size-4 mr-1.5" /> Previous
+                      </Button>
+                      {current < questions.length - 1
+                        ? <Button onClick={() => jumpTo(current + 1)}>Next <ArrowRight className="size-4 ml-1.5" /></Button>
+                        : <Button onClick={() => setConfirmOpen(true)}>Review & finish <CheckCircle2 className="size-4 ml-1.5" /></Button>}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState icon={ListChecks} title="No questions in this exam" />
+              )}
+            </main>
+
+            <div className="px-4 md:px-8 py-3 border-t border-border text-xs text-muted-foreground flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="size-4" />
+                <span className="font-medium text-foreground">CBT Simulation</span>
+                <span className="hidden sm:inline">— Interface may vary slightly in the real exam.</span>
+              </div>
+              <div className="hidden sm:flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-success animate-pulse" /> Auto-save every 10 seconds
+              </div>
+            </div>
           </div>
-          <aside className="lg:sticky lg:top-[68px] lg:self-start">
-            <SectionCard title="Question navigator" description={`${answeredCount}/${questions.length} answered`}>
-              <div className="grid grid-cols-6 lg:grid-cols-5 gap-1.5">
-                {questions.map((q, i) => {
-                  const answered = answers[q.id] !== undefined;
+
+          {/* ---------------- RIGHT NAVIGATOR ---------------- */}
+          <aside className="hidden lg:flex flex-col border-l border-border bg-card/30 max-h-screen overflow-y-auto">
+            <div className="p-5 border-b border-border">
+              <div className="flex items-center justify-between">
+                <div className="font-display font-semibold">Question Navigator</div>
+                <span className="text-xs text-muted-foreground">{questions.length}</span>
+              </div>
+              <div className="mt-4 grid grid-cols-6 gap-1.5">
+                {questions.map((qq, i) => {
+                  const answered = answers[qq.id] !== undefined;
+                  const isMarked = !!marked[qq.id];
                   const isCurrent = current === i;
                   return (
                     <button
-                      key={q.id}
+                      key={qq.id}
                       onClick={() => jumpTo(i)}
-                      className={`aspect-square rounded-md text-xs font-semibold border transition ${
-                        isCurrent ? "ring-2 ring-primary " : ""
-                      }${
-                        answered ? "bg-success/15 border-success/40 text-success" : "bg-secondary/40 border-border text-muted-foreground hover:bg-secondary"
-                      }`}
-                      title={answered ? "Answered" : "Unanswered"}
+                      className={cn(
+                        "aspect-square rounded-md text-xs font-semibold border transition",
+                        isCurrent
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : isMarked
+                            ? "bg-warning text-warning-foreground border-warning"
+                            : answered
+                              ? "bg-success text-success-foreground border-success"
+                              : "bg-card border-border text-muted-foreground hover:border-primary/40",
+                      )}
+                      title={isCurrent ? "Current" : isMarked ? "Marked for review" : answered ? "Answered" : "Unanswered"}
                     >{i + 1}</button>
                   );
                 })}
               </div>
-              <div className="mt-3 flex flex-col gap-1 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm bg-success/40 border border-success/60" /> Answered</span>
-                <span className="flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm bg-secondary border border-border" /> Unanswered</span>
+            </div>
+
+            <div className="p-5 border-b border-border">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Progress</span>
+                <span className="font-semibold">{answeredCount} / {questions.length} Answered</span>
               </div>
-              <Button className="w-full mt-4" onClick={() => setConfirmOpen(true)}>Finish exam</Button>
-            </SectionCard>
+              <div className="mt-2 h-2 rounded-full bg-secondary overflow-hidden">
+                <div className="h-full bg-success transition-all" style={{ width: `${questions.length ? (answeredCount / questions.length) * 100 : 0}%` }} />
+              </div>
+              <div className="mt-1 text-[10px] text-muted-foreground text-right">
+                {questions.length ? Math.round((answeredCount / questions.length) * 100) : 0}%
+              </div>
+              {markedCount > 0 && (
+                <div className="mt-2 text-xs text-warning-foreground inline-flex items-center gap-1.5">
+                  <BookmarkCheck className="size-3.5 text-warning" /> {markedCount} marked for review
+                </div>
+              )}
+            </div>
+
+            <div className="p-5">
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Timer className="size-4 text-primary" /> Time Guide
+                </div>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  You are expected to complete this paper in <span className="font-semibold text-foreground">{fmtDurationCompact(totalSeconds)}</span>. Manage your time wisely.
+                </p>
+              </div>
+              <Button className="w-full mt-4" onClick={() => setConfirmOpen(true)}>
+                <CheckCircle2 className="size-4 mr-1.5" /> Finish exam
+              </Button>
+            </div>
           </aside>
         </div>
+
+        <video ref={videoRef} muted playsInline className="fixed bottom-3 right-3 w-32 h-24 rounded-md border border-border bg-black/60 z-20" style={{ display: proctorOn ? "block" : "none" }} />
+
+        {/* Submit confirm */}
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -351,6 +540,7 @@ export default function ExamInterface() {
               <AlertDialogDescription>
                 You have answered <span className="font-semibold text-foreground">{answeredCount}</span> of <span className="font-semibold text-foreground">{questions.length}</span> questions.
                 {answeredCount < questions.length && <> You still have <span className="font-semibold text-destructive">{questions.length - answeredCount}</span> unanswered.</>}
+                {markedCount > 0 && <> {markedCount} marked for review.</>}
                 {" "}This cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -360,45 +550,149 @@ export default function ExamInterface() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* End exam (early exit) */}
+        <AlertDialog open={endOpen} onOpenChange={setEndOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>End the exam early?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Ending now will submit your exam with the answers you've recorded so far. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep going</AlertDialogCancel>
+              <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => { setEndOpen(false); submit("Ended early"); }}>End & submit</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
 
+  // ===================== PICKER =====================
   const grouped = {
     neco_sim: exams.filter(e => e.mode === "neco_sim"),
     school:   exams.filter(e => !e.mode || e.mode === "school"),
     practice: exams.filter(e => e.mode === "practice"),
   };
-  const renderList = (list: any[]) => list.length === 0
+
+  const renderGrid = (list: any[]) => list.length === 0
     ? <EmptyState icon={ListChecks} title="No exams in this category" />
-    : <ul className="space-y-2">{list.map(e => (
-        <li key={e.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
-          <div>
-            <div className="font-medium">{e.title}</div>
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              <span>{e.duration_min ?? e.duration_minutes} min</span>
-              {e.subject && <span>· {e.subject}</span>}
-              {e.randomize && <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px]">Randomized</span>}
-              {e.proctored && <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px]">Proctored</span>}
-              {e.mode === "practice" && <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">No sanctions</span>}
-            </div>
-          </div>
-          <Button onClick={() => start(e)}>{e.mode === "practice" ? "Practice" : "Start"}</Button>
-        </li>
-      ))}</ul>;
+    : (
+      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        {list.map(e => <ExamCard key={e.id} exam={e} onStart={() => start(e)} />)}
+      </div>
+    );
 
   return (
-    <SectionCard title="Available Exams">
+    <div className="space-y-4">
+      <div>
+        <h2 className="font-display text-lg font-semibold">Exam centre</h2>
+        <p className="text-sm text-muted-foreground">Practice, school assessments, and full NECO CBT simulations.</p>
+      </div>
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-        <TabsList className="mb-4">
+        <TabsList>
           <TabsTrigger value="neco_sim"><Award className="size-3.5 mr-1.5" /> NECO Mock ({grouped.neco_sim.length})</TabsTrigger>
           <TabsTrigger value="school"><GraduationCap className="size-3.5 mr-1.5" /> School Exams ({grouped.school.length})</TabsTrigger>
           <TabsTrigger value="practice"><Sparkles className="size-3.5 mr-1.5" /> Practice ({grouped.practice.length})</TabsTrigger>
         </TabsList>
-        <TabsContent value="neco_sim">{renderList(grouped.neco_sim)}</TabsContent>
-        <TabsContent value="school">{renderList(grouped.school)}</TabsContent>
-        <TabsContent value="practice">{renderList(grouped.practice)}</TabsContent>
+        <TabsContent value="neco_sim" className="mt-4">{renderGrid(grouped.neco_sim)}</TabsContent>
+        <TabsContent value="school"   className="mt-4">{renderGrid(grouped.school)}</TabsContent>
+        <TabsContent value="practice" className="mt-4">{renderGrid(grouped.practice)}</TabsContent>
       </Tabs>
-    </SectionCard>
+    </div>
   );
+}
+
+// ===================== Small components =====================
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-secondary/50 px-3 py-3">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
+      <div className="font-display font-bold mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+function Detail({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="flex items-center gap-2 text-muted-foreground"><Icon className="size-4" />{label}</span>
+      <span className="font-semibold">{value}</span>
+    </div>
+  );
+}
+
+function Legend({ swatch, label }: { swatch: string; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={cn("inline-block size-4 rounded border", swatch)} />
+      <span className="text-muted-foreground">{label}</span>
+    </div>
+  );
+}
+
+function Pill({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5">
+      <div className="size-7 rounded-md bg-secondary grid place-items-center"><Icon className="size-3.5 text-muted-foreground" /></div>
+      <div className="leading-tight min-w-0">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
+        <div className="text-xs font-semibold truncate max-w-[120px]">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function ExamCard({ exam, onStart }: { exam: any; onStart: () => void }) {
+  const mins = exam.duration_min ?? exam.duration_minutes ?? 60;
+  return (
+    <div className="rounded-xl border border-border bg-card p-5 shadow-card flex flex-col gap-3 hover:border-primary/40 transition">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          {exam.subject && <span className="inline-flex text-[10px] uppercase tracking-wider font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{exam.subject}</span>}
+          <h3 className="font-display font-semibold mt-2 leading-tight">{exam.title}</h3>
+        </div>
+        <span className={cn(
+          "text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider whitespace-nowrap",
+          exam.mode === "practice" ? "bg-primary/10 text-primary" :
+          exam.mode === "neco_sim" ? "bg-warning/15 text-warning-foreground" :
+          "bg-secondary text-foreground",
+        )}>{exam.mode === "neco_sim" ? "NECO" : exam.mode === "practice" ? "Practice" : "School"}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="flex items-center gap-1.5 text-muted-foreground"><Timer className="size-3.5" /> {mins} min</div>
+        {exam.proctored && <div className="flex items-center gap-1.5 text-muted-foreground"><Video className="size-3.5" /> Proctored</div>}
+        {exam.randomize && <div className="flex items-center gap-1.5 text-muted-foreground"><Sparkles className="size-3.5" /> Randomized</div>}
+        {exam.scheduled_at && <div className="flex items-center gap-1.5 text-muted-foreground"><Clock className="size-3.5" /> {new Date(exam.scheduled_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</div>}
+      </div>
+      <Button className="mt-auto" onClick={onStart}>
+        {exam.mode === "practice" ? "Start practice" : "Start exam"}
+      </Button>
+    </div>
+  );
+}
+
+// ===================== utils =====================
+function fmtClock(sec: number) {
+  const m = Math.floor(Math.max(0, sec) / 60).toString().padStart(2, "0");
+  const s = (Math.max(0, sec) % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+function fmtDuration(sec: number) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  if (m < 60) return `${m}m ${s}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m`;
+}
+function fmtDurationCompact(sec: number) {
+  const m = Math.floor(sec / 60);
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  const rest = m % 60;
+  return rest ? `${h} hr ${rest} min` : `${h} hr`;
 }
