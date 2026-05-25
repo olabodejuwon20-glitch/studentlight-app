@@ -109,8 +109,11 @@ export default function ExamInterface() {
       attempt = existing!;
     }
     setAttemptId(attempt.id);
-    const { data: qs } = await supabase.from("exam_questions").select("*").eq("exam_id", exam.id).order("position");
-    let list = qs ?? [];
+    const { data: qsRaw } = await supabase.rpc("get_exam_questions_for_attempt", { _attempt_id: attempt.id });
+    let list = (qsRaw ?? []).map((r: any) => ({
+      id: r.q_id, exam_id: r.q_exam_id, school_id: r.q_school_id,
+      prompt: r.q_prompt, options: r.q_options, points: r.q_points, position: r.q_position,
+    }));
     const shouldShuffle = exam.randomize ?? cfg.randomizeQuestions ?? false;
     if (shouldShuffle) list = seededShuffle(list, attempt.id);
     setQuestions(list);
@@ -201,21 +204,21 @@ export default function ExamInterface() {
       return;
     }
     const score = graded?.score ?? 0;
+    const serverBreakdown: Array<{ id: string; correctIdx: number; pickedIdx: number | null; points: number; isCorrect: boolean }> = graded?.breakdown ?? [];
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     stopProctor();
     toast.success(`${reason ? reason + " — " : ""}Submitted! Score: ${score}%`);
     const durationSec = startedAt ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : 0;
-    // Build per-question breakdown using correct_index visible via RLS to members
-    const correctMap = new Map<string, { correct: number; points: number; prompt: string }>(
-      questions.map(q => [q.id, { correct: q.correct_index ?? 0, points: q.points ?? 1, prompt: q.prompt }]),
-    );
+    // Build per-question breakdown using server-provided correct indexes (students cannot read correct_index directly).
+    const serverMap = new Map(serverBreakdown.map(b => [b.id, b]));
     const bd = questions.map(q => {
-      const meta = correctMap.get(q.id)!;
+      const s = serverMap.get(q.id);
       const picked = answers[q.id];
       return {
-        id: q.id, prompt: meta.prompt, points: meta.points, correctIdx: meta.correct,
+        id: q.id, prompt: q.prompt, points: q.points ?? 1,
+        correctIdx: s?.correctIdx ?? 0,
         pickedIdx: picked === undefined ? null : picked,
-        isCorrect: picked !== undefined && picked === meta.correct,
+        isCorrect: s?.isCorrect ?? false,
       };
     });
     setBreakdown(bd);

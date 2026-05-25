@@ -48,16 +48,25 @@ Deno.serve(async (req) => {
     const aMap = new Map((answers ?? []).map((r: any) => [r.question_id, r.selected_index]));
     let correct = 0;
     let total = 0;
-    (questions ?? []).forEach((q: any) => {
+    const breakdown = (questions ?? []).map((q: any) => {
       total += q.points || 0;
-      if (aMap.get(q.id) === q.correct_index) correct += q.points || 0;
+      const picked = aMap.get(q.id);
+      const isCorrect = picked === q.correct_index;
+      if (isCorrect) correct += q.points || 0;
+      return {
+        id: q.id,
+        correctIdx: q.correct_index,
+        pickedIdx: picked === undefined ? null : picked,
+        points: q.points || 1,
+        isCorrect,
+      };
     });
     const score = Math.round((correct / (total || 1)) * 100);
     const submitted_at = new Date().toISOString();
 
     await admin.from("exam_attempts").update({ submitted_at, score }).eq("id", attempt_id);
 
-    return json({ ok: true, score, submitted_at });
+    return json({ ok: true, score, submitted_at, breakdown });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
