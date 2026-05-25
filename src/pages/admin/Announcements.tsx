@@ -10,12 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 
 export default function AdminAnnouncements() {
   const { school, user } = useSchool();
   const [rows, setRows] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", body: "" });
+  const [broadcast, setBroadcast] = useState(true);
+  const [audience, setAudience] = useState<"all" | "teacher" | "student" | "parent">("all");
 
   async function load() {
     if (!school) return;
@@ -29,7 +32,16 @@ export default function AdminAnnouncements() {
     if (!school || !user) return;
     const { error } = await supabase.from("announcements").insert({ ...form, school_id: school.id, created_by: user.id });
     if (error) return toast.error(error.message);
-    toast.success("Announcement posted"); setOpen(false); setForm({ title: "", body: "" }); load();
+    if (broadcast) {
+      const { error: fnErr } = await supabase.functions.invoke("notify-recipients", {
+        body: { school_id: school.id, title: form.title, body: form.body, audience },
+      });
+      if (fnErr) toast.error(`Broadcast failed: ${fnErr.message}`);
+      else toast.success("Announcement posted & broadcast to inboxes");
+    } else {
+      toast.success("Announcement posted");
+    }
+    setOpen(false); setForm({ title: "", body: "" }); load();
   }
   async function remove(id: string) { await supabase.from("announcements").delete().eq("id", id); load(); }
 
@@ -42,6 +54,24 @@ export default function AdminAnnouncements() {
           <form onSubmit={add} className="space-y-3">
             <div><Label>Title</Label><Input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} /></div>
             <div><Label>Message</Label><Textarea rows={4} value={form.body} onChange={e => setForm({ ...form, body: e.target.value })} /></div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div>
+                <div className="text-sm font-medium">Also deliver to inboxes</div>
+                <div className="text-xs text-muted-foreground">Creates a broadcast conversation everyone in the audience can see in their inbox.</div>
+              </div>
+              <Switch checked={broadcast} onCheckedChange={setBroadcast} />
+            </div>
+            {broadcast && (
+              <div>
+                <Label>Audience</Label>
+                <div className="flex gap-2 flex-wrap mt-1">
+                  {(["all","teacher","student","parent"] as const).map(a => (
+                    <button type="button" key={a} onClick={() => setAudience(a)}
+                      className={`text-xs px-3 py-1.5 rounded-full border capitalize ${audience===a ? "bg-primary text-primary-foreground border-primary" : "border-border"}`}>{a}</button>
+                  ))}
+                </div>
+              </div>
+            )}
             <Button type="submit" className="w-full">Publish</Button>
           </form>
         </DialogContent>
