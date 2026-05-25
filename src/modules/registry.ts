@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Users, GraduationCap, BookOpen, Calendar, Library, BookOpenCheck,
   NotebookPen, Wallet, Building2, Bus, Megaphone, FileBarChart, Ticket, Upload, Settings,
   ClipboardCheck, ClipboardList, BarChart3, Award, Mail, FilePlus2, PencilRuler, MessagesSquare,
-  FolderOpen, ListChecks, Sparkles, UserSquare2, Activity,
+  FolderOpen, ListChecks, Sparkles, UserSquare2, Activity, Package,
 } from "lucide-react";
 import { ModuleManifest } from "./types";
 
@@ -185,7 +185,10 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
   },
   {
     slug: "admin-settings", name: "School Settings", category: "operations", icon: Settings, core: true,
-    sidebar: [{ label: "Settings", to: "settings", icon: Settings, roles: ["admin"] }],
+    sidebar: [
+      { label: "Modules",  to: "modules",  icon: Package,   roles: ["admin"] },
+      { label: "Settings", to: "settings", icon: Settings, roles: ["admin"] },
+    ],
   },
 ];
 

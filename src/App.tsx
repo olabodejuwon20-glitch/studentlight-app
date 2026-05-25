@@ -35,6 +35,7 @@ import AdminFees from "./pages/admin/Fees";
 import AdminQuestionBank from "./pages/admin/QuestionBank";
 import AdminProctoring from "./pages/admin/Proctoring";
 import AdminLessonNotes from "./pages/admin/LessonNotes";
+import AdminModules from "./pages/admin/Modules";
 import LibraryManager from "./pages/shared/LibraryManager";
 
 import TeacherDashboard from "./pages/teacher/Dashboard";
@@ -84,6 +85,8 @@ import SuperDashboard from "./pages/super/Dashboard";
 import SuperClaim from "./pages/super/Claim";
 import SuperSchools from "./pages/super/Schools";
 import SuperSchoolDetail from "./pages/super/SchoolDetail";
+import SuperModules from "./pages/super/Modules";
+import SuperMarketplace from "./pages/super/Marketplace";
 import ComingSoon from "./pages/super/_ComingSoon";
 
 const queryClient = new QueryClient();
@@ -113,10 +116,10 @@ const App = () => (
             <Route path="schools/:id" element={<SuperSchoolDetail />} />
             <Route path="analytics" element={<ComingSoon title="Analytics" description="Deep platform analytics and revenue trends." />} />
             <Route path="users" element={<ComingSoon title="Users & Roles" description="Search every user across tenants and manage platform roles." />} />
-            <Route path="modules" element={<ComingSoon title="Modules & Plugins" description="Global module registry, versions, and config schemas." />} />
+            <Route path="modules" element={<SuperModules />} />
             <Route path="licensing" element={<ComingSoon title="Feature Licensing" description="Per-school feature matrix and entitlements." />} />
             <Route path="configurations" element={<ComingSoon title="Tenant Config" description="Schema-driven configuration overrides per school." />} />
-            <Route path="marketplace" element={<ComingSoon title="Marketplace" description="Module store, requests, and approvals." />} />
+            <Route path="marketplace" element={<SuperMarketplace />} />
             <Route path="subscriptions" element={<ComingSoon title="Subscriptions" description="All active subscriptions and renewal pipeline." />} />
             <Route path="billing" element={<ComingSoon title="Billing & Revenue" description="Invoices, MRR, and revenue analytics." />} />
             <Route path="announcements" element={<ComingSoon title="Platform Announcements" description="Broadcast to all schools, roles, or segments." />} />
@@ -152,6 +155,7 @@ const App = () => (
               <Route path="admin/lesson-notes" element={<RoleGate allow="admin"><AdminLessonNotes /></RoleGate>} />
               <Route path="admin/question-bank" element={<RoleGate allow="admin"><AdminQuestionBank /></RoleGate>} />
               <Route path="admin/proctoring" element={<RoleGate allow="admin"><AdminProctoring /></RoleGate>} />
+              <Route path="admin/modules" element={<RoleGate allow="admin"><AdminModules /></RoleGate>} />
               <Route path="admin/settings" element={<RoleGate allow="admin"><AdminSettings /></RoleGate>} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
