@@ -1,83 +1,70 @@
 
-# Phase 5 — CBT Ecosystem Polish
+# Phase 7 — Super Admin Completion
 
-Bring `ExamInterface.tsx` to the quality of the uploaded NECO mockup. All current logic (auto-save, server-side grading via `grade-exam-attempt`, violation tracking, fullscreen lockdown, proctoring, seeded shuffle) is preserved — this is a UI/UX upgrade plus one DB column and a few behavior additions.
+Replace the six `ComingSoon` placeholders in `/super/*` with functional pages. All required tables (`memberships`, `profiles`, `user_roles`, `platform_announcements`, `platform_audit`, `platform_settings`, `security_events`, `schools`) already exist, so this phase is pure UI + a couple of read/write flows. No business-logic changes anywhere else.
 
-## What changes
+## What ships
 
-### 1. Three-pane exam shell (matches the mockup)
+### 1. `/super/users` — Users & Roles
+- Searchable directory across every tenant: name, email, role, school.
+- Filters: role (admin/teacher/student/parent/super_admin), school, status.
+- Row actions: grant / revoke `super_admin` (via `user_roles`), suspend membership (set `memberships.status='suspended'`), force PIN reset (`must_change_pin=true`).
+- Pagination (50/page) and CSV export.
 
-```text
-+--------------------+------------------------------------------+----------------------+
-| Left rail (260px)  | Top bar: Subject • Mode • Student • Timer ring • Submit Exam  |
-| - School logo+name +------------------------------------------+----------------------+
-| - Exam title       |  Single-question view                    | Question Navigator   |
-| - "NECO CBT Mode"  |  Question N of M • 1 Mark • Mark review  | 6-col grid of #'s    |
-| - Exam Details     |  Prompt (KaTeX rendering for math)       | color-coded states   |
-|   • Total Qs       |  A/B/C/D option pills                    | Progress bar         |
-|   • Total Marks    |                                          | NECO Time Guide card |
-|   • Duration       |  Previous / Next                         |                      |
-|   • Start/End time |                                          |                      |
-| - Legend           |                                          |                      |
-| - End Exam (red)   |                                          |                      |
-+--------------------+------------------------------------------+----------------------+
-```
+### 2. `/super/announcements` — Platform Announcements
+- List existing rows from `platform_announcements`, newest first.
+- Compose dialog: title, body (textarea), audience (`all` / `admins` / `teachers` / `students` / `parents`), priority (`normal` / `high` / `critical`), optional `scheduled_for`.
+- Delete + edit own rows. Writes go through `platform_announcements` (super-admin RLS already covers this).
 
-- Single-question paging replaces the current scroll-all list. Existing per-question `<li>` markup becomes a single rendered question driven by `current`.
-- Left rail is collapsible on `<lg` screens (drawer).
-- Right navigator keeps existing answered/current logic and adds "Marked for review" state (amber) + "Current" (indigo) matching the mockup colors.
-- Timer becomes a circular ring (SVG) with mm:ss inside; turns destructive under 60s.
-- "End Exam" (left rail) opens an early-exit confirm distinct from "Submit Exam" (top bar) which is the normal finish flow.
+### 3. `/super/tickets` — Support Tickets
+- New tiny table `support_tickets` (school, opened_by, subject, body, status: open/pending/resolved/closed, priority, assignee, last_activity_at) + `support_messages` (ticket_id, author, body) for the thread.
+- Triage view: status tabs, school filter, search.
+- Detail drawer: full thread, status changer, internal note vs. reply toggle, "assign to me".
+- RLS: super_admin full; school admins read/insert their own tenant's rows + messages.
 
-### 2. Mark for review
+### 4. `/super/security` — Security Center
+- Pulls last 30 days from `security_events`: login anomalies, failed logins, IP blocks, role escalations.
+- KPIs: events today, unique IPs, top offending school, escalations this week.
+- Daily line chart (events/day) + table with type/IP/user/school/timestamp.
+- "Mark reviewed" updates `detail.reviewed_at` (no schema change required).
 
-- DB: add `marked_for_review boolean not null default false` to `public.exam_answers`.
-- UI: checkbox above the question, color in navigator (amber).
-- Persisted via the same upsert path already used for `selected_index`.
+### 5. `/super/logs` — System Logs
+- Read-only stream of `platform_audit` with infinite scroll (cursor on `created_at`).
+- Filters: action prefix, actor, school, date range.
+- JSON payload viewer (popover) for each row, copy-to-clipboard, CSV export of current filter.
 
-### 3. Math/rich-text prompts
+### 6. `/super/settings` — Platform Settings
+- Single-row editor for `platform_settings` (id=1).
+- Tabs:
+  - **Brand**: platform name, logo upload (`school-logos` bucket reused under `platform/`), primary color, support email.
+  - **SMTP**: host, port, user, password (write-only), from name/address — stored in `smtp` jsonb.
+  - **Integrations**: enable/disable known providers (Paddle, Resend, Sentry, PostHog) — stored in `integrations` jsonb. Keys themselves stay in Lovable Cloud secrets, not the table.
+  - **Maintenance**: `maintenance_mode` toggle + `maintenance_message` textarea.
 
-- Add `katex` + a small `<Math>` renderer that scans `$...$` and `$$...$$` in prompt and option strings. Falls back to plain text when no delimiters present, so existing non-math questions render unchanged.
+## Technical details
 
-### 4. Auto-submit on timeout (config-driven)
+- Files created:
+  - `src/pages/super/Users.tsx`
+  - `src/pages/super/Announcements.tsx`
+  - `src/pages/super/Tickets.tsx`
+  - `src/pages/super/Security.tsx`
+  - `src/pages/super/Logs.tsx`
+  - `src/pages/super/Settings.tsx`
+  - One migration adding `support_tickets` + `support_messages` with RLS (super_admin full, school admins scoped) and an `updated_at` trigger.
+- `src/App.tsx`: swap the six `ComingSoon` routes for the new components.
+- Reuse existing primitives (`PageHeader`, `Section`, `MetricCard`, `StatusBadge`, `Skel`, `EmptyState`) and `AreaTrend`/`BarTrend` charts — no new design system work.
+- Reuse `super-action` edge function for any privileged writes (grant role, suspend membership) so audit rows are written consistently.
+- No edits to existing student/teacher/parent/admin pages.
+- No changes to existing tables; only the two new ticket tables are introduced.
 
-- Already submits on `left <= 0` for non-practice. Wire to module config `cbt.autoSubmitOnTimeout` (defaults true) — practice mode stays unchanged.
+## Out of scope
 
-### 5. Reads from module config (Phase 4 hook)
+- Real-time notifications (websockets) for tickets — left as a follow-up.
+- Built-in email sending from SMTP settings page — only stores config, no provider wiring.
+- Custom roles beyond `super_admin` / membership roles — out of scope.
 
-- Use `useModuleConfig(school.id, "cbt")` to drive: `webcamProctoring`, `randomizeQuestions`, `violationLimit`, `showAnswersAfterEach`. Exam-level values still win when set; module config is the school-wide default.
-- This wires Phase 4 plumbing without yet building the admin config UI.
+## Risk
 
-### 6. Submitted summary screen
-
-- After submit, render a clean result card inside the exam shell (instead of just a toast + bounce back to list): score, answered/total, time used, "Back to exams" button. Toast still fires.
-
-### 7. Exam picker upgrade (the screen before an attempt starts)
-
-- Replace the current tabs with a grid of exam cards grouped by `mode` (`school` / `neco_sim` / `practice`).
-- Each card shows: subject pill, title, duration, question count (sub-select to count), scheduled date, proctored indicator, "Start exam" CTA.
-
-## Files touched
-
-- `src/pages/student/ExamInterface.tsx` — refactor into three sub-components within the same file:
-  - `ExamPicker` (list/cards)
-  - `ExamShell` (left rail + top bar + right navigator layout)
-  - `QuestionView` (single-question + math)
-  - keep all existing hooks/state at the top; only render layout changes
-- `src/components/exam/Math.tsx` — tiny KaTeX wrapper
-- `src/components/exam/TimerRing.tsx` — SVG ring + mm:ss
-- `supabase/migrations/<ts>_exam_answers_marked.sql` — add column + index `(attempt_id, marked_for_review)`
-- `package.json` — add `katex` + `@types/katex` (small, ~270kb gzipped)
-
-## Out of scope (saved for later phases)
-
-- Admin "Module Config" page for CBT (Phase 4 UI)
-- Question bank → exam builder bulk import (already partially exists in `TestBuilder.tsx`)
-- Post-submit review mode showing correct answers (depends on `show_answers_after_each` and exam closure rules)
-
-## Risk / safety
-
-- Pure additive DB column with a default; existing rows unaffected.
-- Server grader (`grade-exam-attempt`) untouched — still scores from `correct_index`.
-- Practice mode and proctoring stay behavior-identical.
-- If module config row is missing, defaults from the manifest take over (no breakage for un-provisioned schools).
+- Two additive tables only; existing RLS untouched.
+- All new surfaces are super-admin-gated by the existing `SuperGuard`.
+- No public/anon read paths added.
