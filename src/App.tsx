@@ -36,6 +36,7 @@ import AdminQuestionBank from "./pages/admin/QuestionBank";
 import AdminProctoring from "./pages/admin/Proctoring";
 import AdminLessonNotes from "./pages/admin/LessonNotes";
 import AdminModules from "./pages/admin/Modules";
+import AdminEnrollments from "./pages/admin/Enrollments";
 import LibraryManager from "./pages/shared/LibraryManager";
 import Inbox from "./pages/shared/Inbox";
 
@@ -72,6 +73,7 @@ import StudentGradebook from "./pages/student/Gradebook";
 import MockPicker from "./pages/student/MockPicker";
 import MockRunner from "./pages/student/MockRunner";
 import Practice from "./pages/student/Practice";
+import StudentRegisterSubjects from "./pages/student/RegisterSubjects";
 
 import ParentDashboard from "./pages/parent/Dashboard";
 import ParentChildren from "./pages/parent/Children";
@@ -158,6 +160,7 @@ const App = () => (
               <Route path="admin/students" element={<RoleGate allow="admin"><AdminStudents /></RoleGate>} />
               <Route path="admin/teachers" element={<RoleGate allow="admin"><AdminTeachers /></RoleGate>} />
               <Route path="admin/classes" element={<RoleGate allow="admin"><AdminClasses /></RoleGate>} />
+              <Route path="admin/enrollments" element={<RoleGate allow="admin"><AdminEnrollments /></RoleGate>} />
               <Route path="admin/reports" element={<RoleGate allow="admin"><AdminReports /></RoleGate>} />
               <Route path="admin/invites" element={<RoleGate allow="admin"><AdminInvites /></RoleGate>} />
               <Route path="admin/bulk" element={<RoleGate allow="admin"><AdminBulkUpload /></RoleGate>} />
@@ -195,6 +198,7 @@ const App = () => (
 
               <Route path="student" element={<RoleGate allow="student"><StudentDashboard /></RoleGate>} />
               <Route path="student/classes" element={<RoleGate allow="student"><StudentClasses /></RoleGate>} />
+              <Route path="student/register-subjects" element={<RoleGate allow="student"><StudentRegisterSubjects /></RoleGate>} />
               <Route path="student/exams" element={<RoleGate allow="student"><ExamInterface /></RoleGate>} />
               <Route path="student/mock" element={<RoleGate allow="student"><MockPicker /></RoleGate>} />
               <Route path="student/mock/:sessionId" element={<RoleGate allow="student"><MockRunner /></RoleGate>} />

@@ -28,6 +28,7 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
       { label: "Students",  to: "students",  icon: Users,         roles: ["admin"] },
       { label: "Teachers",  to: "teachers",  icon: GraduationCap, roles: ["admin"] },
       { label: "Classes",   to: "classes",   icon: BookOpen,      roles: ["admin"] },
+      { label: "Enrollments", to: "enrollments", icon: ClipboardCheck, roles: ["admin"] },
       { label: "Invites",   to: "invites",   icon: Ticket,        roles: ["admin"] },
       { label: "Bulk Upload", to: "bulk",    icon: Upload,        roles: ["admin"] },
     ],
@@ -161,6 +162,7 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
     slug: "student-essentials", name: "Student Essentials", category: "academics", icon: BookOpen, core: true,
     sidebar: [
       { label: "My Classes", to: "classes",  icon: BookOpen, roles: ["student"] },
+      { label: "Register Subjects", to: "register-subjects", icon: ListChecks, roles: ["student"] },
       { label: "Calendar",   to: "calendar", icon: Calendar, roles: ["student", "teacher"] },
     ],
   },
