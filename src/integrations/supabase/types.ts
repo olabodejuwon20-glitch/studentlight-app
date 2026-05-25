@@ -408,6 +408,130 @@ export type Database = {
           },
         ]
       }
+      conversation_messages: {
+        Row: {
+          attachments: Json
+          body: string
+          conversation_id: string
+          created_at: string
+          edited_at: string | null
+          id: string
+          kind: string
+          reply_to: string | null
+          school_id: string
+          sender_id: string
+        }
+        Insert: {
+          attachments?: Json
+          body: string
+          conversation_id: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          kind?: string
+          reply_to?: string | null
+          school_id: string
+          sender_id: string
+        }
+        Update: {
+          attachments?: Json
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          kind?: string
+          reply_to?: string | null
+          school_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_participants: {
+        Row: {
+          archived: boolean
+          conversation_id: string
+          created_at: string
+          id: string
+          last_read_at: string | null
+          muted: boolean
+          role_at_join: string | null
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          conversation_id: string
+          created_at?: string
+          id?: string
+          last_read_at?: string | null
+          muted?: boolean
+          role_at_join?: string | null
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          last_read_at?: string | null
+          muted?: boolean
+          role_at_join?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          school_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          kind?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          school_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          school_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exam_answers: {
         Row: {
           attempt_id: string
@@ -2129,6 +2253,10 @@ export type Database = {
           _school: string
           _user: string
         }
+        Returns: boolean
+      }
+      is_conversation_participant: {
+        Args: { _conv: string; _user: string }
         Returns: boolean
       }
       is_member: { Args: { _school: string; _user: string }; Returns: boolean }
