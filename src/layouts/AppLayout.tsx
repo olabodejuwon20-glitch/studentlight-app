@@ -163,7 +163,7 @@ export default function AppLayout() {
             <div className="grid place-items-center size-9 rounded-md bg-white/15 backdrop-blur"><GraduationCap className="size-5" /></div>
             {!collapsed && (
               <div className="leading-tight min-w-0">
-                <div className="font-display font-bold text-base truncate">EduSmart</div>
+                <div className="font-display font-bold text-base truncate">Legacyskool</div>
                 <div className="text-[11px] opacity-90 truncate">{meta.portal}</div>
               </div>
             )}

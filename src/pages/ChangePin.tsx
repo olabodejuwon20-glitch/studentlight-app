@@ -45,7 +45,7 @@ export default function ChangePin() {
         <div className="mx-auto max-w-2xl px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
-            <span className="font-display font-bold text-lg">EduSmart</span>
+            <span className="font-display font-bold text-lg">Legacyskool</span>
           </div>
           <Button variant="ghost" size="sm" onClick={signOut}>Sign out</Button>
         </div>

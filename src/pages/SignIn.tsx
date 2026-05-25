@@ -41,15 +41,15 @@ export default function SignIn() {
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
       <SEO
-        title="Admin Sign In — EduSmart"
-        description="Sign in to your EduSmart admin portal to manage classes, staff, students and results."
+        title="Admin Sign In — Legacyskool"
+        description="Sign in to your Legacyskool admin portal to manage classes, staff, students and results."
         path="/signin"
       />
       <div className="hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-[hsl(var(--admin))] via-[hsl(var(--student))] to-[hsl(var(--teacher))] text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         <Link to="/" className="relative flex items-center gap-3 w-fit">
           <div className="grid place-items-center size-11 rounded-xl bg-white/20 backdrop-blur"><GraduationCap className="size-6" /></div>
-          <div><div className="font-display font-bold text-xl leading-none">EduSmart</div><div className="text-xs opacity-80 mt-1">School Management Platform</div></div>
+          <div><div className="font-display font-bold text-xl leading-none">Legacyskool</div><div className="text-xs opacity-80 mt-1">School Management Platform</div></div>
         </Link>
         <div className="relative space-y-4 max-w-md">
           <h2 className="font-display text-4xl font-bold leading-tight">Welcome back, Admin</h2>
@@ -58,7 +58,7 @@ export default function SignIn() {
             <Building2 className="size-3.5" /> Admins only — staff & students sign in from their school URL.
           </div>
         </div>
-        <div className="relative text-xs opacity-70">© 2026 EduSmart</div>
+        <div className="relative text-xs opacity-70">© 2026 Legacyskool</div>
       </div>
 
       <div className="flex items-center justify-center p-6 sm:p-10">

@@ -41,8 +41,8 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="EduSmart — School Management Platform for Africa"
-        description="Run your school with EduSmart — attendance, CBT exams, grading, results, fees and parent communication in one secure portal."
+        title="Legacyskool — School Management Platform for Africa"
+        description="Run your school with Legacyskool — attendance, CBT exams, grading, results, fees and parent communication in one secure portal."
         path="/"
       />
       {/* Header */}
@@ -50,7 +50,7 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
-            <span className="font-display font-bold text-lg tracking-tight">EduSmart</span>
+            <span className="font-display font-bold text-lg tracking-tight">Legacyskool</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground">Features</a>
@@ -177,7 +177,7 @@ export default function Landing() {
       <section id="stories" className="border-b border-border/60">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-20">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Schools winning with EduSmart</h2>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Schools winning with Legacyskool</h2>
             <p className="text-muted-foreground mt-3">Real results from real schools.</p>
           </div>
           <div className="mt-10 grid md:grid-cols-3 gap-5">
@@ -263,7 +263,7 @@ export default function Landing() {
 
       <footer className="border-t border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 text-xs text-muted-foreground flex flex-col sm:flex-row gap-3 justify-between">
-          <span>© 2026 EduSmart. All rights reserved.</span>
+          <span>© 2026 Legacyskool. All rights reserved.</span>
           <div className="flex gap-5">
             <a href="#features" className="hover:text-foreground">Features</a>
             <a href="#stories" className="hover:text-foreground">Stories</a>
