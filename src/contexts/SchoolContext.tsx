@@ -57,7 +57,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const slug = detectSlug();
     if (!slug) { setSchool(null); setSchoolLoading(false); return; }
-    supabase.from("schools").select("id,name,slug,logo_url").eq("slug", slug).maybeSingle()
+    supabase.from("school_directory").select("id,name,slug,logo_url").eq("slug", slug).maybeSingle()
       .then(({ data }) => { setSchool(data ?? null); setSchoolLoading(false); });
   }, []);
 
