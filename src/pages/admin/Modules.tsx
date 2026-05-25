@@ -69,7 +69,6 @@ export default function AdminModules() {
       <PageHeader
         title="Modules"
         description="Configure which plug-in modules and what behavior is active for your school."
-        icon={Package}
       />
 
       <SectionCard title="Enabled modules">
