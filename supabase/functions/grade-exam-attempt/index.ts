@@ -36,6 +36,13 @@ Deno.serve(async (req) => {
     if (attempt.student_id !== userId) return json({ error: "Forbidden" }, 403);
     if (attempt.submitted_at) return json({ ok: true, score: null, message: "Already submitted" });
 
+    const { data: exam } = await admin
+      .from("exams")
+      .select("show_answers_after_each")
+      .eq("id", attempt.exam_id)
+      .single();
+    const reveal = !!exam?.show_answers_after_each;
+
     const { data: questions } = await admin
       .from("exam_questions")
       .select("id, correct_index, points")
@@ -55,7 +62,8 @@ Deno.serve(async (req) => {
       if (isCorrect) correct += q.points || 0;
       return {
         id: q.id,
-        correctIdx: q.correct_index,
+        // Only reveal correct answer if the exam explicitly allows post-submission disclosure.
+        ...(reveal ? { correctIdx: q.correct_index } : {}),
         pickedIdx: picked === undefined ? null : picked,
         points: q.points || 1,
         isCorrect,
@@ -68,6 +76,7 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, score, submitted_at, breakdown });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error("[grade-exam-attempt] error:", e);
+    return json({ error: "An internal error occurred" }, 500);
   }
 });
