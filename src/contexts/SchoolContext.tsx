@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { getCurrentSchoolSlug } from "@/lib/tenant";
+import { trackAuthEvent } from "@/lib/analytics";
 
 export type Role = "admin" | "teacher" | "student" | "parent";
 
@@ -74,15 +75,17 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s); setUser(s?.user ?? null);
       if (s?.user) {
         setTimeout(() => {
           loadProfile(s.user.id, s.user.email ?? "");
           loadMemberships(s.user.id);
+          if (event === "SIGNED_IN") trackAuthEvent("sign_in", s.user.id);
         }, 0);
       } else {
         setDisplayName(""); setEmail(""); setPhotoUrl(null); setMemberships([]);
+        if (event === "SIGNED_OUT") trackAuthEvent("sign_out");
       }
     });
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
