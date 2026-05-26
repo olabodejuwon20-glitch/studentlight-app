@@ -32,12 +32,27 @@ function Frame({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-xl border border-border bg-background overflow-hidden shadow-card relative">
+    <div
+      className="rounded-xl border border-white/10 overflow-hidden shadow-2xl relative backdrop-blur-md"
+      style={{
+        background: "rgba(255,255,255,0.03)",
+        boxShadow: `0 0 40px ${accent.replace("hsl(", "hsla(").replace(")", " / 0.15)")}, 0 25px 50px -12px rgba(0,0,0,0.25)`,
+      }}
+    >
+      {/* Ambient glow orb behind content */}
+      <div
+        className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] opacity-40 pointer-events-none"
+        style={{ background: accent }}
+      />
+      <div
+        className="absolute -bottom-20 -left-20 w-56 h-56 rounded-full blur-[80px] opacity-25 pointer-events-none"
+        style={{ background: accent }}
+      />
       {/* Window chrome */}
-      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-muted/40">
+      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/10 bg-white/[0.04] backdrop-blur-sm relative z-10">
         <button
           type="button"
-          className="md:hidden mr-1 size-6 grid place-items-center rounded hover:bg-background"
+          className="md:hidden mr-1 size-6 grid place-items-center rounded hover:bg-white/10 transition-colors"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
         >
@@ -46,22 +61,25 @@ function Frame({
         <span className="size-2.5 rounded-full bg-destructive/60" />
         <span className="size-2.5 rounded-full bg-warning/60" />
         <span className="size-2.5 rounded-full bg-success/60" />
-        <div className="ml-3 flex-1 max-w-sm h-5 rounded-md bg-background border border-border px-2 flex items-center text-[10px] text-muted-foreground">
+        <div className="ml-3 flex-1 max-w-sm h-5 rounded-md bg-white/[0.06] border border-white/10 px-2 flex items-center text-[10px] text-muted-foreground">
           legacyskool.app{title ? `/${title.toLowerCase().replace(/\s+/g, "-")}` : "/demo"}
         </div>
       </div>
-      <div className="grid md:grid-cols-[170px_1fr] min-h-[460px] relative">
+      <div className="grid md:grid-cols-[170px_1fr] min-h-[460px] relative z-10">
         {/* Sidebar */}
         <aside
           className={cn(
-            "border-r border-border bg-muted/30 p-3 text-xs",
+            "border-r border-white/10 bg-white/[0.03] backdrop-blur-sm p-3 text-xs",
             "md:block md:static",
             "absolute md:relative inset-y-0 left-0 z-20 w-44 transition-transform",
             open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           )}
         >
           <div className="flex items-center gap-2 mb-4">
-            <div className="size-7 rounded-md grid place-items-center text-white" style={{ background: accent }}>
+            <div
+              className="size-7 rounded-md grid place-items-center text-white shadow-lg"
+              style={{ background: accent, boxShadow: `0 0 12px ${accent.replace("hsl(", "hsla(").replace(")", " / 0.45)")}` }}
+            >
               <GraduationCap className="size-4" />
             </div>
             <span className="font-semibold">Legacyskool</span>
@@ -75,10 +93,15 @@ function Frame({
                   key={i.key}
                   onClick={() => { onNavigate(i.key); setOpen(false); }}
                   className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors",
-                    isActive ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-background/60",
+                    "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-all",
+                    isActive
+                      ? "text-foreground font-medium backdrop-blur-sm border border-white/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
                   )}
-                  style={isActive ? { background: accent.replace("hsl(", "hsl(").replace(")", " / 0.14)") } : {}}
+                  style={isActive ? {
+                    background: accent.replace("hsl(", "hsla(").replace(")", " / 0.14)"),
+                    boxShadow: `0 0 16px ${accent.replace("hsl(", "hsla(").replace(")", " / 0.12)")}`,
+                  } : {}}
                 >
                   <i.icon className="size-3.5" />
                   <span>{i.label}</span>
@@ -94,7 +117,7 @@ function Frame({
           />
         )}
         {/* Content */}
-        <div className="p-4 sm:p-5 min-w-0">{children}</div>
+        <div className="p-4 sm:p-5 min-w-0 relative">{children}</div>
       </div>
     </div>
   );
