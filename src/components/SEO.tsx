@@ -7,7 +7,7 @@ type Props = {
   type?: "website" | "article";
 };
 
-const SITE = "https://edusmat.lovable.app";
+const SITE = "https://legacy-skool.lovable.app";
 
 export default function SEO({ title, description, path, type = "website" }: Props) {
   const url = `${SITE}${path}`;
