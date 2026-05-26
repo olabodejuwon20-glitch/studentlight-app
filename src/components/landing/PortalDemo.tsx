@@ -816,30 +816,48 @@ export default function PortalDemo() {
         </div>
 
         {/* Tabs */}
-        <div className="mt-8 flex flex-wrap justify-center gap-2">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           {PORTALS.map((p) => {
             const isActive = p.key === active;
             return (
               <button
                 key={p.key}
                 onClick={() => setActive(p.key)}
-                className={`px-3 sm:px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+                className={cn(
+                  "relative px-4 sm:px-5 py-2.5 rounded-full text-sm font-medium border transition-all duration-300 overflow-hidden",
                   isActive
-                    ? "text-white border-transparent shadow-card"
-                    : "bg-background text-muted-foreground border-border hover:text-foreground"
-                }`}
-                style={isActive ? { background: p.color } : {}}
+                    ? "text-white border-transparent shadow-lg"
+                    : "bg-white/[0.04] text-muted-foreground border-white/10 hover:text-foreground hover:bg-white/[0.08] hover:border-white/20 backdrop-blur-md",
+                )}
+                style={isActive ? {
+                  background: p.color,
+                  boxShadow: `0 0 24px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.45)")}, 0 0 48px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.25)")}`,
+                } : {}}
               >
-                {p.label}
-                <span className={`ml-2 text-[10px] hidden sm:inline ${isActive ? "opacity-80" : "opacity-60"}`}>{p.subtitle}</span>
+                <span className="relative z-10">{p.label}</span>
+                <span className={cn(
+                  "ml-2 text-[10px] hidden sm:inline relative z-10",
+                  isActive ? "opacity-80" : "opacity-60",
+                )}>{p.subtitle}</span>
+                {isActive && (
+                  <span className="absolute inset-0 rounded-full opacity-20" style={{
+                    background: `radial-gradient(circle at 50% 0%, ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.8)")}, transparent 70%)`,
+                  }} />
+                )}
               </button>
             );
           })}
         </div>
 
         {/* Demo frame */}
-        <div className="mt-6 relative">
-          <div className="absolute -inset-4 rounded-3xl blur-2xl opacity-30" style={{ background: activeMeta.color }} />
+        <div className="mt-8 relative">
+          <div
+            className="absolute -inset-6 rounded-[2rem] blur-3xl opacity-40 transition-colors duration-700"
+            style={{ background: activeMeta.color }}
+          />
+          <div className="absolute -inset-2 rounded-[1.5rem] blur-xl opacity-20 transition-colors duration-700"
+            style={{ background: activeMeta.color }}
+          />
           <div className="relative max-w-4xl mx-auto">
             <Demo />
           </div>
