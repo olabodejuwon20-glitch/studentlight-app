@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { useSchool } from "@/contexts/SchoolContext";
 import { schoolPath, getCurrentSchoolSlug } from "@/lib/tenant";
 import SEO from "@/components/SEO";
+import PortalDemo from "@/components/landing/PortalDemo";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -54,6 +55,7 @@ export default function Landing() {
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground">Features</a>
+            <a href="#demo" className="hover:text-foreground">Demo</a>
             <a href="#stories" className="hover:text-foreground">Success stories</a>
             <a href="#reviews" className="hover:text-foreground">Reviews</a>
           </nav>
@@ -146,6 +148,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Interactive portal demo */}
+      <PortalDemo />
 
       {/* How it works */}
       <section className="border-b border-border/60 bg-muted/30">
