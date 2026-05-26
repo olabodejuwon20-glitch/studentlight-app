@@ -126,7 +126,10 @@ function Frame({
 function Stat({ label, value, trend, color, onClick }: { label: string; value: string; trend?: string; color: string; onClick?: () => void }) {
   const Comp: any = onClick ? "button" : "div";
   return (
-    <Comp onClick={onClick} className={cn("rounded-lg border border-border p-3 text-left transition-all", onClick && "hover:shadow-card hover:border-foreground/20 active:scale-[0.98]")}>
+    <Comp onClick={onClick} className={cn(
+      "rounded-lg border border-white/10 p-3 text-left transition-all backdrop-blur-sm bg-white/[0.04]",
+      onClick && "hover:bg-white/[0.08] hover:shadow-[0_0_20px_rgba(255,255,255,0.06)] active:scale-[0.98]",
+    )}>
       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="font-display text-xl font-bold mt-1" style={{ color }}>{value}</div>
       {trend && <div className="text-[10px] text-success mt-0.5 flex items-center gap-1"><TrendingUp className="size-3" />{trend}</div>}
