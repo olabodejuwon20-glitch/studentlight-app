@@ -1,0 +1,9 @@
+# Legacyskool
+
+> Multi-tenant school management platform with portals for admins, teachers, students and parents — classes, attendance, exams (CBT), results, fees, library and AI tutoring.
+
+## Pages
+
+- [Home](/): Product overview and live demo of the four portals.
+- [Sign in](/signin): Sign in to your school account.
+- [Register your school](/register): Create a new school workspace on Legacyskool.
