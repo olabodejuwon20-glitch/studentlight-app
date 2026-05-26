@@ -234,6 +234,6 @@ Deno.serve(async (req) => {
         return json({ error: "unknown action" }, 400);
     }
   } catch (e) {
-    return json({ error: (e as Error).message ?? "failed" }, 500);
+    console.error('[super-action] error:', e); return json({ error: 'An internal error occurred' }, 500);
   }
 });
