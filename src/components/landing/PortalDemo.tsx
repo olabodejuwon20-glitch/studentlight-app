@@ -36,18 +36,9 @@ function Frame({
       className="rounded-xl border border-white/10 overflow-hidden shadow-2xl relative backdrop-blur-md"
       style={{
         background: "rgba(255,255,255,0.03)",
-        boxShadow: `0 0 40px ${accent.replace("hsl(", "hsla(").replace(")", " / 0.15)")}, 0 25px 50px -12px rgba(0,0,0,0.25)`,
+        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
       }}
     >
-      {/* Ambient glow orb behind content */}
-      <div
-        className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] opacity-40 pointer-events-none"
-        style={{ background: accent }}
-      />
-      <div
-        className="absolute -bottom-20 -left-20 w-56 h-56 rounded-full blur-[80px] opacity-25 pointer-events-none"
-        style={{ background: accent }}
-      />
       {/* Window chrome */}
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/10 bg-white/[0.04] backdrop-blur-sm relative z-10">
         <button
@@ -831,10 +822,20 @@ export default function PortalDemo() {
                 )}
                 style={isActive ? {
                   background: p.color,
-                  boxShadow: `0 0 24px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.45)")}, 0 0 48px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.25)")}`,
-                } : {}}
+                  boxShadow: `0 0 30px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.7)")}, 0 0 60px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.5)")}, 0 0 90px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.3)")}, 0 0 120px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.15)")}`,
+                } : {
+                  boxShadow: `0 0 16px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.35)")}, 0 0 32px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.15)")}, inset 0 0 12px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.08)")}`,
+                }}
               >
-                <span className="relative z-10">{p.label}</span>
+                <span className="relative z-10 flex items-center gap-2">
+                  {!isActive && (
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-90" style={{ background: p.color }} />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: p.color }} />
+                    </span>
+                  )}
+                  {p.label}
+                </span>
                 <span className={cn(
                   "ml-2 text-[10px] hidden sm:inline relative z-10",
                   isActive ? "opacity-80" : "opacity-60",
@@ -851,13 +852,6 @@ export default function PortalDemo() {
 
         {/* Demo frame */}
         <div className="mt-8 relative">
-          <div
-            className="absolute -inset-6 rounded-[2rem] blur-3xl opacity-40 transition-colors duration-700"
-            style={{ background: activeMeta.color }}
-          />
-          <div className="absolute -inset-2 rounded-[1.5rem] blur-xl opacity-20 transition-colors duration-700"
-            style={{ background: activeMeta.color }}
-          />
           <div className="relative max-w-4xl mx-auto">
             <Demo />
           </div>
