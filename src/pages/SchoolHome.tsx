@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { schoolPath, buildSchoolUrl } from "@/lib/tenant";
 import { SchoolBadge } from "@/components/SchoolBadge";
+import SEO from "@/components/SEO";
 
 /** Public landing for a school portal: /:slug — choose Sign in or Create account. */
 export default function SchoolHome() {
@@ -22,6 +23,11 @@ export default function SchoolHome() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={`${school.name} — Legacyskool`}
+        description={`Welcome to the ${school.name} portal on Legacyskool. Sign in or create an account to access classes, results, fees and more.`}
+        path={`/${school.slug}`}
+      />
       <header className="border-b border-border">
         <div className="mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
