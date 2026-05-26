@@ -176,6 +176,6 @@ Deno.serve(async (req) => {
     const filename = `${(profile?.full_name ?? "student").replace(/\s+/g, "_")}_${usedTerm.replace(/\s+/g, "_")}_slip.pdf`;
     return json({ pdf_base64: b64, filename, mime: "application/pdf" });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error('[generate-result-slip] error:', e); return json({ error: 'An internal error occurred' }, 500);
   }
 });

@@ -60,6 +60,6 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, slug: school.slug, schoolId: school.id, email });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error('[register-school] error:', e); return json({ error: 'An internal error occurred' }, 500);
   }
 });
