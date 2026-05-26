@@ -831,10 +831,20 @@ export default function PortalDemo() {
                 )}
                 style={isActive ? {
                   background: p.color,
-                  boxShadow: `0 0 24px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.45)")}, 0 0 48px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.25)")}`,
-                } : {}}
+                  boxShadow: `0 0 20px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.55)")}, 0 0 40px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.35)")}, 0 0 60px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.2)")}`,
+                } : {
+                  boxShadow: `0 0 12px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.15)")}, inset 0 0 8px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.05)")}`,
+                }}
               >
-                <span className="relative z-10">{p.label}</span>
+                <span className="relative z-10 flex items-center gap-2">
+                  {!isActive && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: p.color }} />
+                      <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: p.color }} />
+                    </span>
+                  )}
+                  {p.label}
+                </span>
                 <span className={cn(
                   "ml-2 text-[10px] hidden sm:inline relative z-10",
                   isActive ? "opacity-80" : "opacity-60",
