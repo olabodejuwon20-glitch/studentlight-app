@@ -852,13 +852,6 @@ export default function PortalDemo() {
 
         {/* Demo frame */}
         <div className="mt-8 relative">
-          <div
-            className="absolute -inset-6 rounded-[2rem] blur-3xl opacity-40 transition-colors duration-700"
-            style={{ background: activeMeta.color }}
-          />
-          <div className="absolute -inset-2 rounded-[1.5rem] blur-xl opacity-20 transition-colors duration-700"
-            style={{ background: activeMeta.color }}
-          />
           <div className="relative max-w-4xl mx-auto">
             <Demo />
           </div>
