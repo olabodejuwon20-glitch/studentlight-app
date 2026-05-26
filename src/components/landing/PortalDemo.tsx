@@ -36,18 +36,9 @@ function Frame({
       className="rounded-xl border border-white/10 overflow-hidden shadow-2xl relative backdrop-blur-md"
       style={{
         background: "rgba(255,255,255,0.03)",
-        boxShadow: `0 0 40px ${accent.replace("hsl(", "hsla(").replace(")", " / 0.15)")}, 0 25px 50px -12px rgba(0,0,0,0.25)`,
+        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
       }}
     >
-      {/* Ambient glow orb behind content */}
-      <div
-        className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] opacity-40 pointer-events-none"
-        style={{ background: accent }}
-      />
-      <div
-        className="absolute -bottom-20 -left-20 w-56 h-56 rounded-full blur-[80px] opacity-25 pointer-events-none"
-        style={{ background: accent }}
-      />
       {/* Window chrome */}
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/10 bg-white/[0.04] backdrop-blur-sm relative z-10">
         <button
