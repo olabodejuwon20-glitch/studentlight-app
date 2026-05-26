@@ -822,9 +822,9 @@ export default function PortalDemo() {
                 )}
                 style={isActive ? {
                   background: p.color,
-                  boxShadow: `0 0 20px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.55)")}, 0 0 40px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.35)")}, 0 0 60px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.2)")}`,
+                  boxShadow: `0 0 30px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.7)")}, 0 0 60px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.5)")}, 0 0 90px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.3)")}, 0 0 120px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.15)")}`,
                 } : {
-                  boxShadow: `0 0 12px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.15)")}, inset 0 0 8px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.05)")}`,
+                  boxShadow: `0 0 16px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.35)")}, 0 0 32px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.15)")}, inset 0 0 12px ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.08)")}`,
                 }}
               >
                 <span className="relative z-10 flex items-center gap-2">
