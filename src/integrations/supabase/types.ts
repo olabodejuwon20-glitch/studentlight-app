@@ -261,6 +261,33 @@ export type Database = {
           },
         ]
       }
+      auth_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          school_id: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          school_id?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          school_id?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       behavior_notes: {
         Row: {
           category: string | null
@@ -1588,6 +1615,42 @@ export type Database = {
           status?: string
           updated_at?: string
           version?: string
+        }
+        Relationships: []
+      }
+      page_views: {
+        Row: {
+          created_at: string
+          device: string | null
+          id: string
+          path: string
+          referrer: string | null
+          school_id: string | null
+          session_id: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          id?: string
+          path: string
+          referrer?: string | null
+          school_id?: string | null
+          session_id: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          id?: string
+          path?: string
+          referrer?: string | null
+          school_id?: string | null
+          session_id?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
