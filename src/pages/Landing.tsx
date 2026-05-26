@@ -149,7 +149,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
+      {/* Interactive portal demo */}
       <PortalDemo />
 
       {/* How it works */}
