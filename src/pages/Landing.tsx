@@ -168,7 +168,7 @@ export default function Landing() {
               <div key={s.n} className="rounded-xl border border-border bg-background p-6">
                 <div className="flex items-center justify-between">
                   <div className="size-10 rounded-lg bg-primary/10 text-primary grid place-items-center"><s.icon className="size-5" /></div>
-                  <span className="font-display font-bold text-2xl text-muted-foreground/40">{s.n}</span>
+                  <span className="font-display font-bold text-2xl text-muted-foreground">{s.n}</span>
                 </div>
                 <div className="mt-4 font-semibold">{s.t}</div>
                 <p className="text-sm text-muted-foreground mt-1.5">{s.d}</p>
