@@ -9,6 +9,7 @@ import { RequireAuth, RequireSchool, RoleGate } from "@/components/Guards";
 import AppLayout from "./layouts/AppLayout";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 import Register from "./pages/Register";
 import SignIn from "./pages/SignIn";
 import SchoolHome from "./pages/SchoolHome";
@@ -120,6 +121,7 @@ const App = () => (
       <Sonner position="top-right" />
       <SchoolProvider>
         <BrowserRouter>
+          <AnalyticsTracker />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/register" element={<Register />} />
