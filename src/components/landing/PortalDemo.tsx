@@ -829,9 +829,9 @@ export default function PortalDemo() {
               >
                 <span className="relative z-10 flex items-center gap-2">
                   {!isActive && (
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: p.color }} />
-                      <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: p.color }} />
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-90" style={{ background: p.color }} />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: p.color }} />
                     </span>
                   )}
                   {p.label}
