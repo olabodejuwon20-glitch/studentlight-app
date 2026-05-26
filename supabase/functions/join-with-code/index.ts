@@ -71,6 +71,6 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, email, schoolSlug: school.slug, role: invite.role });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error('[join-with-code] error:', e); return json({ error: 'An internal error occurred' }, 500);
   }
 });

@@ -59,20 +59,29 @@ export default function SuperAnalytics() {
     })();
   }, [range]);
 
-  // Realtime subscriptions
+  // Near-real-time polling (analytics tables are not broadcast on Realtime to avoid
+  // leaking per-user activity to non super-admin subscribers).
   useEffect(() => {
-    const ch = supabase
-      .channel("super-analytics")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "page_views" }, (p) => {
-        setPageViews(prev => [p.new as any, ...prev].slice(0, 5000));
-        setLiveDot(true); setTimeout(() => setLiveDot(false), 800);
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "auth_events" }, (p) => {
-        setAuthEvents(prev => [p.new as any, ...prev].slice(0, 2000));
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, []);
+    let cancelled = false;
+    const tick = async () => {
+      const since = new Date(Date.now() - RANGE_META[range].hours * 3_600_000).toISOString();
+      const [pv, ae] = await Promise.all([
+        supabase.from("page_views").select("id, path, session_id, user_id, device, created_at").gte("created_at", since).order("created_at", { ascending: false }).limit(5000),
+        supabase.from("auth_events").select("id, event, user_id, created_at").gte("created_at", since).order("created_at", { ascending: false }).limit(2000),
+      ]);
+      if (cancelled) return;
+      setPageViews(prev => {
+        const next = pv.data ?? [];
+        if (next.length && prev[0]?.id !== next[0]?.id) {
+          setLiveDot(true); setTimeout(() => setLiveDot(false), 800);
+        }
+        return next;
+      });
+      setAuthEvents(ae.data ?? []);
+    };
+    const id = setInterval(tick, 8000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [range]);
 
   // Legacy platform fetch (one-shot)
   useEffect(() => {

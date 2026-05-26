@@ -69,6 +69,6 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, results, default_pin: DEFAULT_PIN });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error('[bulk-onboard] error:', e); return json({ error: 'An internal error occurred' }, 500);
   }
 });

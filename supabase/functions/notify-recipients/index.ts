@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, conversation_id: conv!.id, recipients: participants.length });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error('[notify-recipients] error:', e); return json({ error: 'An internal error occurred' }, 500);
   }
 });
 

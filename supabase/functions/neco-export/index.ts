@@ -94,6 +94,6 @@ Deno.serve(async (req) => {
     const out = preview ? { headers, rows: rows.slice(0, 10), total: rows.length } : { csv, filename: `${(school?.name ?? "neco").replace(/\s+/g, "_")}_neco_export.csv`, total: rows.length };
     return json(out);
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error('[neco-export] error:', e); return json({ error: 'An internal error occurred' }, 500);
   }
 });
