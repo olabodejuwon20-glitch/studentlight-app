@@ -78,7 +78,7 @@ export default function AdminPayments() {
           </div>
           <SectionCard title="Recent payments">
             {payments.length === 0 ? <EmptyState icon={Banknote} title="No payments yet" /> : (
-              <PaymentsTable rows={payments.slice(0, 10)} profiles={profiles} />
+              <PaymentsTable rows={payments.slice(0, 10)} profiles={profiles} onChanged={refresh} />
             )}
           </SectionCard>
         </TabsContent>
@@ -143,7 +143,7 @@ export default function AdminPayments() {
 
         <TabsContent value="payments" className="space-y-4 mt-6">
           <SectionCard title={`All payments (${payments.length})`}>
-            {payments.length === 0 ? <EmptyState icon={Banknote} title="No payments yet" /> : <PaymentsTable rows={payments} profiles={profiles} />}
+            {payments.length === 0 ? <EmptyState icon={Banknote} title="No payments yet" /> : <PaymentsTable rows={payments} profiles={profiles} onChanged={refresh} />}
           </SectionCard>
         </TabsContent>
 
