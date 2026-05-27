@@ -27,3 +27,13 @@ export function buildRootUrl(path = "/") {
   if (typeof window === "undefined") return path;
   return `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+/**
+ * Best-effort path to "home" for the user's current context. If we're on a
+ * tenant URL (/:slug/...), home is that school's landing page. Otherwise we
+ * fall back to the platform root.
+ */
+export function tenantHomePath(): string {
+  const slug = getCurrentSchoolSlug();
+  return slug ? `/${slug}` : "/";
+}

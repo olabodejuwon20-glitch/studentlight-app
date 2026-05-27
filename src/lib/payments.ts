@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { friendlyInvokeError } from "@/lib/errors";
 
 export const PAYMENT_CATEGORIES = [
   "tuition", "levy", "uniform", "exam", "hostel", "transport", "excursion", "book", "other",
@@ -31,14 +32,14 @@ export async function startPaystackCheckout(invoiceId: string, amountKobo: numbe
   const { data, error } = await supabase.functions.invoke("payments-checkout", {
     body: { invoice_id: invoiceId, amount_kobo: amountKobo },
   });
-  if (error) throw error;
+  if (error) throw new Error(await friendlyInvokeError(error, "We couldn't start your online payment. Please try again."));
   if ((data as any)?.error) throw new Error((data as any).message || (data as any).error);
   return data as { authorization_url: string; reference: string };
 }
 
 export async function recordOfflinePayment(opts: { invoice_id: string; amount_kobo: number; method: "cash" | "bank_transfer" | "pos" | "waiver"; notes?: string; proof_url?: string }) {
   const { data, error } = await supabase.functions.invoke("payments-record-offline", { body: opts });
-  if (error) throw error;
+  if (error) throw new Error(await friendlyInvokeError(error, "We couldn't record that payment. Please try again."));
   if ((data as any)?.error) throw new Error((data as any).error);
   return data;
 }
@@ -47,7 +48,7 @@ export async function issueInvoices(payment_type_id: string, student_ids?: strin
   const { data, error } = await supabase.functions.invoke("issue-invoices", {
     body: { payment_type_id, student_ids },
   });
-  if (error) throw error;
+  if (error) throw new Error(await friendlyInvokeError(error, "We couldn't issue invoices. Please try again."));
   if ((data as any)?.error) throw new Error((data as any).error);
   return data as { ok: true; issued: number };
 }
@@ -99,7 +100,7 @@ export async function verifyPaymentProof(payment_id: string, approve: boolean, r
   const { data, error } = await supabase.functions.invoke("payments-verify-proof", {
     body: { payment_id, approve, reason },
   });
-  if (error) throw error;
+  if (error) throw new Error(await friendlyInvokeError(error, "We couldn't update this proof. Please try again."));
   if ((data as any)?.error) throw new Error((data as any).error);
   return data;
 }

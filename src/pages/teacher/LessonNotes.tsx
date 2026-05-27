@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Sparkles, Save, Send, Loader2, BookOpen, Trash2, Pencil, CheckCircle2, Clock, XCircle, FileEdit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { friendlyError, friendlyInvokeError } from "@/lib/errors";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -56,11 +57,11 @@ export default function TeacherLessonNotes() {
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-lesson-note", { body: form });
-      if (error) throw error;
+      if (error) throw new Error(await friendlyInvokeError(error, "We couldn't generate the lesson note. Please try again."));
       if (data?.error) throw new Error(data.error);
       setForm((f: any) => ({ ...f, content: data.content, title: f.title || `${f.subject} — ${f.topic}` }));
       toast.success("Lesson note generated");
-    } catch (e: any) { toast.error(e.message || "Generation failed"); }
+    } catch (e: any) { toast.error(friendlyError(e, "We couldn't generate the lesson note. Please try again.")); }
     finally { setGenerating(false); }
   }
 

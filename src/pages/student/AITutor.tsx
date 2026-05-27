@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { friendlyError, friendlyInvokeError } from "@/lib/errors";
 import { useSchool } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,10 +31,10 @@ export default function AITutor() {
     setMessages(m => [...m, userMsg]); setInput(""); setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("ai-tutor", { body: { messages: [...messages, userMsg], school_id: school.id } });
-      if (error) throw error;
+      if (error) throw new Error(await friendlyInvokeError(error, "The tutor couldn't respond. Please try again."));
       setMessages(m => [...m, { role: "assistant", content: data.reply }]);
     } catch (err: any) {
-      toast.error(err.message || "Failed");
+      toast.error(friendlyError(err, "The tutor couldn't respond. Please try again."));
     } finally { setBusy(false); }
   }
 

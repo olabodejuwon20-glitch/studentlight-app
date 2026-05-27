@@ -24,15 +24,19 @@ export default function SchoolHome() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={`${school.name} — Legacyskool`}
-        description={`Welcome to the ${school.name} portal on Legacyskool. Sign in or create an account to access classes, results, fees and more.`}
+        title={`${school.name} — School portal`}
+        description={`Welcome to the ${school.name} portal. Sign in or create an account to access classes, results, fees and more.`}
         path={`/${school.slug}`}
       />
       <header className="border-b border-border">
         <div className="mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
-            <span className="font-display font-bold text-lg tracking-tight">Legacyskool</span>
+          <Link to={schoolPath(school.slug, "")} className="flex items-center gap-2">
+            {school.logo_url ? (
+              <img src={school.logo_url} alt="" className="size-9 rounded-lg object-contain border border-border bg-card p-0.5" />
+            ) : (
+              <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
+            )}
+            <span className="font-display font-bold text-lg tracking-tight truncate">{school.name}</span>
           </Link>
           <Link to={schoolPath(school.slug, "/admin")} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5">
             <ShieldCheck className="size-3.5" /> Admin sign in

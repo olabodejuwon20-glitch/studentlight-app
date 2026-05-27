@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { friendlyInvokeError } from "@/lib/errors";
 
 function b64ToBlob(b64: string, mime = "application/pdf") {
   const bin = atob(b64);
@@ -11,7 +12,7 @@ export async function fetchResultSlip(studentId: string, term?: string) {
   const { data, error } = await supabase.functions.invoke("generate-result-slip", {
     body: { student_id: studentId, term },
   });
-  if (error) throw error;
+  if (error) throw new Error(await friendlyInvokeError(error, "We couldn't generate the result slip. Please try again."));
   if ((data as any)?.error) throw new Error((data as any).error);
   const { pdf_base64, filename, mime } = data as { pdf_base64: string; filename: string; mime: string };
   return { blob: b64ToBlob(pdf_base64, mime), filename };

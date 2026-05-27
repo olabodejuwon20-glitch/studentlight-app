@@ -1,9 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { friendlyInvokeError } from "@/lib/errors";
 
 export async function superAction(action: string, payload: Record<string, any> = {}) {
   const { data, error } = await supabase.functions.invoke("super-action", { body: { action, payload } });
-  if (error) { toast.error(error.message || "Action failed"); throw error; }
+  if (error) { const msg = await friendlyInvokeError(error, "Action failed. Please try again."); toast.error(msg); throw new Error(msg); }
   if ((data as any)?.error) { toast.error((data as any).error); throw new Error((data as any).error); }
   return data as { ok: true };
 }
