@@ -10,7 +10,11 @@ const json = (b: unknown, s = 200) =>
 
 const normPhone = (p: string) => p.replace(/[^\d+]/g, "");
 const fakeEmail = (phone: string, slug: string) => `p${normPhone(phone).replace(/\+/g, "")}.${slug}@members.edusmart.local`;
-const DEFAULT_PIN = "123456";
+const randomPin = () => {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return (100000 + (buf[0] % 900000)).toString();
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -37,7 +41,7 @@ Deno.serve(async (req) => {
     const { data: school } = await admin.from("schools").select("slug").eq("id", schoolId).single();
     if (!school) return json({ error: "School not found" }, 404);
 
-    const results: { phone: string; ok: boolean; error?: string }[] = [];
+    const results: { phone: string; ok: boolean; pin?: string; error?: string }[] = [];
     for (const row of rows) {
       const fullName = (row.full_name ?? row.name ?? "").toString().trim();
       const phone = normPhone((row.phone ?? "").toString());
@@ -46,8 +50,9 @@ Deno.serve(async (req) => {
         continue;
       }
       const email = fakeEmail(phone, school.slug);
+      const pin = randomPin();
       const { data: created, error: cErr } = await admin.auth.admin.createUser({
-        email, password: DEFAULT_PIN, email_confirm: true,
+        email, password: pin, email_confirm: true,
         user_metadata: { full_name: fullName, phone },
       });
       let uid: string | undefined = created?.user?.id;
@@ -64,10 +69,10 @@ Deno.serve(async (req) => {
         { onConflict: "school_id,user_id,role" } as any,
       );
       if (mErr) { results.push({ phone, ok: false, error: mErr.message }); continue; }
-      results.push({ phone, ok: true });
+      results.push({ phone, ok: true, pin });
     }
 
-    return json({ ok: true, results, default_pin: DEFAULT_PIN });
+    return json({ ok: true, results });
   } catch (e) {
     console.error('[bulk-onboard] error:', e); return json({ error: 'An internal error occurred' }, 500);
   }
