@@ -110,10 +110,14 @@ export default function Bio() {
       <header className="border-b border-border">
         <div className="mx-auto max-w-3xl px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
+            {school.logo_url ? (
+              <img src={school.logo_url} alt="" className="size-9 rounded-lg object-contain border border-border bg-card p-0.5" />
+            ) : (
+              <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
+            )}
             <div>
-              <div className="font-display font-bold text-lg leading-none">Legacyskool</div>
-              <div className="text-[11px] text-muted-foreground mt-1">{school.name} · <span className="capitalize">{activeRole}</span></div>
+              <div className="font-display font-bold text-lg leading-none">{school.name}</div>
+              <div className="text-[11px] text-muted-foreground mt-1 capitalize">{activeRole} portal</div>
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={signOut}>Sign out</Button>

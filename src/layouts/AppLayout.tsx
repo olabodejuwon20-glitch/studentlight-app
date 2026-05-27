@@ -170,10 +170,14 @@ export default function AppLayout() {
       )}>
         <div className="px-4 py-5 border-b border-sidebar-border">
           <div className="flex items-center gap-3 rounded-lg px-3 py-2.5" style={{ background: meta.color, color: "white" }}>
-            <div className="grid place-items-center size-9 rounded-md bg-white/15 backdrop-blur"><GraduationCap className="size-5" /></div>
+            {school.logo_url ? (
+              <img src={school.logo_url} alt="" className="size-9 rounded-md object-contain bg-white/90 p-0.5" />
+            ) : (
+              <div className="grid place-items-center size-9 rounded-md bg-white/15 backdrop-blur"><GraduationCap className="size-5" /></div>
+            )}
             {!collapsed && (
               <div className="leading-tight min-w-0">
-                <div className="font-display font-bold text-base truncate">Legacyskool</div>
+                <div className="font-display font-bold text-base truncate">{school.name}</div>
                 <div className="text-[11px] opacity-90 truncate">{meta.portal}</div>
               </div>
             )}

@@ -64,7 +64,7 @@ export default function Join() {
           <Link to={schoolPath(school.slug, "")} className="flex items-center gap-2">
             {school.logo_url ? <img src={school.logo_url} alt="" className="size-9 rounded-lg object-contain border border-border bg-card p-0.5" /> :
               <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>}
-            <div><div className="font-display font-bold text-lg leading-none">{school.name}</div><div className="text-[11px] text-muted-foreground mt-1">Legacyskool portal</div></div>
+            <div><div className="font-display font-bold text-lg leading-none">{school.name}</div><div className="text-[11px] text-muted-foreground mt-1">School portal</div></div>
           </Link>
           <Link to={schoolPath(school.slug, "/signin")} className="text-sm text-muted-foreground hover:text-foreground">Already a member? Sign in</Link>
         </div>
