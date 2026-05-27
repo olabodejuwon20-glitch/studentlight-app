@@ -1736,6 +1736,141 @@ export type Database = {
           },
         ]
       }
+      payment_plans: {
+        Row: {
+          amount_kobo: number
+          created_at: string
+          due_date: string | null
+          id: string
+          installment_no: number
+          invoice_id: string
+          status: Database["public"]["Enums"]["invoice_status"]
+        }
+        Insert: {
+          amount_kobo: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          installment_no: number
+          invoice_id: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+        }
+        Update: {
+          amount_kobo?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          installment_no?: number
+          invoice_id?: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_plans_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "school_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_types: {
+        Row: {
+          active: boolean
+          allow_partial: boolean
+          audience: Database["public"]["Enums"]["payment_audience"]
+          category: Database["public"]["Enums"]["payment_category"]
+          class_id: string | null
+          code: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          default_amount_kobo: number
+          description: string | null
+          due_date: string | null
+          id: string
+          late_fee_kobo: number
+          level: string | null
+          mandatory: boolean
+          name: string
+          recurrence: Database["public"]["Enums"]["payment_recurrence"]
+          school_id: string
+          session: string | null
+          term: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          allow_partial?: boolean
+          audience?: Database["public"]["Enums"]["payment_audience"]
+          category?: Database["public"]["Enums"]["payment_category"]
+          class_id?: string | null
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          default_amount_kobo?: number
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          late_fee_kobo?: number
+          level?: string | null
+          mandatory?: boolean
+          name: string
+          recurrence?: Database["public"]["Enums"]["payment_recurrence"]
+          school_id: string
+          session?: string | null
+          term?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          allow_partial?: boolean
+          audience?: Database["public"]["Enums"]["payment_audience"]
+          category?: Database["public"]["Enums"]["payment_category"]
+          class_id?: string | null
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          default_amount_kobo?: number
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          late_fee_kobo?: number
+          level?: string | null
+          mandatory?: boolean
+          name?: string
+          recurrence?: Database["public"]["Enums"]["payment_recurrence"]
+          school_id?: string
+          session?: string | null
+          term?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_types_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_types_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_types_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_announcements: {
         Row: {
           audience: string
@@ -2003,6 +2138,89 @@ export type Database = {
           },
         ]
       }
+      school_invoices: {
+        Row: {
+          amount_due_kobo: number
+          amount_paid_kobo: number
+          currency: string
+          due_date: string | null
+          id: string
+          issued_at: string
+          issued_by: string | null
+          notes: string | null
+          payment_type_id: string | null
+          school_id: string
+          session: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          student_id: string
+          term: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_due_kobo: number
+          amount_paid_kobo?: number
+          currency?: string
+          due_date?: string | null
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          notes?: string | null
+          payment_type_id?: string | null
+          school_id: string
+          session?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          student_id: string
+          term?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_due_kobo?: number
+          amount_paid_kobo?: number
+          currency?: string
+          due_date?: string | null
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          notes?: string | null
+          payment_type_id?: string | null
+          school_id?: string
+          session?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          student_id?: string
+          term?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_invoices_payment_type_id_fkey"
+            columns: ["payment_type_id"]
+            isOneToOne: false
+            referencedRelation: "payment_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_invoices_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_invoices_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_invoices_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_modules: {
         Row: {
           beta: boolean
@@ -2058,6 +2276,150 @@ export type Database = {
           },
           {
             foreignKeyName: "school_modules_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_payment_settings: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          auto_late_fee: boolean
+          bank_name: string | null
+          grace_days: number
+          paystack_subaccount_code: string | null
+          receipt_footer: string | null
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          auto_late_fee?: boolean
+          bank_name?: string | null
+          grace_days?: number
+          paystack_subaccount_code?: string | null
+          receipt_footer?: string | null
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          auto_late_fee?: boolean
+          bank_name?: string | null
+          grace_days?: number
+          paystack_subaccount_code?: string | null
+          receipt_footer?: string | null
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_payment_settings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_payment_settings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_payment_settings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_payments: {
+        Row: {
+          amount_kobo: number
+          created_at: string
+          currency: string
+          id: string
+          invoice_id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          notes: string | null
+          paid_at: string | null
+          payer_user_id: string | null
+          proof_url: string | null
+          provider_payload: Json | null
+          provider_reference: string | null
+          recorded_by: string | null
+          school_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          student_id: string
+        }
+        Insert: {
+          amount_kobo: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_at?: string | null
+          payer_user_id?: string | null
+          proof_url?: string | null
+          provider_payload?: Json | null
+          provider_reference?: string | null
+          recorded_by?: string | null
+          school_id: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          student_id: string
+        }
+        Update: {
+          amount_kobo?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_at?: string | null
+          payer_user_id?: string | null
+          proof_url?: string | null
+          provider_payload?: Json | null
+          provider_reference?: string | null
+          recorded_by?: string | null
+          school_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "school_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_payments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_payments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_payments_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools_public"
@@ -2499,6 +2861,7 @@ export type Database = {
       }
     }
     Functions: {
+      apply_payment: { Args: { _payment_id: string }; Returns: undefined }
       get_exam_questions_for_attempt: {
         Args: { _attempt_id: string }
         Returns: {
@@ -2550,6 +2913,10 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user: string }; Returns: boolean }
+      issue_invoices_for_audience: {
+        Args: { _payment_type_id: string; _student_ids?: string[] }
+        Returns: number
+      }
       redeem_invite: { Args: { _code: string }; Returns: string }
       seed_mock_bank: { Args: { _school: string }; Returns: undefined }
     }
@@ -2559,7 +2926,28 @@ export type Database = {
       exam_mode: "neco_sim" | "school" | "practice"
       exam_status: "draft" | "scheduled" | "active" | "closed"
       fee_status: "pending" | "paid" | "overdue"
+      invoice_status:
+        | "pending"
+        | "partial"
+        | "paid"
+        | "overdue"
+        | "waived"
+        | "cancelled"
       member_role: "admin" | "teacher" | "student" | "parent"
+      payment_audience: "school" | "level" | "class" | "custom"
+      payment_category:
+        | "tuition"
+        | "levy"
+        | "uniform"
+        | "exam"
+        | "hostel"
+        | "transport"
+        | "excursion"
+        | "book"
+        | "other"
+      payment_method: "paystack" | "cash" | "bank_transfer" | "pos" | "waiver"
+      payment_recurrence: "one_off" | "termly" | "sessional" | "monthly"
+      payment_status: "initiated" | "successful" | "failed" | "refunded"
       school_plan: "trial" | "basic" | "standard" | "premium" | "enterprise"
       school_status: "active" | "suspended" | "expired" | "trial"
     }
@@ -2694,7 +3082,30 @@ export const Constants = {
       exam_mode: ["neco_sim", "school", "practice"],
       exam_status: ["draft", "scheduled", "active", "closed"],
       fee_status: ["pending", "paid", "overdue"],
+      invoice_status: [
+        "pending",
+        "partial",
+        "paid",
+        "overdue",
+        "waived",
+        "cancelled",
+      ],
       member_role: ["admin", "teacher", "student", "parent"],
+      payment_audience: ["school", "level", "class", "custom"],
+      payment_category: [
+        "tuition",
+        "levy",
+        "uniform",
+        "exam",
+        "hostel",
+        "transport",
+        "excursion",
+        "book",
+        "other",
+      ],
+      payment_method: ["paystack", "cash", "bank_transfer", "pos", "waiver"],
+      payment_recurrence: ["one_off", "termly", "sessional", "monthly"],
+      payment_status: ["initiated", "successful", "failed", "refunded"],
       school_plan: ["trial", "basic", "standard", "premium", "enterprise"],
       school_status: ["active", "suspended", "expired", "trial"],
     },
