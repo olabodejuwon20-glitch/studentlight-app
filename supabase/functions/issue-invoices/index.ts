@@ -22,11 +22,12 @@ Deno.serve(async (req) => {
       _payment_type_id: payment_type_id,
       _student_ids: student_ids ?? null,
     });
-    if (error) return json({ error: error.message }, 400);
+    if (error) { console.error("[issue-invoices rpc]", error); return json({ error: "Invoice creation failed" }, 400); }
 
     return json({ ok: true, issued: data });
   } catch (e) {
-    return json({ error: String(e?.message || e) }, 500);
+    console.error("[issue-invoices]", e);
+    return json({ error: "An internal error occurred" }, 500);
   }
 });
 
