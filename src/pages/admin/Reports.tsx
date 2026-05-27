@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { FileBarChart, Download, FileText, Package, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { downloadCSV, printToPDF, tableHTML } from "@/lib/exporters";
+import { downloadCSV, printToPDF, tableHTML, safeHtml } from "@/lib/exporters";
 import { fetchResultSlip } from "@/lib/slip";
 import { toast } from "sonner";
 import JSZip from "jszip";
@@ -84,7 +84,7 @@ export default function AdminReports() {
         }}><Download className="size-4" /> <span className="hidden sm:inline ml-1">CSV</span></Button>
       <Button size="sm" variant="outline" disabled={!perfData.length && !att.length}
         onClick={() => {
-          const html = `<h1>School Report</h1><div class="sub">${school?.name || ""}</div>
+          const html = `<h1>School Report</h1><div class="sub">${safeHtml(school?.name || "")}</div>
           <h3>Performance by subject</h3>${tableHTML(["Subject","Average"], perfData.map(p => [p.subject, p.score + "%"]))}
           <h3 style="margin-top:24px;">Attendance distribution</h3>${tableHTML(["Status","Count"], att.map(a => [a.name, a.value]))}`;
           printToPDF(`Report – ${school?.name || ""}`, html);
