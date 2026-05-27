@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Upload, FileSpreadsheet, Loader2, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { friendlyError, friendlyInvokeError } from "@/lib/errors";
 import { useSchool, Role } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { Button } from "@/components/ui/button";

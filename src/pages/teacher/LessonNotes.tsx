@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Sparkles, Save, Send, Loader2, BookOpen, Trash2, Pencil, CheckCircle2, Clock, XCircle, FileEdit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { friendlyError, friendlyInvokeError } from "@/lib/errors";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
