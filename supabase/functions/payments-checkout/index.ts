@@ -63,7 +63,8 @@ Deno.serve(async (req) => {
 
     return json({ authorization_url: paystackData.data.authorization_url, reference });
   } catch (e) {
-    return json({ error: String(e?.message || e) }, 500);
+    console.error("[payments-checkout]", e);
+    return json({ error: "An internal error occurred" }, 500);
   }
 });
 
