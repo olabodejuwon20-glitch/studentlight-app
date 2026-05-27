@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileBarChart, TrendingUp, Target, Award, Download, FileText, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { downloadCSV, printToPDF, tableHTML } from "@/lib/exporters";
+import { downloadCSV, printToPDF, tableHTML, safeHtml } from "@/lib/exporters";
 import { downloadResultSlip } from "@/lib/slip";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,7 +62,7 @@ export default function ParentResults() {
           <Button size="sm" variant="outline" disabled={!childRows.length}
             onClick={() => {
               const childName = kids.find(k => k.id === active)?.name || "Child";
-              const html = `<h1>Academic Report</h1><div class="sub">${childName} · ${school?.name || ""}</div>
+              const html = `<h1>Academic Report</h1><div class="sub">${safeHtml(childName)} · ${safeHtml(school?.name || "")}</div>
               <div class="grid">
                 <div class="card"><div class="label">Overall</div><div class="value">${s.average}% (${s.grade})</div></div>
                 <div class="card"><div class="label">Credit pass</div><div class="value">${s.credit}%</div></div>

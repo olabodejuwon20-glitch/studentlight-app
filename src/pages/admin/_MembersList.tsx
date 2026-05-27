@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { downloadCSV, printToPDF, tableHTML } from "@/lib/exporters";
+import { downloadCSV, printToPDF, tableHTML, safeHtml } from "@/lib/exporters";
 
 type Role = "student" | "teacher";
 type Tone = "student" | "teacher";
@@ -77,7 +77,7 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
       ? [r.full_name || "—", r.email || "—", r.profile_data?.grade_level || "—", r.phone || "—", new Date(r.created_at).toLocaleDateString()]
       : [r.full_name || "—", r.email || "—", (r.profile_data?.subjects || []).join(", ") || "—", r.phone || "—", new Date(r.created_at).toLocaleDateString()]
     );
-    const html = `<h1>${title}</h1><div class="sub">${school?.name || ""} · ${filtered.length} ${role}${filtered.length === 1 ? "" : "s"}</div>${tableHTML(headers, tableRows)}`;
+    const html = `<h1>${safeHtml(title)}</h1><div class="sub">${safeHtml(school?.name || "")} · ${filtered.length} ${role}${filtered.length === 1 ? "" : "s"}</div>${tableHTML(headers, tableRows)}`;
     printToPDF(`${title} – ${school?.name || ""}`, html);
   }
 

@@ -1,8 +1,9 @@
 // CSV + print-to-PDF helpers
-const escapeHtml = (v: any) => {
+export const escapeHtml = (v: any) => {
   const s = v === null || v === undefined ? "" : String(v);
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 };
+export const safeHtml = escapeHtml;
 
 export function downloadCSV(filename: string, rows: Array<Record<string, any>>) {
   if (!rows.length) return;

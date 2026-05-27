@@ -34,14 +34,15 @@ Deno.serve(async (req) => {
       provider_reference: `offline_${invoice.id.slice(0, 8)}_${Date.now()}`,
       proof_url, notes,
     }).select("id").single();
-    if (insErr) return json({ error: insErr.message }, 500);
+    if (insErr) { console.error("[payments-record-offline insert]", insErr); return json({ error: "An internal error occurred" }, 500); }
 
     const { error: applyErr } = await admin.rpc("apply_payment", { _payment_id: payment.id });
-    if (applyErr) return json({ error: applyErr.message }, 500);
+    if (applyErr) { console.error("[payments-record-offline apply]", applyErr); return json({ error: "An internal error occurred" }, 500); }
 
     return json({ ok: true, payment_id: payment.id });
   } catch (e) {
-    return json({ error: String(e?.message || e) }, 500);
+    console.error("[payments-record-offline]", e);
+    return json({ error: "An internal error occurred" }, 500);
   }
 });
 
