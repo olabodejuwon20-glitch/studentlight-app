@@ -64,7 +64,7 @@ export default function StudentResults() {
           </Button>
           <Button size="sm" variant="outline" disabled={!filtered.length}
             onClick={() => {
-              const html = `<h1>Academic Report</h1><div class="sub">${school?.name || ""}</div>
+              const html = `<h1>Academic Report</h1><div class="sub">${safeHtml(school?.name || "")}</div>
               <div class="grid">
                 <div class="card"><div class="label">Overall</div><div class="value">${s.average}% (${s.grade})</div></div>
                 <div class="card"><div class="label">Credit pass</div><div class="value">${s.credit}%</div></div>
