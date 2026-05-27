@@ -69,7 +69,8 @@ Deno.serve(async (req) => {
     }
     if (!res.ok) {
       const t = await res.text();
-      return new Response(JSON.stringify({ error: t }), {
+      console.error("[generate-lesson-note upstream]", res.status, t);
+      return new Response(JSON.stringify({ error: "AI service error" }), {
         status: res.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -80,7 +81,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), {
+    console.error("[generate-lesson-note]", e);
+    return new Response(JSON.stringify({ error: "An internal error occurred" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
