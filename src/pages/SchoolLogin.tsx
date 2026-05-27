@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { schoolPath, buildSchoolUrl } from "@/lib/tenant";
 import { SchoolBadge } from "@/components/SchoolBadge";
+import { friendlyError, friendlyInvokeError } from "@/lib/errors";
 
 /** /:slug/signin — returning members (student/teacher/parent): phone + 6-digit PIN. */
 export default function SchoolLogin() {

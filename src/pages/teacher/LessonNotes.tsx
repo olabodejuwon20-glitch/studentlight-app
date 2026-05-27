@@ -56,11 +56,11 @@ export default function TeacherLessonNotes() {
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-lesson-note", { body: form });
-      if (error) throw error;
+      if (error) throw new Error(await friendlyInvokeError(error, "We couldn't generate the lesson note. Please try again."));
       if (data?.error) throw new Error(data.error);
       setForm((f: any) => ({ ...f, content: data.content, title: f.title || `${f.subject} — ${f.topic}` }));
       toast.success("Lesson note generated");
-    } catch (e: any) { toast.error(e.message || "Generation failed"); }
+    } catch (e: any) { toast.error(friendlyError(e, "We couldn't generate the lesson note. Please try again.")); }
     finally { setGenerating(false); }
   }
 

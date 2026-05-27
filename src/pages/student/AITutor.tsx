@@ -30,10 +30,10 @@ export default function AITutor() {
     setMessages(m => [...m, userMsg]); setInput(""); setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("ai-tutor", { body: { messages: [...messages, userMsg], school_id: school.id } });
-      if (error) throw error;
+      if (error) throw new Error(await friendlyInvokeError(error, "The tutor couldn't respond. Please try again."));
       setMessages(m => [...m, { role: "assistant", content: data.reply }]);
     } catch (err: any) {
-      toast.error(err.message || "Failed");
+      toast.error(friendlyError(err, "The tutor couldn't respond. Please try again."));
     } finally { setBusy(false); }
   }
 

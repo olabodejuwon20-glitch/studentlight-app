@@ -50,14 +50,14 @@ export default function BulkUpload() {
       const { data, error } = await supabase.functions.invoke("bulk-onboard", {
         body: { schoolId: school.id, role, rows },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await friendlyInvokeError(error, "Bulk onboarding failed. Please try again."));
       if ((data as any)?.error) throw new Error((data as any).error);
       const r = (data as any).results as any[];
       setResults(r);
       const ok = r.filter(x => x.ok).length;
       toast.success(`Onboarded ${ok}/${r.length}. Per-user PINs shown in the table — distribute securely.`);
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error(friendlyError(err, "Bulk onboarding failed. Please try again."));
     } finally { setBusy(false); }
   }
 
