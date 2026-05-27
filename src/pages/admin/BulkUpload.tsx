@@ -55,7 +55,7 @@ export default function BulkUpload() {
       const r = (data as any).results as any[];
       setResults(r);
       const ok = r.filter(x => x.ok).length;
-      toast.success(`Onboarded ${ok}/${r.length}. Default PIN is 123456.`);
+      toast.success(`Onboarded ${ok}/${r.length}. Per-user PINs shown in the table — distribute securely.`);
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setBusy(false); }
