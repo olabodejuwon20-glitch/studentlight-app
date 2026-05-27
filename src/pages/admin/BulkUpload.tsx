@@ -32,7 +32,7 @@ export default function BulkUpload() {
   const [role, setRole] = useState<Role>("student");
   const [rows, setRows] = useState<Row[]>([]);
   const [busy, setBusy] = useState(false);
-  const [results, setResults] = useState<{ phone: string; ok: boolean; error?: string }[] | null>(null);
+  const [results, setResults] = useState<{ phone: string; ok: boolean; pin?: string; error?: string }[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
