@@ -14,7 +14,9 @@ import { SectionCard } from "@/components/dashboard/SectionCard";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { EmptyState } from "@/components/EmptyState";
 import { AUDIENCES, PAYMENT_CATEGORIES, RECURRENCES, issueInvoices, invoiceStatusColor, naira, recordOfflinePayment, toKobo } from "@/lib/payments";
-import { Plus, Wallet, Send, Banknote, Settings as SettingsIcon, ListChecks } from "lucide-react";
+import { verifyPaymentProof } from "@/lib/payments";
+import { ReceiptLink } from "@/components/payments/ReceiptLink";
+import { Plus, Wallet, Send, Banknote, Settings as SettingsIcon, ListChecks, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminPayments() {
@@ -153,13 +155,23 @@ export default function AdminPayments() {
   );
 }
 
-function PaymentsTable({ rows, profiles }: { rows: any[]; profiles: Record<string, string> }) {
+function PaymentsTable({ rows, profiles, onChanged }: { rows: any[]; profiles: Record<string, string>; onChanged?: () => void }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const act = async (id: string, approve: boolean) => {
+    setBusy(id);
+    try {
+      await verifyPaymentProof(id, approve);
+      toast.success(approve ? "Payment verified" : "Proof rejected");
+      onChanged?.();
+    } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+    finally { setBusy(null); }
+  };
   return (
     <div className="overflow-x-auto"><table className="w-full text-sm">
       <thead className="text-xs text-muted-foreground border-b border-border"><tr>
         <th className="text-left py-2">Date</th><th className="text-left">Student</th>
         <th className="text-left">Method</th><th className="text-right">Amount</th>
-        <th className="text-left">Status</th><th className="text-left">Reference</th>
+        <th className="text-left">Status</th><th className="text-left">Receipt</th><th className="text-left">Reference</th><th></th>
       </tr></thead>
       <tbody>{rows.map(p => (
         <tr key={p.id} className="border-b border-border last:border-0">
@@ -167,8 +179,17 @@ function PaymentsTable({ rows, profiles }: { rows: any[]; profiles: Record<strin
           <td>{profiles[p.student_id] || "—"}</td>
           <td className="capitalize">{p.method.replace("_", " ")}</td>
           <td className="text-right tabular-nums">{naira(p.amount_kobo)}</td>
-          <td><Badge variant="outline" className={p.status === "successful" ? "bg-success/10 text-success border-success/30" : p.status === "failed" ? "bg-destructive/10 text-destructive border-destructive/30" : "bg-warning/10 text-warning border-warning/30"}>{p.status}</Badge></td>
+          <td><Badge variant="outline" className={p.status === "successful" ? "bg-success/10 text-success border-success/30" : p.status === "failed" ? "bg-destructive/10 text-destructive border-destructive/30" : "bg-warning/10 text-warning border-warning/30"}>{p.status === "initiated" && p.proof_url ? "pending review" : p.status}</Badge></td>
+          <td><ReceiptLink path={p.proof_url} /></td>
           <td className="text-xs text-muted-foreground font-mono truncate max-w-[160px]">{p.provider_reference}</td>
+          <td className="text-right">
+            {p.status === "initiated" && p.proof_url && (
+              <div className="flex gap-1 justify-end">
+                <Button size="sm" variant="outline" disabled={busy === p.id} onClick={() => act(p.id, true)}><CheckCircle2 className="w-4 h-4" /></Button>
+                <Button size="sm" variant="outline" disabled={busy === p.id} onClick={() => act(p.id, false)}><XCircle className="w-4 h-4" /></Button>
+              </div>
+            )}
+          </td>
         </tr>
       ))}</tbody>
     </table></div>
