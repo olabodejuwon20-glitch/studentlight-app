@@ -62,7 +62,7 @@ export default function BulkUpload() {
   }
 
   return (
-    <SectionCard title="Bulk onboard from CSV" description="Upload a CSV with columns: full_name, phone. Each user gets default PIN 123456 and must change it on first sign in.">
+    <SectionCard title="Bulk onboard from CSV" description="Upload a CSV with columns: full_name, phone. Each user gets a unique random PIN and must change it on first sign in.">
       <div className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-2"><Label>Role</Label>
@@ -80,10 +80,11 @@ export default function BulkUpload() {
         {rows.length > 0 && (
           <div className="rounded-lg border border-border overflow-hidden max-h-64 overflow-y-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/60"><tr><th className="text-left p-2">Name</th><th className="text-left p-2">Phone</th><th className="text-left p-2">Status</th></tr></thead>
+            <thead className="bg-muted/60"><tr><th className="text-left p-2">Name</th><th className="text-left p-2">Phone</th><th className="text-left p-2">PIN</th><th className="text-left p-2">Status</th></tr></thead>
               <tbody>{rows.map((r,i)=>{
                 const res = results?.find(x => x.phone === r.phone.replace(/[^\d+]/g,""));
                 return <tr key={i} className="border-t border-border"><td className="p-2">{r.full_name}</td><td className="p-2 font-mono text-xs">{r.phone}</td>
+                  <td className="p-2 font-mono text-xs">{res?.pin ?? "—"}</td>
                   <td className="p-2">{res ? (res.ok ? <span className="inline-flex items-center gap-1 text-emerald-600"><Check className="size-3.5"/>added</span> : <span className="inline-flex items-center gap-1 text-destructive"><X className="size-3.5"/>{res.error}</span>) : <span className="text-muted-foreground">pending</span>}</td></tr>;
               })}</tbody>
             </table>
