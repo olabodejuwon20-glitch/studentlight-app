@@ -30,12 +30,15 @@ Deno.serve(async (req) => {
     });
     if (!res.ok) {
       const t = await res.text();
-      return new Response(JSON.stringify({ error: t }), { status: res.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.error("[ai-tutor upstream]", res.status, t);
+      const msg = res.status === 429 ? "Rate limit reached. Try again shortly." : res.status === 402 ? "AI credits exhausted." : "AI service error";
+      return new Response(JSON.stringify({ error: msg }), { status: res.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content ?? "";
     return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    console.error("[ai-tutor]", e);
+    return new Response(JSON.stringify({ error: "An internal error occurred" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
