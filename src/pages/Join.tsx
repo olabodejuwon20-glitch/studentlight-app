@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { schoolPath } from "@/lib/tenant";
+import { friendlyError, friendlyInvokeError } from "@/lib/errors";
 import { SchoolBadge } from "@/components/SchoolBadge";
 
 export default function Join() {
@@ -42,7 +43,7 @@ export default function Join() {
           bio: { gender, dob: dob || null, address, photo_url: null, profile_data: {} },
         },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await friendlyInvokeError(error, "We couldn't process your onboarding code. Please check and try again."));
       if ((data as any)?.error) throw new Error((data as any).error);
       const email = (data as any).email as string;
       const slug = (data as any).schoolSlug as string;
@@ -51,7 +52,7 @@ export default function Join() {
       toast.success("Welcome to your school");
       window.location.href = schoolPath(slug, "/app");
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error(friendlyError(err, "We couldn't complete your sign-up. Please try again."));
     } finally { setBusy(false); }
   }
 

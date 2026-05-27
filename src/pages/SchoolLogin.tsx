@@ -34,7 +34,7 @@ export default function SchoolLogin() {
       const { data, error } = await supabase.functions.invoke("phone-auth", {
         body: { phone, schoolSlug: school!.slug },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(await friendlyInvokeError(error, "We couldn't sign you in. Please try again."));
       if ((data as any)?.error) throw new Error((data as any).error);
       const email = (data as any).email as string;
       const mustChange = !!(data as any).mustChangePin;
@@ -42,7 +42,7 @@ export default function SchoolLogin() {
       if (sErr) throw new Error("PIN doesn't match. Try again.");
       toast.success("Welcome");
       window.location.href = schoolPath(school!.slug, mustChange ? "/change-pin" : "/app");
-    } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
+    } catch (err) { toast.error(friendlyError(err, "We couldn't sign you in. Please try again.")); } finally { setBusy(false); }
   }
 
   return (
