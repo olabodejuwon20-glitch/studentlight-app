@@ -65,6 +65,50 @@ Deno.serve(async (req) => {
     const usedTerm = term || school?.current_term || "Term 1";
     const termRows = (results ?? []).filter(r => !term ? true : r.term === usedTerm);
 
+    // Build verification snapshot + record (public-readable, no credentials)
+    const pdat: any = stuMem.profile_data ?? {};
+    const gradedRows = termRows.map(r => {
+      const sc = Math.round(Number(r.score));
+      return { subject: r.subject, score: sc, ...necoGrade(sc) };
+    });
+    const totalSnap = gradedRows.reduce((a, r) => a + r.score, 0);
+    const avgSnap = gradedRows.length ? Math.round(totalSnap / gradedRows.length) : 0;
+    const snapshot = {
+      school: { name: school?.name ?? null, address: school?.address ?? null, phone: school?.phone ?? null, email: school?.email ?? null, logo_url: school?.logo_url ?? null },
+      student: {
+        full_name: profile?.full_name ?? null,
+        admission_no: pdat.admission_no ?? null,
+        class: pdat.class ?? null,
+        gender: profile?.gender ?? null,
+        dob: profile?.dob ?? null,
+      },
+      term: usedTerm,
+      session: school?.current_session ?? null,
+      results: gradedRows,
+      average: avgSnap,
+      overall_grade: necoGrade(avgSnap).grade,
+      issued_at: new Date().toISOString(),
+    };
+
+    const { data: ver, error: verErr } = await admin
+      .from("result_verifications")
+      .insert({ school_id: schoolId, student_id, term: usedTerm, session: school?.current_session ?? null, snapshot, issued_by: user.id })
+      .select("id")
+      .single();
+    if (verErr) console.error("[generate-result-slip] verification insert failed", verErr);
+
+    const origin = req.headers.get("origin") || "https://legacy-skool.lovable.app";
+    const verifyUrl = ver?.id ? `${origin}/verify/${ver.id}` : origin;
+    let qrImg: any = null;
+    try {
+      const qrDataUrl = await QRCode.toDataURL(verifyUrl, { errorCorrectionLevel: "M", margin: 1, width: 256 });
+      const b64Png = qrDataUrl.split(",")[1];
+      const bin = atob(b64Png);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      qrImg = await (await PDFDocument.prototype.embedPng.call({} as any, bytes).catch(() => null)) || null;
+    } catch (e) { console.error("[generate-result-slip] qr failed", e); }
+
     // Build PDF
     const pdf = await PDFDocument.create();
     const page = pdf.addPage([595.28, 841.89]); // A4
@@ -103,7 +147,6 @@ Deno.serve(async (req) => {
       page.drawText(l, { x, y, size: 8, font, color: muted });
       page.drawText(v || "—", { x, y: y - 12, size: 11, font: bold, color: ink });
     };
-    const pdat: any = stuMem.profile_data ?? {};
     label("STUDENT NAME", profile?.full_name ?? "—", 32);
     label("ADMISSION NO", pdat.admission_no ?? "—", 240);
     label("CLASS", pdat.class ?? "—", 380);
