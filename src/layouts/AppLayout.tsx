@@ -193,9 +193,11 @@ export default function AppLayout() {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
             {items.map((it) => {
-              const path = it.to
-                ? schoolPath(school.slug, `/app/${activeRole}/${it.to}`)
-                : schoolPath(school.slug, `/app/${activeRole}`);
+              const path = !it.to
+                ? schoolPath(school.slug, `/app/${activeRole}`)
+                : it.to.startsWith("/")
+                  ? schoolPath(school.slug, it.to)
+                  : schoolPath(school.slug, `/app/${activeRole}/${it.to}`);
               return (
                 <li key={path}>
                   <NavLink to={path} end={!it.to} onClick={() => setMobileOpen(false)}
