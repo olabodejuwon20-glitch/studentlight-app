@@ -99,14 +99,13 @@ Deno.serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://legacy-skool.lovable.app";
     const verifyUrl = ver?.id ? `${origin}/verify/${ver.id}` : origin;
-    let qrImg: any = null;
+    let qrBytes: Uint8Array | null = null;
     try {
       const qrDataUrl = await QRCode.toDataURL(verifyUrl, { errorCorrectionLevel: "M", margin: 1, width: 256 });
       const b64Png = qrDataUrl.split(",")[1];
       const bin = atob(b64Png);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      qrImg = await (await PDFDocument.prototype.embedPng.call({} as any, bytes).catch(() => null)) || null;
+      qrBytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) qrBytes[i] = bin.charCodeAt(i);
     } catch (e) { console.error("[generate-result-slip] qr failed", e); }
 
     // Build PDF
