@@ -1,5 +1,6 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
+import QRCode from "npm:qrcode@1.5.4";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
