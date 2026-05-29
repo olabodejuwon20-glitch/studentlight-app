@@ -19,6 +19,8 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/comms/NotificationBell";
+import { OnboardingGate } from "@/components/admin/OnboardingGate";
+import { HelpCircle } from "lucide-react";
 
 const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
   admin: [
@@ -278,7 +280,9 @@ export default function AppLayout() {
         </header>
 
         <main className="flex-1 px-3 sm:px-4 lg:px-8 py-4 sm:py-6 pb-20 lg:pb-6 animate-fade-in">
-          <Outlet />
+          <OnboardingGate>
+            <Outlet />
+          </OnboardingGate>
         </main>
       </div>
     </div>
