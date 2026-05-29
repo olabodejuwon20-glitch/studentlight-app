@@ -49,7 +49,7 @@ export default function VerifyResult() {
   if (state === "invalid" || !snap) {
     return (
       <div className="min-h-screen grid place-items-center bg-background p-6">
-        <SEO title="Result not verified" description="This result could not be verified." />
+        <SEO title="Result not verified" description="This result could not be verified." path={`/verify/${id ?? ""}`} />
         <Card className="max-w-md w-full p-6 text-center space-y-3">
           <ShieldAlert className="size-10 text-destructive mx-auto" />
           <h1 className="text-xl font-semibold">We can't verify this result</h1>
@@ -62,7 +62,7 @@ export default function VerifyResult() {
 
   return (
     <div className="min-h-screen bg-muted/30 py-10 px-4">
-      <SEO title={`Verified result — ${snap.student.full_name ?? "Student"}`} description={`Authentic result issued by ${snap.school.name ?? "the school"}.`} />
+      <SEO title={`Verified result — ${snap.student.full_name ?? "Student"}`} description={`Authentic result issued by ${snap.school.name ?? "the school"}.`} path={`/verify/${id ?? ""}`} />
       <div className="max-w-2xl mx-auto space-y-5">
         <Card className="p-6 border-success/40 bg-success/5">
           <div className="flex items-center gap-3">
