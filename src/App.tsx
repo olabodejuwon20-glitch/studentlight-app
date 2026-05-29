@@ -39,6 +39,8 @@ import AdminProctoring from "./pages/admin/Proctoring";
 import AdminLessonNotes from "./pages/admin/LessonNotes";
 import AdminModules from "./pages/admin/Modules";
 import AdminEnrollments from "./pages/admin/Enrollments";
+import AdminOnboarding from "./pages/admin/Onboarding";
+import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
 import Inbox from "./pages/shared/Inbox";
 
@@ -180,6 +182,8 @@ const App = () => (
               <Route path="admin/modules" element={<RoleGate allow="admin"><AdminModules /></RoleGate>} />
               <Route path="admin/inbox" element={<RoleGate allow="admin"><Inbox /></RoleGate>} />
               <Route path="admin/settings" element={<RoleGate allow="admin"><AdminSettings /></RoleGate>} />
+              <Route path="admin/onboarding" element={<RoleGate allow="admin"><AdminOnboarding /></RoleGate>} />
+              <Route path="help" element={<HelpPage />} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
               <Route path="teacher/classes" element={<RoleGate allow="teacher"><TeacherClasses /></RoleGate>} />
