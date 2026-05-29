@@ -2077,6 +2077,39 @@ export type Database = {
           },
         ]
       }
+      result_verifications: {
+        Row: {
+          created_at: string
+          id: string
+          issued_by: string | null
+          school_id: string
+          session: string | null
+          snapshot: Json
+          student_id: string
+          term: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issued_by?: string | null
+          school_id: string
+          session?: string | null
+          snapshot: Json
+          student_id: string
+          term?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issued_by?: string | null
+          school_id?: string
+          session?: string | null
+          snapshot?: Json
+          student_id?: string
+          term?: string | null
+        }
+        Relationships: []
+      }
       results: {
         Row: {
           created_at: string

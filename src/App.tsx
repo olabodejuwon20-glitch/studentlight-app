@@ -19,6 +19,7 @@ import Join from "./pages/Join";
 import ChangePin from "./pages/ChangePin";
 import Bio from "./pages/Bio";
 import ProfilePage from "./pages/Profile";
+import VerifyResult from "./pages/VerifyResult";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminStudents from "./pages/admin/Students";
@@ -126,6 +127,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/register" element={<Register />} />
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/verify/:id" element={<VerifyResult />} />
 
           {/* Super Admin OS */}
           <Route path="/super/claim" element={<SuperClaim />} />
