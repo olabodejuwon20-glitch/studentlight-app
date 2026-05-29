@@ -41,6 +41,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Invites",   to: "invites",   icon: Ticket },
     { label: "Bulk Upload", to: "bulk",    icon: Upload },
     { label: "Settings",  to: "settings",  icon: Settings },
+    { label: "Help",      to: "../help",   icon: HelpCircle },
   ],
   teacher: [
     { label: "Dashboard",   to: "",            icon: LayoutDashboard },
@@ -61,6 +62,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Calendar",    to: "calendar",    icon: Calendar },
     { label: "Resources",   to: "resources",   icon: FolderOpen },
     { label: "Reports",     to: "reports",     icon: FileBarChart },
+    { label: "Help",        to: "../help",     icon: HelpCircle },
   ],
   student: [
     { label: "Dashboard",  to: "",          icon: LayoutDashboard },
@@ -79,6 +81,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Inbox",      to: "inbox",     icon: InboxIcon },
     { label: "Messages",   to: "messages",  icon: MessagesSquare },
     { label: "Calendar",   to: "calendar",  icon: Calendar },
+    { label: "Help",       to: "../help",   icon: HelpCircle },
   ],
   parent: [
     { label: "Dashboard",       to: "",            icon: LayoutDashboard },
@@ -92,6 +95,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Fees & Payments", to: "fees",        icon: Wallet },
     { label: "Messages",        to: "messages",    icon: MessagesSquare },
     { label: "Calendar",        to: "calendar",    icon: Calendar },
+    { label: "Help",            to: "../help",     icon: HelpCircle },
   ],
 };
 
