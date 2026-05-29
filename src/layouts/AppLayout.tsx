@@ -19,6 +19,8 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/comms/NotificationBell";
+import { OnboardingGate } from "@/components/admin/OnboardingGate";
+import { HelpCircle } from "lucide-react";
 
 const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
   admin: [
@@ -39,6 +41,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Invites",   to: "invites",   icon: Ticket },
     { label: "Bulk Upload", to: "bulk",    icon: Upload },
     { label: "Settings",  to: "settings",  icon: Settings },
+    { label: "Help",      to: "/app/help", icon: HelpCircle },
   ],
   teacher: [
     { label: "Dashboard",   to: "",            icon: LayoutDashboard },
@@ -59,6 +62,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Calendar",    to: "calendar",    icon: Calendar },
     { label: "Resources",   to: "resources",   icon: FolderOpen },
     { label: "Reports",     to: "reports",     icon: FileBarChart },
+    { label: "Help",        to: "/app/help",   icon: HelpCircle },
   ],
   student: [
     { label: "Dashboard",  to: "",          icon: LayoutDashboard },
@@ -77,6 +81,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Inbox",      to: "inbox",     icon: InboxIcon },
     { label: "Messages",   to: "messages",  icon: MessagesSquare },
     { label: "Calendar",   to: "calendar",  icon: Calendar },
+    { label: "Help",       to: "/app/help", icon: HelpCircle },
   ],
   parent: [
     { label: "Dashboard",       to: "",            icon: LayoutDashboard },
@@ -90,6 +95,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Fees & Payments", to: "fees",        icon: Wallet },
     { label: "Messages",        to: "messages",    icon: MessagesSquare },
     { label: "Calendar",        to: "calendar",    icon: Calendar },
+    { label: "Help",            to: "/app/help",   icon: HelpCircle },
   ],
 };
 
@@ -187,9 +193,11 @@ export default function AppLayout() {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
             {items.map((it) => {
-              const path = it.to
-                ? schoolPath(school.slug, `/app/${activeRole}/${it.to}`)
-                : schoolPath(school.slug, `/app/${activeRole}`);
+              const path = !it.to
+                ? schoolPath(school.slug, `/app/${activeRole}`)
+                : it.to.startsWith("/")
+                  ? schoolPath(school.slug, it.to)
+                  : schoolPath(school.slug, `/app/${activeRole}/${it.to}`);
               return (
                 <li key={path}>
                   <NavLink to={path} end={!it.to} onClick={() => setMobileOpen(false)}
@@ -278,7 +286,9 @@ export default function AppLayout() {
         </header>
 
         <main className="flex-1 px-3 sm:px-4 lg:px-8 py-4 sm:py-6 pb-20 lg:pb-6 animate-fade-in">
-          <Outlet />
+          <OnboardingGate>
+            <Outlet />
+          </OnboardingGate>
         </main>
       </div>
     </div>
