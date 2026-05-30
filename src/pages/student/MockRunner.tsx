@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Award, CheckCircle2, Clock, GraduationCap, Loader2, LogOut, ShieldCheck, User as UserIcon } from "lucide-react";
+import { Award, CheckCircle2, Clock, GraduationCap, Loader2, LogOut, ShieldCheck, User as UserIcon, ListChecks } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -174,45 +175,55 @@ export default function MockRunner() {
     <div className="-m-4 sm:-m-6 lg:-m-8 min-h-screen bg-background">
       {/* Top bar */}
       <div className="sticky top-0 z-30 bg-card border-b border-border">
-        <div className="grid grid-cols-[260px_1fr_320px] items-stretch">
-          <div className="px-5 py-4 border-r border-border bg-[hsl(var(--sidebar-background))] text-[hsl(var(--sidebar-foreground))]">
-            <div className="flex items-center gap-2">
-              <div className="size-9 grid place-items-center rounded-md bg-primary/20"><ShieldCheck className="size-4 text-primary" /></div>
-              <div className="leading-tight">
-                <div className="font-display font-bold text-base">{school?.name ?? "Legacyskool"}</div>
-                <div className="text-[10px] opacity-80 uppercase tracking-wide">{modeLabel}</div>
-              </div>
+        <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="size-8 grid place-items-center rounded-md bg-primary/15 shrink-0"><ShieldCheck className="size-4 text-primary" /></div>
+            <div className="leading-tight min-w-0 hidden sm:block">
+              <div className="font-semibold text-sm truncate">{modeLabel}</div>
+              <div className="text-[10px] text-muted-foreground truncate">{totalAnswered}/{allQuestions.length} answered</div>
             </div>
           </div>
-          <div className="flex items-center justify-between px-6 py-3 gap-6">
-            <div className="flex items-center gap-6 text-sm">
-              <Pill icon={ModeIcon} label="Mode" value={modeLabel.replace(" CBT Mock", "")} />
-              <Pill icon={UserIcon} label="Student" value={displayName ?? "—"} />
-              <Pill icon={CheckCircle2} label="Progress" value={`${totalAnswered}/${allQuestions.length}`} />
-            </div>
-          </div>
-          <div className="flex items-center justify-end gap-4 px-5 border-l border-border">
-            <div className="text-right">
-              <div className="text-[10px] uppercase text-muted-foreground">Time Remaining</div>
-              <div className={cn("font-mono text-2xl font-bold tabular-nums", secondsLeft < 300 ? "text-destructive" : "text-foreground")}>
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <div className="text-right leading-tight">
+              <div className="text-[9px] uppercase text-muted-foreground tracking-wide">Time left</div>
+              <div className={cn("font-mono text-base sm:text-xl font-bold tabular-nums",
+                secondsLeft < 300 ? "text-destructive" : "text-foreground")}>
                 {fmtClock(secondsLeft)}
               </div>
             </div>
+            {/* Mobile-only navigator trigger */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button size="sm" variant="outline" className="lg:hidden px-2.5">
+                  <ListChecks className="size-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[85vw] max-w-[340px] overflow-y-auto">
+                <SheetHeader><SheetTitle>Question Navigator</SheetTitle></SheetHeader>
+                <NavigatorGrid
+                  subjectQuestions={subjectQuestions}
+                  answers={answers}
+                  activeIdx={activeIdx}
+                  setActiveIdx={setActiveIdx}
+                  answeredInSubject={answeredInSubject}
+                />
+              </SheetContent>
+            </Sheet>
             <Button size="sm" onClick={() => submit(false)} disabled={submitting || isSubmitted}>
-              <CheckCircle2 className="size-4 mr-1.5" /> Submit Exam
+              <CheckCircle2 className="size-4 sm:mr-1.5" /> <span className="hidden sm:inline">Submit</span>
             </Button>
           </div>
         </div>
 
         {/* Subject tab strip — UTME style */}
-        <div className="px-6 py-2 flex gap-1.5 overflow-x-auto border-t border-border bg-card/50">
+        <div className="px-3 sm:px-5 py-2 flex gap-1.5 overflow-x-auto border-t border-border bg-card/50">
           {subjects.map(s => {
             const on = s.id === activeSubject;
             return (
               <button key={s.id} type="button"
                 onClick={() => { setActiveSubject(s.id); setActiveIdx(0); }}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap border transition-colors flex items-center gap-2",
+                  "px-2.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap border transition-colors flex items-center gap-2 shrink-0",
                   on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-secondary"
                 )}
               >
@@ -224,7 +235,7 @@ export default function MockRunner() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_320px] gap-0 min-h-[calc(100vh-140px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_300px] gap-0 min-h-[calc(100vh-140px)]">
         {/* Left rail */}
         <aside className="hidden lg:flex flex-col bg-[hsl(var(--sidebar-background))] text-[hsl(var(--sidebar-foreground))] border-r border-border p-5 gap-5">
           <div className="rounded-lg bg-white/5 p-4">
@@ -253,15 +264,12 @@ export default function MockRunner() {
         </aside>
 
         {/* Question area */}
-        <main className="p-6">
+        <main className="p-3 sm:p-5 lg:p-6">
           {currentQ ? (
-            <div className="bg-card border border-border rounded-2xl p-6 max-w-3xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-semibold">Question {activeIdx + 1} of {subjectQuestions.length}</span>
-                  <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-medium">1 Mark</span>
-                </div>
-                <label className="flex items-center gap-2 text-sm">
+            <div className="bg-card border border-border rounded-2xl p-4 sm:p-6 max-w-3xl mx-auto">
+              <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+                <span className="font-semibold text-sm">Question {activeIdx + 1} of {subjectQuestions.length}</span>
+                <label className="flex items-center gap-2 text-xs sm:text-sm">
                   <Checkbox
                     checked={!!answers[currentQ.id]?.marked}
                     onCheckedChange={(v) => setAnswer(currentQ.id, currentQ.subject_id, { marked: !!v })}
@@ -269,7 +277,7 @@ export default function MockRunner() {
                   Mark for Review
                 </label>
               </div>
-              <div className="text-base leading-relaxed mb-5">{currentQ.prompt}</div>
+              <div className="text-sm sm:text-base leading-relaxed mb-5 whitespace-pre-wrap break-words">{currentQ.prompt}</div>
               <div className="space-y-2.5">
                 {(currentQ.options as string[]).map((opt, oi) => {
                   const chosen = answers[currentQ.id]?.selected_index === oi;
@@ -277,24 +285,24 @@ export default function MockRunner() {
                     <button key={oi} type="button" disabled={isSubmitted}
                       onClick={() => setAnswer(currentQ.id, currentQ.subject_id, { selected_index: oi })}
                       className={cn(
-                        "w-full text-left rounded-xl border px-4 py-3 transition-all flex items-center gap-3",
+                        "w-full text-left rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 transition-all flex items-center gap-3",
                         chosen ? "border-success bg-success/10" : "border-border hover:bg-secondary/40",
                       )}
                     >
-                      <span className={cn("size-7 grid place-items-center rounded-full text-xs font-semibold border",
+                      <span className={cn("size-7 grid place-items-center rounded-full text-xs font-semibold border shrink-0",
                         chosen ? "bg-success text-success-foreground border-success" : "bg-background border-border"
                       )}>{String.fromCharCode(65 + oi)}</span>
-                      <span className="text-sm">{opt}</span>
+                      <span className="text-sm break-words">{opt}</span>
                     </button>
                   );
                 })}
               </div>
-              <div className="flex items-center justify-between mt-6">
-                <Button variant="outline" disabled={activeIdx === 0} onClick={() => setActiveIdx(i => Math.max(0, i - 1))}>← Previous</Button>
+              <div className="flex items-center justify-between mt-6 gap-2">
+                <Button variant="outline" size="sm" disabled={activeIdx === 0} onClick={() => setActiveIdx(i => Math.max(0, i - 1))}>← Prev</Button>
                 {activeIdx < subjectQuestions.length - 1 ? (
-                  <Button onClick={() => setActiveIdx(i => Math.min(subjectQuestions.length - 1, i + 1))}>Next →</Button>
+                  <Button size="sm" onClick={() => setActiveIdx(i => Math.min(subjectQuestions.length - 1, i + 1))}>Next →</Button>
                 ) : (
-                  <Button onClick={() => {
+                  <Button size="sm" onClick={() => {
                     const i = subjects.findIndex(s => s.id === activeSubject);
                     const next = subjects[i + 1];
                     if (next) { setActiveSubject(next.id); setActiveIdx(0); }
@@ -310,40 +318,53 @@ export default function MockRunner() {
 
         {/* Right rail: navigator */}
         <aside className="hidden lg:flex flex-col p-5 border-l border-border bg-card gap-4">
-          <div className="flex items-center justify-between">
-            <div className="font-semibold text-sm">Question Navigator</div>
-            <span className="text-xs text-muted-foreground">{subjectQuestions.length}</span>
-          </div>
-          <div className="grid grid-cols-5 gap-2">
-            {subjectQuestions.map((q, i) => {
-              const a = answers[q.id];
-              const isCurrent = i === activeIdx;
-              const cls = isCurrent ? "bg-primary text-primary-foreground border-primary"
-                : a?.marked ? "bg-warning text-warning-foreground border-warning"
-                : a?.selected_index != null ? "bg-success text-success-foreground border-success"
-                : "bg-background border-border";
-              return (
-                <button key={q.id} type="button" onClick={() => setActiveIdx(i)}
-                  className={cn("size-9 rounded-md text-xs font-semibold border transition-all", cls)}>
-                  {i + 1}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-2">
-            <div className="flex items-center justify-between text-xs">
-              <span>Progress</span>
-              <span className="text-success font-semibold">{answeredInSubject} / {subjectQuestions.length} Answered</span>
-            </div>
-            <div className="h-2 mt-1.5 rounded-full bg-secondary overflow-hidden">
-              <div className="h-full bg-success transition-all" style={{ width: `${(answeredInSubject / Math.max(1, subjectQuestions.length)) * 100}%` }} />
-            </div>
-          </div>
-          <div className="mt-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-primary"><Clock className="size-3.5" /> {session.mode === "neco_sim" ? "NECO" : "JAMB"} Time Guide</div>
-            <div className="mt-1 text-muted-foreground">You have {session.duration_minutes} minutes total. Pace yourself — about {Math.round(session.duration_minutes / Math.max(1, allQuestions.length))} min per question.</div>
-          </div>
+          <NavigatorGrid
+            subjectQuestions={subjectQuestions}
+            answers={answers}
+            activeIdx={activeIdx}
+            setActiveIdx={setActiveIdx}
+            answeredInSubject={answeredInSubject}
+          />
         </aside>
+      </div>
+    </div>
+  );
+}
+
+function NavigatorGrid({ subjectQuestions, answers, activeIdx, setActiveIdx, answeredInSubject }: {
+  subjectQuestions: Question[]; answers: AnswerMap; activeIdx: number;
+  setActiveIdx: (i: number) => void; answeredInSubject: number;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="font-semibold text-sm">Questions</div>
+        <span className="text-xs text-muted-foreground">{subjectQuestions.length}</span>
+      </div>
+      <div className="grid grid-cols-5 gap-2">
+        {subjectQuestions.map((q, i) => {
+          const a = answers[q.id];
+          const isCurrent = i === activeIdx;
+          const cls = isCurrent ? "bg-primary text-primary-foreground border-primary"
+            : a?.marked ? "bg-warning text-warning-foreground border-warning"
+            : a?.selected_index != null ? "bg-success text-success-foreground border-success"
+            : "bg-background border-border";
+          return (
+            <button key={q.id} type="button" onClick={() => setActiveIdx(i)}
+              className={cn("size-9 rounded-md text-xs font-semibold border transition-all", cls)}>
+              {i + 1}
+            </button>
+          );
+        })}
+      </div>
+      <div>
+        <div className="flex items-center justify-between text-xs">
+          <span>Progress</span>
+          <span className="text-success font-semibold">{answeredInSubject} / {subjectQuestions.length}</span>
+        </div>
+        <div className="h-2 mt-1.5 rounded-full bg-secondary overflow-hidden">
+          <div className="h-full bg-success transition-all" style={{ width: `${(answeredInSubject / Math.max(1, subjectQuestions.length)) * 100}%` }} />
+        </div>
       </div>
     </div>
   );
