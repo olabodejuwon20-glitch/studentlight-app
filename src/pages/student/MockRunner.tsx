@@ -172,161 +172,197 @@ export default function MockRunner() {
   const totalAnswered = allQuestions.filter(q => answers[q.id]?.selected_index != null).length;
 
   return (
-    <div className="-m-4 sm:-m-6 lg:-m-8 min-h-screen bg-background">
-      {/* Top bar */}
-      <div className="sticky top-0 z-30 bg-card border-b border-border">
-        <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-2.5">
+    <ExamShell
+      modeLabel={modeLabel}
+      ModeIcon={ModeIcon}
+      subjects={subjects}
+      activeSubject={activeSubject}
+      setActiveSubject={(id) => { setActiveSubject(id); setActiveIdx(0); }}
+      activeSubjectMeta={activeSubjectMeta}
+      subjectQuestions={subjectQuestions}
+      answers={answers}
+      activeIdx={activeIdx}
+      setActiveIdx={setActiveIdx}
+      answeredInSubject={answeredInSubject}
+      totalAnswered={totalAnswered}
+      totalQuestions={allQuestions.length}
+      secondsLeft={secondsLeft}
+      isSubmitted={isSubmitted}
+      submitting={submitting}
+      onSubmit={() => submit(false)}
+      currentQ={currentQ}
+      onSelect={(oi) => currentQ && setAnswer(currentQ.id, currentQ.subject_id, { selected_index: oi })}
+      onToggleMark={(v) => currentQ && setAnswer(currentQ.id, currentQ.subject_id, { marked: v })}
+      onNextSubject={() => {
+        const i = subjects.findIndex(s => s.id === activeSubject);
+        const next = subjects[i + 1];
+        if (next) { setActiveSubject(next.id); setActiveIdx(0); }
+        else toast.info("That was the last subject. Review or submit.");
+      }}
+    />
+  );
+}
+
+function ExamShell(props: any) {
+  const {
+    modeLabel, ModeIcon, subjects, activeSubject, setActiveSubject, activeSubjectMeta,
+    subjectQuestions, answers, activeIdx, setActiveIdx, answeredInSubject,
+    totalAnswered, totalQuestions, secondsLeft, isSubmitted, submitting, onSubmit,
+    currentQ, onSelect, onToggleMark, onNextSubject,
+  } = props;
+  const shellRef = useRef<HTMLDivElement>(null);
+  const [isFs, setIsFs] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setIsFs(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", sync);
+    // Best-effort enter fullscreen on mount (requires user gesture on some browsers; ignore if blocked)
+    shellRef.current?.requestFullscreen?.().catch(() => {});
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
+
+  function toggleFs() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else shellRef.current?.requestFullscreen?.().catch(() => {});
+  }
+
+  const lowTime = secondsLeft < 300;
+
+  return (
+    <div ref={shellRef} className="fixed inset-0 z-50 bg-background flex flex-col">
+      {/* Minimal top bar */}
+      <header className="shrink-0 border-b border-border bg-card/80 backdrop-blur">
+        <div className="flex items-center gap-3 px-4 sm:px-6 h-14">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="size-8 grid place-items-center rounded-md bg-primary/15 shrink-0"><ShieldCheck className="size-4 text-primary" /></div>
+            <div className="size-7 grid place-items-center rounded-md bg-primary/15 shrink-0">
+              <ModeIcon className="size-4 text-primary" />
+            </div>
             <div className="leading-tight min-w-0 hidden sm:block">
-              <div className="font-semibold text-sm truncate">{modeLabel}</div>
-              <div className="text-[10px] text-muted-foreground truncate">{totalAnswered}/{allQuestions.length} answered</div>
+              <div className="font-semibold text-sm truncate">{activeSubjectMeta?.name ?? modeLabel}</div>
+              <div className="text-[10px] text-muted-foreground truncate">{totalAnswered}/{totalQuestions} answered</div>
             </div>
           </div>
-          <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            <div className="text-right leading-tight">
-              <div className="text-[9px] uppercase text-muted-foreground tracking-wide">Time left</div>
-              <div className={cn("font-mono text-base sm:text-xl font-bold tabular-nums",
-                secondsLeft < 300 ? "text-destructive" : "text-foreground")}>
-                {fmtClock(secondsLeft)}
-              </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            <div className={cn(
+              "px-3 py-1 rounded-full font-mono text-base sm:text-lg font-bold tabular-nums border",
+              lowTime ? "text-destructive border-destructive/40 bg-destructive/5 animate-pulse" : "text-foreground border-border bg-background"
+            )}>
+              {fmtClock(secondsLeft)}
             </div>
-            {/* Mobile-only navigator trigger */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button size="sm" variant="outline" className="lg:hidden px-2.5">
+                <Button size="sm" variant="outline" className="px-2.5" aria-label="Question navigator">
                   <ListChecks className="size-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[85vw] max-w-[340px] overflow-y-auto">
-                <SheetHeader><SheetTitle>Question Navigator</SheetTitle></SheetHeader>
-                <NavigatorGrid
-                  subjectQuestions={subjectQuestions}
-                  answers={answers}
-                  activeIdx={activeIdx}
-                  setActiveIdx={setActiveIdx}
-                  answeredInSubject={answeredInSubject}
-                />
+              <SheetContent side="right" className="w-[88vw] max-w-[360px] overflow-y-auto">
+                <SheetHeader><SheetTitle>Navigator</SheetTitle></SheetHeader>
+                <div className="mt-4 space-y-4">
+                  <div className="flex flex-wrap gap-1.5">
+                    {subjects.map((s: any) => (
+                      <button key={s.id} type="button"
+                        onClick={() => setActiveSubject(s.id)}
+                        className={cn(
+                          "px-2 py-1 rounded text-[11px] font-medium border",
+                          s.id === activeSubject ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"
+                        )}>
+                        {s.name}
+                      </button>
+                    ))}
+                  </div>
+                  <NavigatorGrid
+                    subjectQuestions={subjectQuestions}
+                    answers={answers}
+                    activeIdx={activeIdx}
+                    setActiveIdx={setActiveIdx}
+                    answeredInSubject={answeredInSubject}
+                  />
+                </div>
               </SheetContent>
             </Sheet>
-            <Button size="sm" onClick={() => submit(false)} disabled={submitting || isSubmitted}>
+            <Button size="sm" variant="ghost" onClick={toggleFs} aria-label="Toggle fullscreen" className="px-2 hidden sm:inline-flex">
+              {isFs ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            </Button>
+            <Button size="sm" onClick={onSubmit} disabled={submitting || isSubmitted}>
               <CheckCircle2 className="size-4 sm:mr-1.5" /> <span className="hidden sm:inline">Submit</span>
             </Button>
           </div>
         </div>
+      </header>
 
-        {/* Subject tab strip — UTME style */}
-        <div className="px-3 sm:px-5 py-2 flex gap-1.5 overflow-x-auto border-t border-border bg-card/50">
-          {subjects.map(s => {
-            const on = s.id === activeSubject;
-            return (
-              <button key={s.id} type="button"
-                onClick={() => { setActiveSubject(s.id); setActiveIdx(0); }}
-                className={cn(
-                  "px-2.5 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap border transition-colors flex items-center gap-2 shrink-0",
-                  on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-secondary"
-                )}
-              >
-                <span className="size-2 rounded-full" style={{ background: on ? "white" : s.color }} />
-                {s.name}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_300px] gap-0 min-h-[calc(100vh-140px)]">
-        {/* Left rail */}
-        <aside className="hidden lg:flex flex-col bg-[hsl(var(--sidebar-background))] text-[hsl(var(--sidebar-foreground))] border-r border-border p-5 gap-5">
-          <div className="rounded-lg bg-white/5 p-4">
-            <div className="font-semibold text-sm">{modeLabel} 2025</div>
-            <div className="text-xs opacity-80 mt-0.5">{activeSubjectMeta?.name ?? "—"}</div>
-            <div className="mt-2 inline-flex px-2 py-1 rounded text-[10px] font-semibold bg-primary/20 text-primary">{session.mode === "neco_sim" ? "NECO CBT Mode" : "JAMB CBT Mode"}</div>
-          </div>
-          <div className="space-y-2 text-xs">
-            <div className="uppercase tracking-wide opacity-70 text-[10px]">Exam details</div>
-            <DetailRow label="Subjects" value={String(subjects.length)} />
-            <DetailRow label="Total Questions" value={String(allQuestions.length)} />
-            <DetailRow label="Duration" value={`${session.duration_minutes} min`} />
-          </div>
-          <div className="space-y-2 text-xs">
-            <div className="uppercase tracking-wide opacity-70 text-[10px]">Legend</div>
-            <LegendRow color="bg-background border" label="Not Answered" />
-            <LegendRow color="bg-success" label="Answered" />
-            <LegendRow color="bg-warning" label="Marked for Review" />
-            <LegendRow color="bg-primary" label="Current Question" />
-          </div>
-          <div className="mt-auto">
-            <Button variant="destructive" size="sm" className="w-full" onClick={() => submit(false)} disabled={submitting || isSubmitted}>
-              <LogOut className="size-4 mr-1.5" /> End Exam
-            </Button>
-          </div>
-        </aside>
-
-        {/* Question area */}
-        <main className="p-3 sm:p-5 lg:p-6">
+      {/* Centered, distraction-free question */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="min-h-full flex items-center justify-center px-4 py-8 sm:py-12">
           {currentQ ? (
-            <div className="bg-card border border-border rounded-2xl p-4 sm:p-6 max-w-3xl mx-auto">
-              <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-                <span className="font-semibold text-sm">Question {activeIdx + 1} of {subjectQuestions.length}</span>
-                <label className="flex items-center gap-2 text-xs sm:text-sm">
+            <div className="w-full max-w-2xl">
+              <div className="flex items-center justify-between mb-4 text-xs text-muted-foreground">
+                <span className="font-semibold tracking-wide uppercase">
+                  Question {activeIdx + 1} <span className="opacity-60">/ {subjectQuestions.length}</span>
+                </span>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
                   <Checkbox
                     checked={!!answers[currentQ.id]?.marked}
-                    onCheckedChange={(v) => setAnswer(currentQ.id, currentQ.subject_id, { marked: !!v })}
+                    onCheckedChange={(v) => onToggleMark(!!v)}
                   />
-                  Mark for Review
+                  Mark for review
                 </label>
               </div>
-              <div className="text-sm sm:text-base leading-relaxed mb-5 whitespace-pre-wrap break-words">{currentQ.prompt}</div>
-              <div className="space-y-2.5">
+
+              <h2 className="text-lg sm:text-2xl font-medium leading-relaxed text-foreground mb-8 whitespace-pre-wrap break-words">
+                {currentQ.prompt}
+              </h2>
+
+              <div className="space-y-3">
                 {(currentQ.options as string[]).map((opt, oi) => {
                   const chosen = answers[currentQ.id]?.selected_index === oi;
                   return (
                     <button key={oi} type="button" disabled={isSubmitted}
-                      onClick={() => setAnswer(currentQ.id, currentQ.subject_id, { selected_index: oi })}
+                      onClick={() => onSelect(oi)}
                       className={cn(
-                        "w-full text-left rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 transition-all flex items-center gap-3",
-                        chosen ? "border-success bg-success/10" : "border-border hover:bg-secondary/40",
+                        "w-full text-left rounded-xl border px-4 py-3.5 transition-all flex items-center gap-3",
+                        chosen
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/30"
+                          : "border-border hover:border-primary/40 hover:bg-secondary/40",
                       )}
                     >
-                      <span className={cn("size-7 grid place-items-center rounded-full text-xs font-semibold border shrink-0",
-                        chosen ? "bg-success text-success-foreground border-success" : "bg-background border-border"
+                      <span className={cn(
+                        "size-8 grid place-items-center rounded-full text-sm font-semibold border shrink-0 transition-colors",
+                        chosen ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"
                       )}>{String.fromCharCode(65 + oi)}</span>
-                      <span className="text-sm break-words">{opt}</span>
+                      <span className="text-sm sm:text-base break-words">{opt}</span>
                     </button>
                   );
                 })}
               </div>
-              <div className="flex items-center justify-between mt-6 gap-2">
-                <Button variant="outline" size="sm" disabled={activeIdx === 0} onClick={() => setActiveIdx(i => Math.max(0, i - 1))}>← Prev</Button>
+
+              <div className="flex items-center justify-between mt-10 gap-2">
+                <Button variant="ghost" size="lg" disabled={activeIdx === 0}
+                  onClick={() => setActiveIdx(Math.max(0, activeIdx - 1))}>
+                  ← Previous
+                </Button>
                 {activeIdx < subjectQuestions.length - 1 ? (
-                  <Button size="sm" onClick={() => setActiveIdx(i => Math.min(subjectQuestions.length - 1, i + 1))}>Next →</Button>
+                  <Button size="lg" onClick={() => setActiveIdx(Math.min(subjectQuestions.length - 1, activeIdx + 1))}>
+                    Next →
+                  </Button>
                 ) : (
-                  <Button size="sm" onClick={() => {
-                    const i = subjects.findIndex(s => s.id === activeSubject);
-                    const next = subjects[i + 1];
-                    if (next) { setActiveSubject(next.id); setActiveIdx(0); }
-                    else toast.info("That was the last subject. Review or submit.");
-                  }}>Next Subject →</Button>
+                  <Button size="lg" onClick={onNextSubject}>Next subject →</Button>
                 )}
               </div>
             </div>
           ) : (
-            <div className="text-muted-foreground text-center py-10">No questions in this subject.</div>
+            <div className="text-muted-foreground text-center">No questions in this subject.</div>
           )}
-        </main>
+        </div>
+      </main>
 
-        {/* Right rail: navigator */}
-        <aside className="hidden lg:flex flex-col p-5 border-l border-border bg-card gap-4">
-          <NavigatorGrid
-            subjectQuestions={subjectQuestions}
-            answers={answers}
-            activeIdx={activeIdx}
-            setActiveIdx={setActiveIdx}
-            answeredInSubject={answeredInSubject}
-          />
-        </aside>
-      </div>
+      {/* Slim progress bar */}
+      <footer className="shrink-0 border-t border-border bg-card/80">
+        <div className="h-1 bg-secondary">
+          <div className="h-full bg-primary transition-all"
+            style={{ width: `${(totalAnswered / Math.max(1, totalQuestions)) * 100}%` }} />
+        </div>
+      </footer>
     </div>
   );
 }
