@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { HelpTip } from "@/components/HelpTip";
 import { cn } from "@/lib/utils";
 
-type Step = 0 | 1 | 2;
+type Step = 0 | 1;
 
 const SUGGESTED_CLASSES = [
   "JSS 1", "JSS 2", "JSS 3", "SSS 1", "SSS 2", "SSS 3",
@@ -121,7 +121,8 @@ export default function AdminOnboarding() {
       const { error: updErr } = await supabase.from("schools").update({ settings }).eq("id", school.id);
       if (updErr) throw updErr;
       await refreshMemberships();
-      setStep(2);
+      toast.success("Setup complete — welcome aboard!");
+      nav(schoolPath(school.slug, "/app/admin"));
     } catch (e: any) {
       toast.error(e.message ?? "Could not save");
     } finally { setSaving(false); }
@@ -230,22 +231,6 @@ export default function AdminOnboarding() {
         </Card>
       )}
 
-      {step === 2 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Sparkles className="size-5 text-primary" /> You're all set</CardTitle>
-            <CardDescription>Your school is ready. Here are some good next steps.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <NextStep icon={<GraduationCap className="size-4" />} label="Invite teachers & students" onClick={() => nav(schoolPath(school.slug, "/app/admin/invites"))} />
-            <NextStep icon={<BookOpen className="size-4" />} label="Add more classes / set teachers" onClick={() => nav(schoolPath(school.slug, "/app/admin/classes"))} />
-            <NextStep icon={<Sparkles className="size-4" />} label="Open the platform guide" onClick={() => nav(schoolPath(school.slug, "/app/help"))} />
-            <div className="flex justify-end pt-2">
-              <Button onClick={() => nav(schoolPath(school.slug, "/app/admin"))}>Go to dashboard</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
