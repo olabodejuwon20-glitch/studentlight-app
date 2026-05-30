@@ -52,10 +52,10 @@ export default function Landing() {
       />
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur sticky top-0 z-30 bg-background/80">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
+          <Link to="/" className="flex items-center gap-2 min-w-0">
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
-            <span className="font-display font-bold text-lg tracking-tight">Legacyskool</span>
+            <span className="font-display font-bold text-base sm:text-lg tracking-tight truncate">Legacyskool</span>
           </Link>
           <nav className="hidden lg:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#pillars" className="hover:text-foreground">What we do</a>
@@ -64,12 +64,12 @@ export default function Landing() {
             <a href="#about" className="hover:text-foreground">About</a>
             <a href="#contact" className="hover:text-foreground">Contact</a>
           </nav>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {user
               ? <Button size="sm" onClick={() => navigate(schoolPath(slug, "/app"))}>Open dashboard</Button>
               : <>
-                  <Button size="sm" variant="outline" onClick={() => navigate("/signin")}><LogIn className="size-4 mr-1.5" />Sign in</Button>
-                  <Button size="sm" onClick={() => navigate("/register")}><UserPlus className="size-4 mr-1.5" /><span className="hidden sm:inline">Get started</span><span className="sm:hidden">Start</span></Button>
+                  <Button size="sm" variant="outline" className="px-2 sm:px-3" onClick={() => navigate("/signin")}><LogIn className="size-4 sm:mr-1.5" /><span className="hidden sm:inline">Sign in</span></Button>
+                  <Button size="sm" className="px-2.5 sm:px-3" onClick={() => navigate("/register")}><UserPlus className="size-4 sm:mr-1.5" /><span className="hidden sm:inline">Get started</span><span className="sm:hidden">Start</span></Button>
                 </>}
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function Landing() {
             <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-secondary/80 text-secondary-foreground border border-border">
               <Sparkles className="size-3.5 text-primary" /> Built for African schools
             </div>
-            <h1 className="font-display sm:text-5xl lg:text-6xl font-bold tracking-tight mt-6 leading-[1.05] text-5xl text-left px-0 my-0 py-0">
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mt-6 leading-[1.05] text-left px-0 my-0 py-0 break-words">
               Exams, attendance, results and fees —<br />
               <span className="bg-gradient-to-r from-[hsl(var(--admin))] via-[hsl(var(--student))] to-[hsl(var(--teacher))] bg-clip-text text-transparent">run your school from one place.</span>
             </h1>
