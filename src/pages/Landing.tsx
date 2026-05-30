@@ -2,7 +2,8 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   GraduationCap, ShieldCheck, Users, BookOpen, Sparkles, ArrowRight, Building2,
   LogIn, UserPlus, Globe2, ClipboardCheck, Wallet, MessagesSquare, BarChart3,
-  Star, Quote, CheckCircle2,
+  Star, Quote, CheckCircle2, Mail, MessageCircle, Lock, Database, KeyRound,
+  Award, ListChecks, Phone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,19 +11,21 @@ import { useSchool } from "@/contexts/SchoolContext";
 import { schoolPath, getCurrentSchoolSlug } from "@/lib/tenant";
 import SEO from "@/components/SEO";
 import PortalDemo from "@/components/landing/PortalDemo";
+import WhatsAppFab from "@/components/landing/WhatsAppFab";
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, SUPPORT_SLA, mailtoOnboard, mailtoDemo, waLink } from "@/lib/contact";
 
 export default function Landing() {
   const navigate = useNavigate();
   const { user, school } = useSchool();
   const slug = school?.slug ?? getCurrentSchoolSlug();
 
-  const features = [
-    { icon: ClipboardCheck, title: "Attendance & timetables", desc: "Daily attendance, class schedules and reminders in one place." },
-    { icon: BookOpen,       title: "CBT exams & grading",     desc: "Build assessments, run secure tests and grade in minutes." },
-    { icon: BarChart3,      title: "Performance analytics",   desc: "Track results, trends and progress at a glance." },
-    { icon: Wallet,         title: "Fees & invoicing",        desc: "Issue, track and collect school fees without spreadsheets." },
-    { icon: MessagesSquare, title: "Parent communication",    desc: "Send announcements, results and updates to families." },
-    { icon: Sparkles,       title: "AI study tutor",          desc: "Students get instant explanations and study help." },
+  // The 5 core pillars, in priority order.
+  const pillars = [
+    { n: "01", icon: ListChecks,    title: "CBT & exam simulation",       desc: "Run school exams and JAMB / NECO / WAEC mocks online — auto-graded, with real past questions via the ALOC bank." },
+    { n: "02", icon: ClipboardCheck, title: "Attendance & student records", desc: "Daily attendance, classes, enrollments and a single source of truth for every student." },
+    { n: "03", icon: Award,         title: "Digital CA, tests & results",  desc: "Continuous assessment, term tests, automated report cards and QR-verifiable result slips." },
+    { n: "04", icon: Wallet,        title: "Online payments",             desc: "Issue invoices, collect fees online via Paystack, track collections and reconcile in one place." },
+    { n: "05", icon: Sparkles,      title: "AI for teachers & students",   desc: "Lesson-note generator, an AI study tutor and AI-assisted school operations — built in." },
   ];
 
   const stories = [
@@ -42,8 +45,8 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Legacyskool — School Management Platform for Africa"
-        description="Run your school with Legacyskool — attendance, CBT exams, grading, results, fees and parent communication in one secure portal."
+        title="Legacyskool — CBT exams, attendance, results & school payments"
+        description="The school operating system for Africa: CBT and JAMB/NECO simulation, attendance, digital results, online fee collection and AI for teachers and students."
         path="/"
       />
       {/* Header */}
@@ -54,10 +57,11 @@ export default function Landing() {
             <span className="font-display font-bold text-lg tracking-tight">Legacyskool</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-foreground">Features</a>
-            <a href="#demo" className="hover:text-foreground">Demo</a>
+            <a href="#pillars" className="hover:text-foreground">What we do</a>
+            <a href="#how" className="hover:text-foreground">How it works</a>
             <a href="#stories" className="hover:text-foreground">Success stories</a>
-            <a href="#reviews" className="hover:text-foreground">Reviews</a>
+            <a href="#trust" className="hover:text-foreground">Trust</a>
+            <a href="#contact" className="hover:text-foreground">Contact</a>
           </nav>
           <div className="flex items-center gap-2">
             {user
@@ -77,27 +81,30 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-16 sm:pt-20 pb-14 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-secondary/80 text-secondary-foreground border border-border">
-              <Sparkles className="size-3.5 text-primary" /> The complete school operating system
+              <Sparkles className="size-3.5 text-primary" /> Built for African schools
             </div>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mt-6 leading-[1.05]">
-              Run your school.<br />
-              <span className="bg-gradient-to-r from-[hsl(var(--admin))] via-[hsl(var(--student))] to-[hsl(var(--teacher))] bg-clip-text text-transparent">All in one place.</span>
+              Exams, attendance, results and fees —<br />
+              <span className="bg-gradient-to-r from-[hsl(var(--admin))] via-[hsl(var(--student))] to-[hsl(var(--teacher))] bg-clip-text text-transparent">run your school from one place.</span>
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground mt-5 sm:mt-6 max-w-lg">
-              Admissions, attendance, exams, grading, fees, and parent communication — built for modern schools.
+              CBT and JAMB/NECO simulation, attendance, digital result cards, online payments and AI tools for teachers and students — all in one secure portal.
             </p>
             <div className="mt-7 sm:mt-8 flex flex-wrap gap-3">
-              <Button size="lg" onClick={() => navigate("/register")}>
-                Get started free <ArrowRight className="size-4 ml-1.5" />
+              <Button size="lg" asChild>
+                <a href={mailtoOnboard()}>Request school onboarding <ArrowRight className="size-4 ml-1.5" /></a>
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate("/signin")}>
-                <LogIn className="size-4 mr-1.5" /> Sign in
+              <Button size="lg" variant="outline" asChild>
+                <a href={mailtoDemo()}><Mail className="size-4 mr-1.5" /> Book a demo</a>
+              </Button>
+              <Button size="lg" variant="ghost" onClick={() => navigate("/register")}>
+                Or self-serve sign-up
               </Button>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="size-3.5 text-success" /> No card required</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="size-3.5 text-success" /> Pilot pricing available</span>
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="size-3.5 text-success" /> Setup in minutes</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="size-3.5 text-success" /> Cancel anytime</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="size-3.5 text-success" /> Onboarding support included</span>
             </div>
           </div>
 
@@ -105,11 +112,11 @@ export default function Landing() {
             <div className="absolute -inset-4 bg-gradient-to-br from-primary/10 via-transparent to-primary/10 rounded-3xl blur-2xl" />
             <div className="relative rounded-2xl border border-border bg-card/80 backdrop-blur shadow-card p-5 sm:p-6">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {features.slice(0, 4).map((f) => (
-                  <div key={f.title} className="rounded-xl border border-border/60 p-3 sm:p-4 bg-background/40">
-                    <div className="size-9 rounded-lg bg-primary/10 text-primary grid place-items-center"><f.icon className="size-5" /></div>
-                    <div className="mt-3 font-semibold text-sm">{f.title}</div>
-                    <div className="text-xs text-muted-foreground mt-1 leading-relaxed">{f.desc}</div>
+                {pillars.slice(0, 4).map((p) => (
+                  <div key={p.title} className="rounded-xl border border-border/60 p-3 sm:p-4 bg-background/40">
+                    <div className="size-9 rounded-lg bg-primary/10 text-primary grid place-items-center"><p.icon className="size-5" /></div>
+                    <div className="mt-3 font-semibold text-sm">{p.title}</div>
+                    <div className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-3">{p.desc}</div>
                   </div>
                 ))}
               </div>
@@ -130,19 +137,22 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="border-b border-border/60">
+      {/* Pillars — what we do, in priority order */}
+      <section id="pillars" className="border-b border-border/60">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-20">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Everything a modern school needs</h2>
-            <p className="text-muted-foreground mt-3">From the front office to the classroom and the home — one connected system.</p>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Five things every school needs. We do all five.</h2>
+            <p className="text-muted-foreground mt-3">Built in the order schools actually feel the pain — exams first, attendance and results next, then fees, then AI on top.</p>
           </div>
           <div className="mt-10 sm:mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {features.map((f) => (
-              <Card key={f.title} className="p-5 sm:p-6">
-                <div className="size-11 rounded-xl bg-primary/10 text-primary grid place-items-center"><f.icon className="size-5" /></div>
-                <div className="mt-4 font-semibold">{f.title}</div>
-                <p className="text-sm text-muted-foreground mt-1.5">{f.desc}</p>
+            {pillars.map((p) => (
+              <Card key={p.title} className="p-5 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div className="size-11 rounded-xl bg-primary/10 text-primary grid place-items-center"><p.icon className="size-5" /></div>
+                  <span className="font-display font-bold text-xl text-muted-foreground/60">{p.n}</span>
+                </div>
+                <div className="mt-4 font-semibold">{p.title}</div>
+                <p className="text-sm text-muted-foreground mt-1.5">{p.desc}</p>
               </Card>
             ))}
           </div>
@@ -153,17 +163,17 @@ export default function Landing() {
       <PortalDemo />
 
       {/* How it works */}
-      <section className="border-b border-border/60 bg-muted/30">
+      <section id="how" className="border-b border-border/60 bg-muted/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-20">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Up and running in three steps</h2>
-            <p className="text-muted-foreground mt-3">Built so you can launch your school in an afternoon.</p>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">From sign-up to first exam in one afternoon</h2>
+            <p className="text-muted-foreground mt-3">Our onboarding team helps every new school go live — you're never doing it alone.</p>
           </div>
           <div className="mt-10 sm:mt-12 grid md:grid-cols-3 gap-5">
             {[
-              { n: "01", icon: Building2, t: "Create your school", d: "Sign up as the admin and we'll set up your private workspace." },
-              { n: "02", icon: Globe2,    t: "Share your link",    d: "Send your unique school link to staff and families to sign in." },
-              { n: "03", icon: Users,     t: "Onboard with codes", d: "Generate role-based codes — or upload everyone in bulk." },
+              { n: "01", icon: Building2, t: "Register your school",     d: "Sign up as the admin or request our team to walk you through it." },
+              { n: "02", icon: Users,     t: "Onboard staff & students", d: "Bulk-upload from a CSV, or generate role-based join codes." },
+              { n: "03", icon: ListChecks, t: "Run exams, attendance, results & fees", d: "Everything is set up — start using the five pillars on day one." },
             ].map(s => (
               <div key={s.n} className="rounded-xl border border-border bg-background p-6">
                 <div className="flex items-center justify-between">
@@ -223,32 +233,65 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Why */}
-      <section className="border-b border-border/60">
+      {/* About / mission */}
+      <section id="about" className="border-b border-border/60">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-16 sm:py-20 text-center">
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">About Legacyskool</div>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-3">We're building the operating system for African schools.</h2>
+          <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+            Legacyskool was started by educators and engineers who watched schools drown in paper registers, leaked exam papers, missing report cards and uncollected fees. We replace all of that with one secure portal that any school — from 50 students to 5,000 — can run on day one.
+          </p>
+        </div>
+      </section>
+
+      {/* Trust & data protection */}
+      <section id="trust" className="border-b border-border/60 bg-muted/30">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-20">
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Your school's data is yours.</h2>
+            <p className="text-muted-foreground mt-3">Bank-grade infrastructure, daily backups and strict role-based access — built in, not bolted on.</p>
+          </div>
+          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { icon: Lock,        t: "Encrypted in transit & at rest" },
+              { icon: Database,    t: "Automated daily backups" },
+              { icon: KeyRound,    t: "Role-based access control" },
+              { icon: ShieldCheck, t: "Data deletion on request" },
+            ].map(i => (
+              <div key={i.t} className="rounded-xl border border-border bg-background p-5">
+                <div className="size-10 rounded-lg bg-primary/10 text-primary grid place-items-center"><i.icon className="size-5" /></div>
+                <div className="mt-3 font-semibold text-sm">{i.t}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 text-center">
+            <Button variant="outline" asChild><Link to="/privacy">Read our privacy & data policy</Link></Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact / Support */}
+      <section id="contact" className="border-b border-border/60">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-20 grid lg:grid-cols-2 gap-10 items-center">
           <div>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Built for the way schools actually work</h2>
-            <p className="text-muted-foreground mt-3">Each school gets its own private workspace. Your data stays yours, and every user signs in only to your portal.</p>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Talk to a human.</h2>
+            <p className="text-muted-foreground mt-3">Email, WhatsApp or book a call — a real person will help you scope onboarding, pricing and pilots.</p>
+            <div className="mt-5 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-success" /> {SUPPORT_SLA}
+            </div>
             <ul className="mt-6 space-y-3 text-sm">
-              {[
-                "Bank-grade security and isolated data per school",
-                "Role-based access for admins, teachers, students and parents",
-                "Bulk onboarding from CSV — get hundreds of users live in one go",
-                "Works on any phone, tablet or computer",
-              ].map(t => (
-                <li key={t} className="flex items-start gap-2">
-                  <ShieldCheck className="size-4 text-success mt-0.5 shrink-0" /> {t}
-                </li>
-              ))}
+              <li className="flex items-center gap-2"><Mail className="size-4 text-muted-foreground" /> <a className="hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></li>
+              <li className="flex items-center gap-2"><MessageCircle className="size-4 text-muted-foreground" /> <a className="hover:underline" href={waLink()} target="_blank" rel="noopener noreferrer">WhatsApp us</a></li>
+              <li className="flex items-center gap-2"><Phone className="size-4 text-muted-foreground" /> {SUPPORT_WHATSAPP_DISPLAY}</li>
             </ul>
           </div>
           <Card className="p-6 sm:p-8">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Ready to start?</div>
-            <h3 className="font-display text-2xl font-bold mt-2">Launch your school portal today</h3>
-            <p className="text-sm text-muted-foreground mt-2">Free to get started. Be live with staff and students this week.</p>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Pilot programme</div>
+            <h3 className="font-display text-2xl font-bold mt-2">Early-school pricing available</h3>
+            <p className="text-sm text-muted-foreground mt-2">Pilot schools get hands-on onboarding, training for staff and a discount for the first session.</p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Button onClick={() => navigate("/register")}>Get started <ArrowRight className="size-4 ml-1.5" /></Button>
-              <Button variant="outline" onClick={() => navigate("/signin")}>Sign in</Button>
+              <Button asChild><a href={mailtoOnboard()}>Request onboarding <ArrowRight className="size-4 ml-1.5" /></a></Button>
+              <Button variant="outline" asChild><Link to="/refer">Refer a school</Link></Button>
             </div>
           </Card>
         </div>
@@ -257,11 +300,11 @@ export default function Landing() {
       {/* CTA strip */}
       <section className="bg-gradient-to-br from-[hsl(var(--admin))] via-[hsl(var(--student))] to-[hsl(var(--teacher))] text-white">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-14 text-center">
-          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Bring your school online in minutes</h2>
-          <p className="mt-3 text-white/90 max-w-xl mx-auto">Join hundreds of schools already saving time and improving outcomes.</p>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Ready to run your school the modern way?</h2>
+          <p className="mt-3 text-white/90 max-w-xl mx-auto">Pilot pricing is open. Talk to our team or sign up and start exploring today.</p>
           <div className="mt-7 flex flex-wrap gap-3 justify-center">
-            <Button size="lg" variant="secondary" onClick={() => navigate("/register")}>Get started free <ArrowRight className="size-4 ml-1.5" /></Button>
-            <Button size="lg" variant="outline" className="bg-transparent text-white border-white/40 hover:bg-white/10 hover:text-white" onClick={() => navigate("/signin")}>Admin sign in</Button>
+            <Button size="lg" variant="secondary" asChild><a href={mailtoOnboard()}>Request onboarding <ArrowRight className="size-4 ml-1.5" /></a></Button>
+            <Button size="lg" variant="outline" className="bg-transparent text-white border-white/40 hover:bg-white/10 hover:text-white" onClick={() => navigate("/register")}>Self-serve sign-up</Button>
           </div>
         </div>
       </section>
@@ -270,13 +313,15 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 text-xs text-muted-foreground flex flex-col sm:flex-row gap-3 justify-between">
           <span>© 2026 Legacyskool. All rights reserved.</span>
           <div className="flex gap-5">
-            <a href="#features" className="hover:text-foreground">Features</a>
-            <a href="#stories" className="hover:text-foreground">Stories</a>
-            <a href="#reviews" className="hover:text-foreground">Reviews</a>
+            <a href="#pillars" className="hover:text-foreground">What we do</a>
+            <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+            <Link to="/refer" className="hover:text-foreground">Refer</Link>
             <Link to="/signin" className="hover:text-foreground">Sign in</Link>
           </div>
         </div>
       </footer>
+
+      <WhatsAppFab />
     </div>
   );
 }
