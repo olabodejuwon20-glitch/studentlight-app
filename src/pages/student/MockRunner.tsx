@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Award, CheckCircle2, Clock, GraduationCap, Loader2, LogOut, ShieldCheck, User as UserIcon, ListChecks } from "lucide-react";
+import { Award, CheckCircle2, GraduationCap, Loader2, ListChecks, Maximize2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
