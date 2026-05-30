@@ -236,37 +236,36 @@ export default function Landing() {
 
       {/* About / mission */}
       <section id="about" className="border-b border-border/60">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-16 sm:py-20 text-center">
-          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">About Legacyskool</div>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-3">We're building the operating system for African schools.</h2>
-          <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-            Legacyskool was started by educators and engineers who watched schools drown in paper registers, leaked exam papers, missing report cards and uncollected fees. We replace all of that with one secure portal that any school — from 50 students to 5,000 — can run on day one.
-          </p>
-        </div>
-      </section>
-
-      {/* Trust & data protection */}
-      <section id="trust" className="border-b border-border/60 bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-20">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Your school's data is yours.</h2>
-            <p className="text-muted-foreground mt-3">Bank-grade infrastructure, daily backups and strict role-based access — built in, not bolted on.</p>
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-16 sm:py-20">
+          <div className="text-center">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">About Legacyskool</div>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-3">We're building the operating system for African schools.</h2>
           </div>
-          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="mt-8 grid md:grid-cols-2 gap-6 text-muted-foreground leading-relaxed">
+            <p>
+              Legacyskool was started by educators and engineers who watched schools drown in paper registers, leaked exam papers, missing report cards and uncollected fees. We replace all of that with one secure portal that any school — from 50 students to 5,000 — can run on day one.
+            </p>
+            <p>
+              Our team has spent years inside Nigerian classrooms, staff rooms and bursaries. Every module we ship is built with a real school co-piloting the design, so what you see is shaped by the people who actually use it — not a template borrowed from another market.
+            </p>
+            <p>
+              We believe African schools deserve software that respects their bandwidth, their budgets and their workflows. That's why Legacyskool works on low-end Android phones, gracefully handles patchy networks, and offers pilot pricing so even small schools can go digital from term one.
+            </p>
+            <p>
+              Beyond the platform, we run onboarding clinics, train staff on the ground and stand beside every school through their first exam cycle. The goal isn't to sell software — it's to leave each school more organised, more transparent and more trusted by its parents than we found it.
+            </p>
+          </div>
+          <div className="mt-10 grid sm:grid-cols-3 gap-4 text-center">
             {[
-              { icon: Lock,        t: "Encrypted in transit & at rest" },
-              { icon: Database,    t: "Automated daily backups" },
-              { icon: KeyRound,    t: "Role-based access control" },
-              { icon: ShieldCheck, t: "Data deletion on request" },
-            ].map(i => (
-              <div key={i.t} className="rounded-xl border border-border bg-background p-5">
-                <div className="size-10 rounded-lg bg-primary/10 text-primary grid place-items-center"><i.icon className="size-5" /></div>
-                <div className="mt-3 font-semibold text-sm">{i.t}</div>
+              { k: "120+", v: "Schools onboarded" },
+              { k: "85k+", v: "Students managed" },
+              { k: "4.9/5", v: "Average school rating" },
+            ].map(s => (
+              <div key={s.v} className="rounded-xl border border-border bg-card p-5">
+                <div className="font-display text-3xl font-bold bg-gradient-to-r from-[hsl(var(--admin))] to-[hsl(var(--student))] bg-clip-text text-transparent">{s.k}</div>
+                <div className="text-sm text-muted-foreground mt-1">{s.v}</div>
               </div>
             ))}
-          </div>
-          <div className="mt-8 text-center">
-            <Button variant="outline" asChild><Link to="/privacy">Read our privacy & data policy</Link></Button>
           </div>
         </div>
       </section>
