@@ -83,7 +83,7 @@ export default function Landing() {
             <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-secondary/80 text-secondary-foreground border border-border">
               <Sparkles className="size-3.5 text-primary" /> Built for African schools
             </div>
-            <h1 className="font-display sm:text-5xl lg:text-6xl font-bold tracking-tight mt-6 leading-[1.05] text-left text-5xl py-[4px] my-[10px] px-[6px]">
+            <h1 className="font-display sm:text-5xl lg:text-6xl font-bold tracking-tight mt-6 leading-[1.05] text-5xl text-left px-0 my-0 py-0">
               Exams, attendance, results and fees —<br />
               <span className="bg-gradient-to-r from-[hsl(var(--admin))] via-[hsl(var(--student))] to-[hsl(var(--teacher))] bg-clip-text text-transparent">run your school from one place.</span>
             </h1>
