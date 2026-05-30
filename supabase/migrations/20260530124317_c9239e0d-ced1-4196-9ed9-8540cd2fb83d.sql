@@ -1,0 +1,1 @@
+GRANT SELECT ON public.school_directory TO anon, authenticated;

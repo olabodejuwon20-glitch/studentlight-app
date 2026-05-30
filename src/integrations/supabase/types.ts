@@ -2917,6 +2917,15 @@ export type Database = {
           q_subject_id: string
         }[]
       }
+      get_school_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          id: string
+          logo_url: string
+          name: string
+          slug: string
+        }[]
+      }
       grade_mock_session: {
         Args: { _auto?: boolean; _session_id: string }
         Returns: Json
