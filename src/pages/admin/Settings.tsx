@@ -10,10 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { buildSchoolUrl } from "@/lib/tenant";
-import { Copy, Upload, Loader2, Image as ImageIcon, Plus, Trash2, Eye, Download } from "lucide-react";
+import { Copy, Upload, Loader2, Image as ImageIcon, Plus, Trash2, Eye, Download, HelpCircle, BookOpen, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { schoolPath } from "@/lib/tenant";
 
 export default function AdminSettings() {
   const { school } = useSchool();
+  const nav = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -145,6 +148,7 @@ export default function AdminSettings() {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="academic">Academic</TabsTrigger>
           <TabsTrigger value="neco">Exams & NECO</TabsTrigger>
+          <TabsTrigger value="help">Help & Guide</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -252,6 +256,8 @@ export default function AdminSettings() {
           </SectionCard>
         </TabsContent>
       </Tabs>
+
+      {/* Help tab is rendered inside Tabs but kept outside the existing TabsContent blocks for minimal diff. */}
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-4xl">
