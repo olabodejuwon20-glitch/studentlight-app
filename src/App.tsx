@@ -22,6 +22,7 @@ import ProfilePage from "./pages/Profile";
 import VerifyResult from "./pages/VerifyResult";
 import Privacy from "./pages/Privacy";
 import Refer from "./pages/Refer";
+import Terms from "./pages/Terms";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminStudents from "./pages/admin/Students";
@@ -134,6 +135,7 @@ const App = () => (
             <Route path="/verify/:id" element={<VerifyResult />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/refer" element={<Refer />} />
+            <Route path="/terms" element={<Terms />} />
 
           {/* Super Admin OS */}
           <Route path="/super/claim" element={<SuperClaim />} />
