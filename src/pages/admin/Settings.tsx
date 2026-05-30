@@ -10,10 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { buildSchoolUrl } from "@/lib/tenant";
-import { Copy, Upload, Loader2, Image as ImageIcon, Plus, Trash2, Eye, Download } from "lucide-react";
+import { Copy, Upload, Loader2, Image as ImageIcon, Plus, Trash2, Eye, Download, HelpCircle, BookOpen, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { schoolPath } from "@/lib/tenant";
 
 export default function AdminSettings() {
   const { school } = useSchool();
+  const nav = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -145,6 +148,7 @@ export default function AdminSettings() {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="academic">Academic</TabsTrigger>
           <TabsTrigger value="neco">Exams & NECO</TabsTrigger>
+          <TabsTrigger value="help">Help & Guide</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -248,6 +252,35 @@ export default function AdminSettings() {
               <Button disabled={necoBusy} onClick={() => callNeco(false)}>
                 {necoBusy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Download full CSV
               </Button>
+            </div>
+          </SectionCard>
+        </TabsContent>
+
+        <TabsContent value="help" className="space-y-4">
+          <SectionCard title="Platform guide" description="Step-by-step walkthroughs, FAQs and tips for every role.">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <button onClick={() => school && nav(schoolPath(school.slug, "/app/help"))}
+                className="text-left rounded-xl border border-border p-4 hover:bg-muted/50 transition flex items-start gap-3">
+                <span className="size-10 rounded-md bg-primary/10 text-primary grid place-items-center shrink-0">
+                  <HelpCircle className="size-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-sm">Open the Help Center</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Role-based guides for admins, teachers, students and parents.</div>
+                </div>
+                <ArrowRight className="size-4 text-muted-foreground mt-1" />
+              </button>
+              <button onClick={() => school && nav(schoolPath(school.slug, "/app/admin/onboarding"))}
+                className="text-left rounded-xl border border-border p-4 hover:bg-muted/50 transition flex items-start gap-3">
+                <span className="size-10 rounded-md bg-primary/10 text-primary grid place-items-center shrink-0">
+                  <BookOpen className="size-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-sm">Re-run school setup</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Update profile, classes and core subjects with the guided wizard.</div>
+                </div>
+                <ArrowRight className="size-4 text-muted-foreground mt-1" />
+              </button>
             </div>
           </SectionCard>
         </TabsContent>

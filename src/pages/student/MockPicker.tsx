@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Award, GraduationCap, Loader2, Play, Sparkles, History, BookOpenCheck } from "lucide-react";
+import { Award, GraduationCap, Loader2, Play, Sparkles, History, BookOpenCheck, Wifi } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
@@ -10,6 +10,7 @@ import { SectionCard } from "@/components/dashboard/SectionCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { EmptyState } from "@/components/EmptyState";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ export default function MockPicker() {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [starting, setStarting] = useState(false);
+  const [useReal, setUseReal] = useState(true);
 
   const { data: subjects, isLoading } = useQuery({
     queryKey: ["mock-subjects", school?.id],
@@ -100,6 +102,19 @@ export default function MockPicker() {
     }
     setStarting(true);
     try {
+      const selectedIds = Object.keys(selected).filter(id => selected[id]);
+      if (useReal) {
+        toast.loading("Loading real past questions…", { id: "aloc" });
+        const { data: fr, error: fe } = await supabase.functions.invoke("fetch-aloc-questions", {
+          body: { school_id: school.id, mode, subject_ids: selectedIds },
+        });
+        toast.dismiss("aloc");
+        if (fe || (fr as any)?.error) {
+          toast.warning("Couldn't load real past questions — using practice bank.");
+        } else {
+          toast.success(`${(fr as any)?.inserted ?? 0} real past questions loaded.`);
+        }
+      }
       const { data: session, error } = await supabase
         .from("mock_sessions")
         .insert({
@@ -112,9 +127,7 @@ export default function MockPicker() {
         .select("id")
         .single();
       if (error) throw error;
-      const rows = Object.keys(selected)
-        .filter(id => selected[id])
-        .map((subject_id, idx) => ({ session_id: session.id, subject_id, sort: idx }));
+      const rows = selectedIds.map((subject_id, idx) => ({ session_id: session.id, subject_id, sort: idx }));
       const { error: e2 } = await supabase.from("mock_session_subjects").insert(rows);
       if (e2) throw e2;
       qc.invalidateQueries({ queryKey: ["mock-sessions"] });
@@ -146,10 +159,17 @@ export default function MockPicker() {
               ? "English Language is compulsory. Choose 3 more electives."
               : "Choose any 9 NECO subjects. Each carries 20 questions."}
             action={
-              <Button onClick={start} disabled={starting || chosenCount !== rule.pick}>
-                {starting ? <Loader2 className="size-3.5 mr-1.5 animate-spin" /> : <Play className="size-3.5 mr-1.5" />}
-                Start session ({chosenCount}/{rule.pick})
-              </Button>
+              <div className="flex items-center gap-3 flex-wrap justify-end">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Wifi className="size-3.5" />
+                  <span className="hidden sm:inline">Real past questions</span>
+                  <Switch checked={useReal} onCheckedChange={setUseReal} />
+                </label>
+                <Button onClick={start} disabled={starting || chosenCount !== rule.pick}>
+                  {starting ? <Loader2 className="size-3.5 mr-1.5 animate-spin" /> : <Play className="size-3.5 mr-1.5" />}
+                  Start ({chosenCount}/{rule.pick})
+                </Button>
+              </div>
             }
           >
             {isLoading ? (
