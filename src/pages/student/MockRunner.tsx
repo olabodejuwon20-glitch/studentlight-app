@@ -406,20 +406,3 @@ function NavigatorGrid({ subjectQuestions, answers, activeIdx, setActiveIdx, ans
   );
 }
 
-function Pill({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="size-8 rounded-md bg-secondary grid place-items-center"><Icon className="size-4 text-muted-foreground" /></div>
-      <div className="leading-tight">
-        <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
-        <div className="text-sm font-semibold">{value}</div>
-      </div>
-    </div>
-  );
-}
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return <div className="flex items-center justify-between"><span className="opacity-80">{label}</span><span className="font-semibold">{value}</span></div>;
-}
-function LegendRow({ color, label }: { color: string; label: string }) {
-  return <div className="flex items-center gap-2"><span className={cn("size-3 rounded", color)} />{label}</div>;
-}
