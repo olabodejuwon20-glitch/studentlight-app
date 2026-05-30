@@ -1,8 +1,8 @@
 // Update these once real support channels are confirmed.
-export const SUPPORT_EMAIL = "support@legacyskool.com";
+export const SUPPORT_EMAIL = "Support@legacyschools.study";
 // E.164 (no spaces, no plus) for wa.me links.
-export const SUPPORT_WHATSAPP = "2348000000000";
-export const SUPPORT_WHATSAPP_DISPLAY = "+234 800 000 0000";
+export const SUPPORT_WHATSAPP = "2349136284262";
+export const SUPPORT_WHATSAPP_DISPLAY = "+234 9136284262";
 export const SUPPORT_SLA = "We respond within 4 working hours.";
 
 export const waLink = (msg = "Hi Legacyskool, I'd like to learn more.") =>

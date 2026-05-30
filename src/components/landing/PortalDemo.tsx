@@ -841,7 +841,7 @@ export default function PortalDemo() {
                   isActive ? "opacity-80" : "opacity-60",
                 )}>{p.subtitle}</span>
                 {isActive && (
-                  <span className="absolute inset-0 rounded-full opacity-20" style={{
+                  <span className="absolute inset-0 opacity-20 rounded-md" style={{
                     background: `radial-gradient(circle at 50% 0%, ${p.color.replace("hsl(", "hsla(").replace(")", " / 0.8)")}, transparent 70%)`,
                   }} />
                 )}
