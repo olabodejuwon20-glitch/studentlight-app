@@ -52,24 +52,24 @@ export default function Landing() {
       />
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur sticky top-0 z-30 bg-background/80">
-        <div className="mx-auto max-w-7xl px-4 h-16 flex items-center justify-between sm:px-[26px] py-[12px]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-2">
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
             <span className="font-display font-bold text-lg tracking-tight">Legacyskool</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
+          <nav className="hidden lg:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#pillars" className="hover:text-foreground">What we do</a>
             <a href="#how" className="hover:text-foreground">How it works</a>
             <a href="#stories" className="hover:text-foreground">Success stories</a>
-            <a href="#trust" className="hover:text-foreground">Trust</a>
+            <a href="#about" className="hover:text-foreground">About</a>
             <a href="#contact" className="hover:text-foreground">Contact</a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {user
               ? <Button size="sm" onClick={() => navigate(schoolPath(slug, "/app"))}>Open dashboard</Button>
               : <>
-                  <Button size="sm" variant="ghost" className="border-solid border-[#7859f8]" onClick={() => navigate("/signin")}><LogIn className="size-4 mr-1.5" />Sign in</Button>
-                  <Button size="sm" onClick={() => navigate("/register")}><UserPlus className="size-4 mr-1.5" />Get started</Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate("/signin")}><LogIn className="size-4 mr-1.5" />Sign in</Button>
+                  <Button size="sm" onClick={() => navigate("/register")}><UserPlus className="size-4 mr-1.5" /><span className="hidden sm:inline">Get started</span><span className="sm:hidden">Start</span></Button>
                 </>}
           </div>
         </div>
@@ -79,7 +79,7 @@ export default function Landing() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 opacity-40"
           style={{ backgroundImage: "radial-gradient(circle at 15% 10%, hsl(var(--admin)/0.25), transparent 40%), radial-gradient(circle at 85% 0%, hsl(var(--student)/0.25), transparent 45%), radial-gradient(circle at 50% 100%, hsl(var(--teacher)/0.2), transparent 50%)" }} />
-        <div className="max-w-7xl px-4 pt-16 sm:pt-20 pb-14 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center py-[51px] sm:px-[144px] my-0 mx-0 border-solid font-extralight">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-14 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-secondary/80 text-secondary-foreground border border-border">
               <Sparkles className="size-3.5 text-primary" /> Built for African schools
