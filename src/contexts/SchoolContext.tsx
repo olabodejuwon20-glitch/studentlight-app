@@ -58,8 +58,12 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const slug = detectSlug();
     if (!slug) { setSchool(null); setSchoolLoading(false); return; }
-    supabase.from("school_directory").select("id,name,slug,logo_url").eq("slug", slug).maybeSingle()
-      .then(({ data }) => { setSchool(data ?? null); setSchoolLoading(false); });
+    supabase.rpc("get_school_by_slug", { _slug: slug })
+      .then(({ data }) => {
+        const row = Array.isArray(data) ? data[0] : null;
+        setSchool(row ?? null);
+        setSchoolLoading(false);
+      });
   }, []);
 
   const loadMemberships = useCallback(async (uid: string) => {
