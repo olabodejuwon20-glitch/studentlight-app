@@ -2952,6 +2952,13 @@ export type Database = {
       }
       redeem_invite: { Args: { _code: string }; Returns: string }
       seed_mock_bank: { Args: { _school: string }; Returns: undefined }
+      verify_result_slip: {
+        Args: { _id: string }
+        Returns: {
+          created_at: string
+          snapshot: Json
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "teacher" | "student" | "parent" | "super_admin"

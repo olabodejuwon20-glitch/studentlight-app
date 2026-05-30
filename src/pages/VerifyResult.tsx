@@ -27,13 +27,11 @@ export default function VerifyResult() {
     if (!id) { setState("invalid"); return; }
     (async () => {
       const { data, error } = await supabase
-        .from("result_verifications")
-        .select("snapshot, created_at")
-        .eq("id", id)
-        .maybeSingle();
-      if (error || !data) { setState("invalid"); return; }
-      setSnap(data.snapshot as Snapshot);
-      setIssuedAt(data.created_at);
+        .rpc("verify_result_slip", { _id: id });
+      const row = Array.isArray(data) ? data[0] : null;
+      if (error || !row) { setState("invalid"); return; }
+      setSnap(row.snapshot as Snapshot);
+      setIssuedAt(row.created_at);
       setState("ok");
     })();
   }, [id]);
