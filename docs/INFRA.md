@@ -24,5 +24,5 @@
 - Edge-function logs available via the Lovable Cloud dashboard.
 
 ## Data deletion
-- A verified school admin can request full data deletion at `support@legacyskool.com`.
+- A verified school admin can request full data deletion at `Support@legacyschools.study`.
 - We action deletions within 30 days; a confirmation email is sent on completion.

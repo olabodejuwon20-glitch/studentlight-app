@@ -51,7 +51,7 @@ export default function Landing() {
       />
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur sticky top-0 z-30 bg-background/80">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 h-16 flex items-center justify-between sm:px-[26px] py-[12px]">
           <Link to="/" className="flex items-center gap-2">
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
             <span className="font-display font-bold text-lg tracking-tight">Legacyskool</span>
@@ -67,7 +67,7 @@ export default function Landing() {
             {user
               ? <Button size="sm" onClick={() => navigate(schoolPath(slug, "/app"))}>Open dashboard</Button>
               : <>
-                  <Button size="sm" variant="ghost" onClick={() => navigate("/signin")}><LogIn className="size-4 mr-1.5" />Sign in</Button>
+                  <Button size="sm" variant="ghost" className="border-solid border-[#7859f8]" onClick={() => navigate("/signin")}><LogIn className="size-4 mr-1.5" />Sign in</Button>
                   <Button size="sm" onClick={() => navigate("/register")}><UserPlus className="size-4 mr-1.5" />Get started</Button>
                 </>}
           </div>
@@ -78,12 +78,12 @@ export default function Landing() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 opacity-40"
           style={{ backgroundImage: "radial-gradient(circle at 15% 10%, hsl(var(--admin)/0.25), transparent 40%), radial-gradient(circle at 85% 0%, hsl(var(--student)/0.25), transparent 45%), radial-gradient(circle at 50% 100%, hsl(var(--teacher)/0.2), transparent 50%)" }} />
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-16 sm:pt-20 pb-14 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+        <div className="max-w-7xl px-4 pt-16 sm:pt-20 pb-14 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center py-[51px] sm:px-[144px] my-0 mx-0 border-solid font-extralight">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-secondary/80 text-secondary-foreground border border-border">
               <Sparkles className="size-3.5 text-primary" /> Built for African schools
             </div>
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mt-6 leading-[1.05]">
+            <h1 className="font-display sm:text-5xl lg:text-6xl font-bold tracking-tight mt-6 leading-[1.05] text-left text-5xl py-[4px] my-[10px] px-[6px]">
               Exams, attendance, results and fees —<br />
               <span className="bg-gradient-to-r from-[hsl(var(--admin))] via-[hsl(var(--student))] to-[hsl(var(--teacher))] bg-clip-text text-transparent">run your school from one place.</span>
             </h1>
@@ -97,8 +97,8 @@ export default function Landing() {
               <Button size="lg" variant="outline" asChild>
                 <a href={mailtoDemo()}><Mail className="size-4 mr-1.5" /> Book a demo</a>
               </Button>
-              <Button size="lg" variant="ghost" onClick={() => navigate("/register")}>
-                Or self-serve sign-up
+              <Button size="lg" variant="ghost" className="opacity-95 shadow-lg rounded-lg border-solid border border-slate-400" onClick={() => navigate("/register")}>
+                &nbsp;sign-up
               </Button>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
@@ -275,7 +275,7 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-20 grid lg:grid-cols-2 gap-10 items-center">
           <div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Talk to a human.</h2>
-            <p className="text-muted-foreground mt-3">Email, WhatsApp or book a call — a real person will help you scope onboarding, pricing and pilots.</p>
+            <p className="text-muted-foreground mt-3">Email, WhatsApp or book a call — Our Support Team will help you scope onboarding, pricing and pilots.</p>
             <div className="mt-5 text-xs text-muted-foreground inline-flex items-center gap-1.5">
               <CheckCircle2 className="size-3.5 text-success" /> {SUPPORT_SLA}
             </div>
@@ -304,7 +304,7 @@ export default function Landing() {
           <p className="mt-3 text-white/90 max-w-xl mx-auto">Pilot pricing is open. Talk to our team or sign up and start exploring today.</p>
           <div className="mt-7 flex flex-wrap gap-3 justify-center">
             <Button size="lg" variant="secondary" asChild><a href={mailtoOnboard()}>Request onboarding <ArrowRight className="size-4 ml-1.5" /></a></Button>
-            <Button size="lg" variant="outline" className="bg-transparent text-white border-white/40 hover:bg-white/10 hover:text-white" onClick={() => navigate("/register")}>Self-serve sign-up</Button>
+            <Button size="lg" variant="outline" className="bg-transparent text-white border-white/40 hover:bg-white/10 hover:text-white text-sm text-center border border-solid opacity-95 shadow-xl rounded-xl" onClick={() => navigate("/register")}>&nbsp;sign-up</Button>
           </div>
         </div>
       </section>
