@@ -3,7 +3,7 @@ import {
   GraduationCap, ShieldCheck, Users, BookOpen, Sparkles, ArrowRight, Building2,
   LogIn, UserPlus, Globe2, ClipboardCheck, Wallet, MessagesSquare, BarChart3,
   Star, Quote, CheckCircle2, Mail, MessageCircle, Lock, Database, KeyRound,
-  Award, ListChecks, Phone,
+  Award, ListChecks, Phone, Library,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +26,7 @@ export default function Landing() {
     { n: "03", icon: Award,         title: "Digital CA, tests & results",  desc: "Continuous assessment, term tests, automated report cards and QR-verifiable result slips." },
     { n: "04", icon: Wallet,        title: "Online payments",             desc: "Issue invoices, collect fees online via Paystack, track collections and reconcile in one place." },
     { n: "05", icon: Sparkles,      title: "AI for teachers & students",   desc: "Lesson-note generator, an AI study tutor and AI-assisted school operations — built in." },
+    { n: "06", icon: Library,       title: "Digital library & resources", desc: "A shared library of lesson notes, past questions, textbooks and study material — searchable for teachers and students." },
   ];
 
   const stories = [
