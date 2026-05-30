@@ -5,6 +5,7 @@ import SEO from "@/components/SEO";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, ShieldAlert, Loader2 } from "lucide-react";
+import { friendlyInvokeError } from "@/lib/errors";
 
 type Snapshot = {
   school: { name: string | null; address: string | null; phone: string | null; email: string | null; logo_url: string | null };
@@ -26,12 +27,18 @@ export default function VerifyResult() {
   useEffect(() => {
     if (!id) { setState("invalid"); return; }
     (async () => {
-      const { data, error } = await supabase
-        .rpc("verify_result_slip", { _id: id });
-      const row = Array.isArray(data) ? data[0] : null;
-      if (error || !row) { setState("invalid"); return; }
-      setSnap(row.snapshot as Snapshot);
-      setIssuedAt(row.created_at);
+      const { data, error } = await supabase.functions.invoke("public-verify-result", {
+        body: { id },
+      });
+      if (error) {
+        const msg = await friendlyInvokeError(error, "This result could not be verified.");
+        if (/invalid verification link|not found/i.test(msg)) setState("invalid");
+        else setState("invalid");
+        return;
+      }
+      if ((data as any)?.error || !(data as any)?.snapshot) { setState("invalid"); return; }
+      setSnap((data as any).snapshot as Snapshot);
+      setIssuedAt((data as any).created_at ?? null);
       setState("ok");
     })();
   }, [id]);
