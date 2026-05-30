@@ -312,9 +312,11 @@ export default function Landing() {
       <footer className="border-t border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 text-xs text-muted-foreground flex flex-col sm:flex-row gap-3 justify-between">
           <span>© 2026 Legacyskool. All rights reserved.</span>
-          <div className="flex gap-5">
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
             <a href="#pillars" className="hover:text-foreground">What we do</a>
+            <a href="#about" className="hover:text-foreground">About</a>
             <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+            <Link to="/terms" className="hover:text-foreground">Terms</Link>
             <Link to="/refer" className="hover:text-foreground">Refer</Link>
             <Link to="/signin" className="hover:text-foreground">Sign in</Link>
           </div>
