@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HelpTip } from "@/components/HelpTip";
 import { cn } from "@/lib/utils";
+import { SUPPORT_EMAIL, waLink } from "@/lib/contact";
+import { Mail, MessageCircle, HelpCircle } from "lucide-react";
 
 type Step = 0 | 1;
 
@@ -230,6 +232,21 @@ export default function AdminOnboarding() {
           </CardContent>
         </Card>
       )}
+
+      <div className="rounded-xl border border-border bg-muted/30 p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <HelpCircle className="size-4 text-primary" /> Need a hand with setup?
+        </div>
+        <div className="text-xs text-muted-foreground flex-1">Our onboarding team is on standby — usually replies within 4 working hours.</div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Onboarding help")}`}><Mail className="size-3.5 mr-1.5" /> Email</a>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href={waLink("Hi, I need help with school onboarding on Legacyskool.")} target="_blank" rel="noopener noreferrer"><MessageCircle className="size-3.5 mr-1.5" /> WhatsApp</a>
+          </Button>
+        </div>
+      </div>
 
     </div>
   );
