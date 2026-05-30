@@ -3,7 +3,7 @@ import {
   GraduationCap, ShieldCheck, Users, BookOpen, Sparkles, ArrowRight, Building2,
   LogIn, UserPlus, Globe2, ClipboardCheck, Wallet, MessagesSquare, BarChart3,
   Star, Quote, CheckCircle2, Mail, MessageCircle, Lock, Database, KeyRound,
-  Award, ListChecks, Phone,
+  Award, ListChecks, Phone, Library,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +26,7 @@ export default function Landing() {
     { n: "03", icon: Award,         title: "Digital CA, tests & results",  desc: "Continuous assessment, term tests, automated report cards and QR-verifiable result slips." },
     { n: "04", icon: Wallet,        title: "Online payments",             desc: "Issue invoices, collect fees online via Paystack, track collections and reconcile in one place." },
     { n: "05", icon: Sparkles,      title: "AI for teachers & students",   desc: "Lesson-note generator, an AI study tutor and AI-assisted school operations — built in." },
+    { n: "06", icon: Library,       title: "Digital library & resources", desc: "A shared library of lesson notes, past questions, textbooks and study material — searchable for teachers and students." },
   ];
 
   const stories = [
@@ -51,24 +52,24 @@ export default function Landing() {
       />
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur sticky top-0 z-30 bg-background/80">
-        <div className="mx-auto max-w-7xl px-4 h-16 flex items-center justify-between sm:px-[26px] py-[12px]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-2">
             <div className="grid place-items-center size-9 rounded-lg bg-primary text-primary-foreground"><GraduationCap className="size-5" /></div>
             <span className="font-display font-bold text-lg tracking-tight">Legacyskool</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
+          <nav className="hidden lg:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#pillars" className="hover:text-foreground">What we do</a>
             <a href="#how" className="hover:text-foreground">How it works</a>
             <a href="#stories" className="hover:text-foreground">Success stories</a>
-            <a href="#trust" className="hover:text-foreground">Trust</a>
+            <a href="#about" className="hover:text-foreground">About</a>
             <a href="#contact" className="hover:text-foreground">Contact</a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {user
               ? <Button size="sm" onClick={() => navigate(schoolPath(slug, "/app"))}>Open dashboard</Button>
               : <>
-                  <Button size="sm" variant="ghost" className="border-solid border-[#7859f8]" onClick={() => navigate("/signin")}><LogIn className="size-4 mr-1.5" />Sign in</Button>
-                  <Button size="sm" onClick={() => navigate("/register")}><UserPlus className="size-4 mr-1.5" />Get started</Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate("/signin")}><LogIn className="size-4 mr-1.5" />Sign in</Button>
+                  <Button size="sm" onClick={() => navigate("/register")}><UserPlus className="size-4 mr-1.5" /><span className="hidden sm:inline">Get started</span><span className="sm:hidden">Start</span></Button>
                 </>}
           </div>
         </div>
@@ -78,7 +79,7 @@ export default function Landing() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 opacity-40"
           style={{ backgroundImage: "radial-gradient(circle at 15% 10%, hsl(var(--admin)/0.25), transparent 40%), radial-gradient(circle at 85% 0%, hsl(var(--student)/0.25), transparent 45%), radial-gradient(circle at 50% 100%, hsl(var(--teacher)/0.2), transparent 50%)" }} />
-        <div className="max-w-7xl px-4 pt-16 sm:pt-20 pb-14 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center py-[51px] sm:px-[144px] my-0 mx-0 border-solid font-extralight">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-14 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-secondary/80 text-secondary-foreground border border-border">
               <Sparkles className="size-3.5 text-primary" /> Built for African schools
@@ -235,37 +236,36 @@ export default function Landing() {
 
       {/* About / mission */}
       <section id="about" className="border-b border-border/60">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-16 sm:py-20 text-center">
-          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">About Legacyskool</div>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-3">We're building the operating system for African schools.</h2>
-          <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-            Legacyskool was started by educators and engineers who watched schools drown in paper registers, leaked exam papers, missing report cards and uncollected fees. We replace all of that with one secure portal that any school — from 50 students to 5,000 — can run on day one.
-          </p>
-        </div>
-      </section>
-
-      {/* Trust & data protection */}
-      <section id="trust" className="border-b border-border/60 bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-20">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Your school's data is yours.</h2>
-            <p className="text-muted-foreground mt-3">Bank-grade infrastructure, daily backups and strict role-based access — built in, not bolted on.</p>
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-16 sm:py-20">
+          <div className="text-center">
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">About Legacyskool</div>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-3">We're building the operating system for African schools.</h2>
           </div>
-          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="mt-8 grid md:grid-cols-2 gap-6 text-muted-foreground leading-relaxed">
+            <p>
+              Legacyskool was started by educators and engineers who watched schools drown in paper registers, leaked exam papers, missing report cards and uncollected fees. We replace all of that with one secure portal that any school — from 50 students to 5,000 — can run on day one.
+            </p>
+            <p>
+              Our team has spent years inside Nigerian classrooms, staff rooms and bursaries. Every module we ship is built with a real school co-piloting the design, so what you see is shaped by the people who actually use it — not a template borrowed from another market.
+            </p>
+            <p>
+              We believe African schools deserve software that respects their bandwidth, their budgets and their workflows. That's why Legacyskool works on low-end Android phones, gracefully handles patchy networks, and offers pilot pricing so even small schools can go digital from term one.
+            </p>
+            <p>
+              Beyond the platform, we run onboarding clinics, train staff on the ground and stand beside every school through their first exam cycle. The goal isn't to sell software — it's to leave each school more organised, more transparent and more trusted by its parents than we found it.
+            </p>
+          </div>
+          <div className="mt-10 grid sm:grid-cols-3 gap-4 text-center">
             {[
-              { icon: Lock,        t: "Encrypted in transit & at rest" },
-              { icon: Database,    t: "Automated daily backups" },
-              { icon: KeyRound,    t: "Role-based access control" },
-              { icon: ShieldCheck, t: "Data deletion on request" },
-            ].map(i => (
-              <div key={i.t} className="rounded-xl border border-border bg-background p-5">
-                <div className="size-10 rounded-lg bg-primary/10 text-primary grid place-items-center"><i.icon className="size-5" /></div>
-                <div className="mt-3 font-semibold text-sm">{i.t}</div>
+              { k: "120+", v: "Schools onboarded" },
+              { k: "85k+", v: "Students managed" },
+              { k: "4.9/5", v: "Average school rating" },
+            ].map(s => (
+              <div key={s.v} className="rounded-xl border border-border bg-card p-5">
+                <div className="font-display text-3xl font-bold bg-gradient-to-r from-[hsl(var(--admin))] to-[hsl(var(--student))] bg-clip-text text-transparent">{s.k}</div>
+                <div className="text-sm text-muted-foreground mt-1">{s.v}</div>
               </div>
             ))}
-          </div>
-          <div className="mt-8 text-center">
-            <Button variant="outline" asChild><Link to="/privacy">Read our privacy & data policy</Link></Button>
           </div>
         </div>
       </section>
@@ -312,9 +312,11 @@ export default function Landing() {
       <footer className="border-t border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 text-xs text-muted-foreground flex flex-col sm:flex-row gap-3 justify-between">
           <span>© 2026 Legacyskool. All rights reserved.</span>
-          <div className="flex gap-5">
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
             <a href="#pillars" className="hover:text-foreground">What we do</a>
+            <a href="#about" className="hover:text-foreground">About</a>
             <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+            <Link to="/terms" className="hover:text-foreground">Terms</Link>
             <Link to="/refer" className="hover:text-foreground">Refer</Link>
             <Link to="/signin" className="hover:text-foreground">Sign in</Link>
           </div>
