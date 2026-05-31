@@ -1032,6 +1032,30 @@ export type Database = {
           },
         ]
       }
+      invite_redeem_attempts: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          success?: boolean
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount_cents: number
