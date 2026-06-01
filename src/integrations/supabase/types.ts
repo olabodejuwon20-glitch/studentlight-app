@@ -279,6 +279,9 @@ export type Database = {
       }
       assessment_answers_v2: {
         Row: {
+          ai_feedback: Json | null
+          ai_grade: number | null
+          ai_job_id: string | null
           answered_at: string
           attempt_id: string
           id: string
@@ -290,6 +293,9 @@ export type Database = {
           selected: Json | null
         }
         Insert: {
+          ai_feedback?: Json | null
+          ai_grade?: number | null
+          ai_job_id?: string | null
           answered_at?: string
           attempt_id: string
           id?: string
@@ -301,6 +307,9 @@ export type Database = {
           selected?: Json | null
         }
         Update: {
+          ai_feedback?: Json | null
+          ai_grade?: number | null
+          ai_job_id?: string | null
           answered_at?: string
           attempt_id?: string
           id?: string
@@ -1850,6 +1859,61 @@ export type Database = {
           },
           {
             foreignKeyName: "library_files_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marking_rubrics: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          id: string
+          name: string
+          school_id: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          id?: string
+          name: string
+          school_id: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          id?: string
+          name?: string
+          school_id?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marking_rubrics_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marking_rubrics_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marking_rubrics_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools_public"
