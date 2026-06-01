@@ -1698,6 +1698,135 @@ export type Database = {
           },
         ]
       }
+      knowledge_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          document_id: string
+          embedding: string
+          id: string
+          metadata: Json
+          school_id: string
+          token_count: number | null
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          document_id: string
+          embedding: string
+          id?: string
+          metadata?: Json
+          school_id: string
+          token_count?: number | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          document_id?: string
+          embedding?: string
+          id?: string
+          metadata?: Json
+          school_id?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_documents: {
+        Row: {
+          chunk_count: number
+          class_id: string | null
+          created_at: string
+          curriculum: string | null
+          error: string | null
+          id: string
+          metadata: Json
+          mime_type: string | null
+          school_id: string
+          source_kind: string
+          source_path: string | null
+          status: string
+          student_id: string | null
+          subject_code: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+          visibility: string
+        }
+        Insert: {
+          chunk_count?: number
+          class_id?: string | null
+          created_at?: string
+          curriculum?: string | null
+          error?: string | null
+          id?: string
+          metadata?: Json
+          mime_type?: string | null
+          school_id: string
+          source_kind?: string
+          source_path?: string | null
+          status?: string
+          student_id?: string | null
+          subject_code?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+          visibility?: string
+        }
+        Update: {
+          chunk_count?: number
+          class_id?: string | null
+          created_at?: string
+          curriculum?: string | null
+          error?: string | null
+          id?: string
+          metadata?: Json
+          mime_type?: string | null
+          school_id?: string
+          source_kind?: string
+          source_path?: string | null
+          status?: string
+          student_id?: string | null
+          subject_code?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_documents_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_documents_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_documents_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_notes: {
         Row: {
           admin_feedback: string | null
@@ -4050,6 +4179,24 @@ export type Database = {
       issue_invoices_for_audience: {
         Args: { _payment_type_id: string; _student_ids?: string[] }
         Returns: number
+      }
+      match_knowledge_chunks: {
+        Args: {
+          _class_id?: string
+          _match_count?: number
+          _query_embedding: string
+          _school_id: string
+          _student_id?: string
+        }
+        Returns: {
+          chunk_id: string
+          content: string
+          document_id: string
+          metadata: Json
+          similarity: number
+          title: string
+          visibility: string
+        }[]
       }
       publish_assessment: {
         Args: { _assessment_id: string }

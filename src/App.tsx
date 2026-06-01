@@ -46,6 +46,8 @@ import AdminOnboarding from "./pages/admin/Onboarding";
 import AdminParentAlerts from "./pages/admin/ParentAlerts";
 import AdminAIActivity from "./pages/admin/AIActivity";
 import AdminAISettings from "./pages/admin/AISettings";
+import AdminCopilot from "./pages/admin/Copilot";
+import AdminKnowledge from "./pages/admin/Knowledge";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
 import Inbox from "./pages/shared/Inbox";
@@ -200,6 +202,8 @@ const App = () => (
               <Route path="admin/parent-alerts" element={<RoleGate allow="admin"><AdminParentAlerts /></RoleGate>} />
               <Route path="admin/ai-activity" element={<RoleGate allow="admin"><AdminAIActivity /></RoleGate>} />
               <Route path="admin/ai-settings" element={<RoleGate allow="admin"><AdminAISettings /></RoleGate>} />
+              <Route path="admin/copilot" element={<RoleGate allow="admin"><AdminCopilot /></RoleGate>} />
+              <Route path="admin/knowledge" element={<RoleGate allow="admin"><AdminKnowledge /></RoleGate>} />
               <Route path="help" element={<HelpPage />} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
