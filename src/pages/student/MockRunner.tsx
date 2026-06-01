@@ -150,7 +150,7 @@ export default function MockRunner() {
       const total = (graded as any)?.total_score ?? 0;
       const totalQ = (graded as any)?.total_questions ?? allQuestions.length;
       toast.success(auto ? "Time up — auto-submitted" : `Submitted. Score: ${total}/${totalQ}`);
-      nav(schoolPath(slug, "/app/student/mock"));
+      nav(schoolPath(slug, `/app/student/review?session=${sessionId}`));
     } catch (e: any) {
       toast.error(e.message ?? "Submit failed");
     } finally {

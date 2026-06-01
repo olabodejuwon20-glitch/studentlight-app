@@ -436,7 +436,12 @@ export default function ExamInterface() {
             </div>
           )}
 
-          <Button className="w-full mt-6" onClick={backToPicker}>Back to exams</Button>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Button variant="outline" asChild>
+              <Link to={schoolPath(school?.slug, `/app/student/review?attempt=${attemptId}`)}>Review answers</Link>
+            </Button>
+            <Button onClick={backToPicker}>Back to exams</Button>
+          </div>
         </div>
       </div>
     );
