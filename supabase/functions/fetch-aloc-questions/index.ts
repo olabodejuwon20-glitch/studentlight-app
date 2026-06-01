@@ -59,6 +59,30 @@ Deno.serve(async (req) => {
     const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(url, service, { auth: { persistSession: false } });
 
+    // Auth: require signed-in school admin or teacher for the supplied school
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+    const userClient = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const { data: claims, error: authErr } = await userClient.auth.getClaims(
+      authHeader.replace("Bearer ", ""),
+    );
+    if (authErr || !claims?.claims?.sub) return json({ error: "Unauthorized" }, 401);
+    const userId = claims.claims.sub as string;
+
+    const { data: membership } = await admin
+      .from("memberships")
+      .select("role,status")
+      .eq("school_id", school_id)
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle();
+    if (!membership || !["admin", "teacher"].includes(membership.role)) {
+      return json({ error: "Forbidden" }, 403);
+    }
+
     const { data: subs, error: sErr } = await admin
       .from("mock_subjects")
       .select("id, code, name")
