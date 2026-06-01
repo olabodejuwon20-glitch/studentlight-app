@@ -53,6 +53,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Behavior",    to: "behavior",    icon: Award },
     { label: "Parent Comms",to: "parent-comms",icon: Mail },
     { label: "Inbox",       to: "inbox",       icon: InboxIcon },
+    { label: "AI Co-Teacher", to: "ai-tutor",  icon: Sparkles },
     { label: "Lesson Plan", to: "lesson-plan", icon: NotebookPen },
     { label: "Lesson Notes", to: "lesson-notes", icon: BookOpenCheck },
     { label: "Library",     to: "library",     icon: Library },
