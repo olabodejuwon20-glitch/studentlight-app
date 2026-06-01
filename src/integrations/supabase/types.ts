@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_approvals: {
+        Row: {
+          ai_job_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string
+          draft: Json
+          edits: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          notes: string | null
+          school_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_job_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by: string
+          draft: Json
+          edits?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          notes?: string | null
+          school_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_job_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string
+          draft?: Json
+          edits?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          notes?: string | null
+          school_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_approvals_ai_job_id_fkey"
+            columns: ["ai_job_id"]
+            isOneToOne: false
+            referencedRelation: "ai_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_chats: {
         Row: {
           attachments: Json
@@ -109,6 +168,63 @@ export type Database = {
           school_id?: string
           title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      ai_jobs: {
+        Row: {
+          completion_tokens: number | null
+          cost_usd: number | null
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          input: Json | null
+          kind: string
+          latency_ms: number | null
+          model: string | null
+          output: Json | null
+          prompt_tokens: number | null
+          school_id: string
+          status: string
+          total_tokens: number | null
+          user_id: string | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          cost_usd?: number | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json | null
+          kind: string
+          latency_ms?: number | null
+          model?: string | null
+          output?: Json | null
+          prompt_tokens?: number | null
+          school_id: string
+          status?: string
+          total_tokens?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          cost_usd?: number | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json | null
+          kind?: string
+          latency_ms?: number | null
+          model?: string | null
+          output?: Json | null
+          prompt_tokens?: number | null
+          school_id?: string
+          status?: string
+          total_tokens?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2797,6 +2913,39 @@ export type Database = {
           },
         ]
       }
+      school_ai_quotas: {
+        Row: {
+          cost_used_usd: number
+          enabled: boolean
+          monthly_cost_cap_usd: number
+          monthly_token_cap: number
+          period_start: string
+          school_id: string
+          tokens_used: number
+          updated_at: string
+        }
+        Insert: {
+          cost_used_usd?: number
+          enabled?: boolean
+          monthly_cost_cap_usd?: number
+          monthly_token_cap?: number
+          period_start?: string
+          school_id: string
+          tokens_used?: number
+          updated_at?: string
+        }
+        Update: {
+          cost_used_usd?: number
+          enabled?: boolean
+          monthly_cost_cap_usd?: number
+          monthly_token_cap?: number
+          period_start?: string
+          school_id?: string
+          tokens_used?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       school_invoices: {
         Row: {
           amount_due_kobo: number
@@ -3203,6 +3352,45 @@ export type Database = {
         }
         Relationships: []
       }
+      student_topic_mastery: {
+        Row: {
+          attempts: number
+          correct: number
+          ema_mastery: number
+          id: string
+          last_attempt_at: string | null
+          school_id: string
+          student_id: string
+          subject_code: string | null
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          correct?: number
+          ema_mastery?: number
+          id?: string
+          last_attempt_at?: string | null
+          school_id: string
+          student_id: string
+          subject_code?: string | null
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          correct?: number
+          ema_mastery?: number
+          id?: string
+          last_attempt_at?: string | null
+          school_id?: string
+          student_id?: string
+          subject_code?: string | null
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subjects: {
         Row: {
           class_id: string | null
@@ -3538,6 +3726,10 @@ export type Database = {
     }
     Functions: {
       apply_payment: { Args: { _payment_id: string }; Returns: undefined }
+      bump_ai_quota: {
+        Args: { _cost: number; _school_id: string; _tokens: number }
+        Returns: undefined
+      }
       get_assessment_questions_for_attempt: {
         Args: { _attempt_id: string }
         Returns: {
