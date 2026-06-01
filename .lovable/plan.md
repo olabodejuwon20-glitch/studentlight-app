@@ -1,103 +1,63 @@
 
-# AI Across Legacy School — Feature Roadmap
+# Enhance Student AI Tutor — Step-by-step, Quiz Follow-ups, Curriculum Recommendations
 
-You already have four AI surfaces shipped: AI Tutor (student + teacher chat), AI question generation, AI lesson notes, and voice-note transcription. This plan extends AI into every daily workflow — learning, teaching, and management — organized into three implementation waves so we can ship value continuously without bloating scope.
-
-Everything below runs on **Lovable AI Gateway** (no extra API keys) via edge functions, reuses existing tables where possible, and respects multi-tenant RLS.
+The tutor already streams chat and has four skills (quiz, summarize, explain_exam, plan_week). This adds three capabilities on top of that foundation without rewriting it.
 
 ---
 
-## Guiding principles
+## 1. Step-by-step explanations
 
-1. **AI assists, humans decide.** Every AI output that affects grades, fees, or parent communication is reviewable and editable before it goes live.
-2. **Use the cheap model by default** (`google/gemini-3-flash-preview`), reserve `gpt-5` / `gemini-2.5-pro` for heavy reasoning (term comments, multi-source analysis).
-3. **One edge function per use case.** Prompts live server-side; the client only ships intent and context.
-4. **Every AI write goes through a review queue** (we already established this pattern with `questions_v2.ai_generated / approved_by`).
+A new `explain_steps` skill + a "Show steps" toggle on the composer.
 
----
+- **Edge function:** new branch in `supabase/functions/ai-tutor/index.ts` for `skill: "explain_steps"`. Prompt asks the model to return numbered scaffolded steps with: goal → key idea → worked example → "your turn" check question → common mistake.
+- **Inline action:** on any assistant message, a small "Break this down step-by-step" chip that re-runs the previous user question through `explain_steps` with the assistant's last answer as context.
+- **Empty-state suggestion** added: "Walk me through quadratic equations step by step".
 
-## Wave 1 — Quick wins (1–2 weeks of work)
+## 2. Quiz follow-ups after an answer
 
-Features that reuse existing data + the AI patterns we've already built.
+After every assistant response, render 2–3 contextual follow-up chips under the bubble:
 
-### Students
-- **Adaptive practice from your weak topics.** After each submitted attempt, read `assessment_results.per_topic`; the tutor offers "10-question booster on Quadratic Equations" with one click → calls `generate-questions` into a private `ai_assessment` for that student.
-- **"Explain my last exam" deep-dive.** On `ExamReview`, an inline AI button per wrong question that streams an explanation grounded in the question + the student's selected answer (using `ai-tutor` with a structured prompt).
-- **Voice Q&A.** Tutor mic button already transcribes — add **TTS playback** of replies (Gemini Flash voice) for accessibility and primary-school students.
-- **Study plan generator.** "Plan my study week" composer action → produces a calendar of topics drawn from upcoming `assessments` + weakest topics; writes ICS-style events into existing `calendar_events`.
+- "Quiz me on this" → runs the existing `quiz` skill with the topic extracted from the last exchange.
+- "Try a harder one" → re-runs quiz with `difficulty: "hard"`.
+- "Explain like I'm 12" → runs `explain_steps` with `level: "simple"`.
 
-### Teachers
-- **AI lesson plan → assessment in one click.** From `LessonPlan` / `LessonNotes`, "Generate matching test" calls `generate-questions` pre-filled with topic/subject/level → drops into an `ai_assessment` draft for review.
-- **Smart marking for essays / short answers.** Extend `submit_assessment` to flag `essay` / `short` questions → new `grade-open-answer` edge function returns suggested score + rubric-style feedback; teacher approves in `Grading`.
-- **Parent message drafter.** In `ParentComms`, "Draft a message" uses the student's recent attendance/behavior/results to produce a warm, factual update the teacher edits and sends.
-- **Co-teacher in context.** AI Co-Teacher already exists — add **slash commands**: `/scheme`, `/rubric`, `/quiz`, `/parent-note` that pre-fill the prompt.
+Implementation:
+- New `MessageBubble` prop `actions?: { label, onClick }[]`, rendered as ghost chips below the assistant bubble.
+- `TutorChat` computes follow-ups for the *last* assistant message only (not historical ones, to keep it clean).
+- Topic extraction: take the last user message's first 80 chars; the model handles the rest.
 
-### Admins
-- **Bulk-roster cleanup.** On `BulkUpload`, AI normalizes inconsistent names, splits "Surname, Firstname", detects duplicate students, and proposes a fix list to approve.
-- **Announcement composer.** AI rewrites a one-line idea into three tones (formal / friendly / urgent) before broadcasting.
-- **Fee-defaulter outreach.** From `Fees`, AI drafts polite, parent-specific reminder messages referencing the actual outstanding line items.
+## 3. Curriculum-tied study recommendations
 
-### Parents
-- **"What did my child do this week?"** A weekly AI digest summarizing attendance, behavior notes, new grades, and upcoming assessments — surfaced on `parent/Dashboard` and optionally emailed.
+A new `recommend` skill that grounds suggestions in the student's actual data.
 
----
-
-## Wave 2 — Deeper AI loops (2–4 weeks)
-
-Features that need a small amount of new schema or background jobs.
-
-### Learning intelligence
-- **Mastery model per student.** Roll `assessment_results.per_topic` into a `student_topic_mastery` table updated on every submission. Tutor, practice, and study planner all read from it.
-- **Personalized homework.** Teacher creates an assignment with a topic + level; system generates a unique question set per student based on mastery (low mastery → easier scaffolded items; high mastery → stretch problems).
-- **AI study buddy with memory.** Tutor remembers what a specific student is currently studying (subject, recent mistakes, exam dates) across conversations using a lightweight `tutor_memory` table.
-
-### Teaching automation
-- **Scheme-of-work generator.** Input curriculum + term length → produces a week-by-week scheme with topics, objectives, suggested activities, and ready-to-publish lesson notes; admin-reviewable.
-- **AI-graded essays at scale.** Batch grading: teacher uploads/scans, AI proposes scores with margin notes; teacher confirms in a 1-keystroke flow.
-- **Behavior pattern detector.** Weekly job reads `behavior_notes` + attendance and flags students whose pattern is shifting (escalation or improvement) for the form teacher.
-
-### Management & ops
-- **Term-end report-comment writer.** For each student per subject, generate a personalized comment using their term results and behavior notes; drops into the existing report-card slip flow for the teacher/admin to edit.
-- **Timetable assistant.** Given teachers, subjects, room constraints → AI proposes a conflict-free weekly timetable; admin tweaks visually.
-- **Anomaly watcher.** AI scans daily attendance + fees + violations data and alerts admin to outliers ("Class JSS2A attendance dropped 18% this week").
-
-### Parents
-- **Two-way AI mediator.** When a parent messages a teacher in another language, AI translates in-thread (already-supported attachments + translate prompt).
-- **"Ask about my child."** Parent-only chat scoped to *their child's* records — answers grounded only in the data they're allowed to see (uses RLS-aware retrieval pattern).
+- **Server-side context** (`ai-tutor`, new skill branch): pull, scoped to `auth.uid()` + `school_id`:
+  - Enrolled subjects via `class_enrollments` → `classes(subject, grade_level)`
+  - Recent results (`results` table, last 20)
+  - Per-topic mastery from latest `assessment_results.per_topic` rows (last 5 attempts)
+  - Upcoming `exams` in the next 14 days
+- **Prompt** asks for: top 3 priority topics, why (cited from the data), one concrete next action per topic (e.g. "10-question booster", "re-read note X", "watch a 5-min recap"), and links back to existing tutor skills.
+- **Surface points:**
+  - Empty-state suggestion: "What should I study next?".
+  - A persistent "Recommended for you" chip in the composer suggestion row when the student has at least one submitted assessment.
+- **System prompt update:** append a short "curriculum awareness" paragraph to `STUDENT_SYS` so even free-form chat references the student's level/subjects when known. Inject a one-line "Student context: subjects=…, level=…" into the chat path when available.
 
 ---
 
-## Wave 3 — Differentiators (4+ weeks)
+## Files touched
 
-Bigger bets that turn the platform into a true AI school OS.
+- `supabase/functions/ai-tutor/index.ts` — add `explain_steps` and `recommend` skills; helper `loadStudentContext(admin, user_id, school_id)` used by both `recommend` and the default chat path; expand the `quiz` prompt to accept `difficulty` and `level`.
+- `src/components/tutor/TutorChat.tsx` — wire new skills, compute follow-up actions for the latest assistant message, add new empty-state suggestion, "Show steps" toggle in composer area.
+- `src/components/tutor/MessageBubble.tsx` — render optional `actions` chip row under assistant bubbles.
+- `src/components/tutor/Composer.tsx` — optional small "Step-by-step" toggle button that, when on, routes the next send through `explain_steps`.
 
-- **Document understanding (RAG).** Library uploads (PDF textbooks, past papers) are chunked + embedded with `google/gemini-embedding-001` into a `library_embeddings` table; tutor answers cite specific pages from the school's own library.
-- **Whiteboard-to-notes.** Teacher snaps a photo of a chalkboard; AI extracts text/math and converts to a clean lesson note + auto-tags topics.
-- **Predictive analytics.** "Who is at risk of failing this term?" — a model over grades, attendance, behavior produces a ranked list with the top contributing factors per student.
-- **Curriculum gap analysis.** Compare what teachers actually covered (lesson notes) vs the scheme of work, and flag missed topics before exams.
-- **AI invigilator.** Optional camera + screen-blur during proctored mocks; AI flags suspicious motion/multiple faces and writes to `assessment_violations_v2`.
-- **Voice-first admin.** Admin says "show me JSS2 fees this term" or "send a reminder to defaulters" — AI routes the intent to the correct page / RPC.
+No database changes. No new tables. Everything uses existing tables (`class_enrollments`, `results`, `assessment_results`, `exams`, `ai_chats`, `ai_conversations`) and RPCs.
 
 ---
 
-## Cross-cutting work needed once
+## Out of scope (call out for next iteration)
 
-These pay back across many features and are worth doing early (start of Wave 2):
+- A `student_topic_mastery` rollup table (already noted in the Wave 2 roadmap) would make recommendations faster and remembered across sessions — skipped here so this stays additive.
+- Voice replies / TTS — noted in Wave 1, not in this scope.
+- Pulling textbook content via RAG — Wave 3 work.
 
-- **`ai_jobs` table + worker pattern** for any AI task that takes >5s (batch grading, weekly digests, embeddings) so the UI stays snappy.
-- **`student_topic_mastery` rollup** — feeds Wave 2 personalization.
-- **Shared retrieval helper** (`get_student_context(user_id)`) used by tutor, parent digest, report comments — single source of truth for "what the AI knows about a student".
-- **Approval audit trail.** Every AI-generated artifact (question, comment, message) records `ai_generated=true` + `approved_by`/`approved_at` so admins can audit.
-
----
-
-## What I recommend we build first
-
-If you want maximum visible impact with one focused sprint, ship these four:
-
-1. **Adaptive practice from weak topics** (student-facing, demoable in minutes)
-2. **AI lesson plan → assessment in one click** (saves teachers hours/week)
-3. **Term-end report-comment writer** (the killer admin feature parents see)
-4. **Parent weekly digest** (visible value to parents → drives engagement)
-
-Tell me which wave (or which specific bullets) you want me to scope into a build plan next, and I'll turn it into the migration + edge-function + UI work.
+Approve and I'll ship.

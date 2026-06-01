@@ -11,9 +11,10 @@ interface Props {
   content: string;
   attachments?: Attachment[];
   streaming?: boolean;
+  actions?: { label: string; onClick: () => void; icon?: React.ComponentType<{ className?: string }> }[];
 }
 
-export function MessageBubble({ role, content, attachments, streaming }: Props) {
+export function MessageBubble({ role, content, attachments, streaming, actions }: Props) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     await navigator.clipboard.writeText(content);
@@ -53,6 +54,18 @@ export function MessageBubble({ role, content, attachments, streaming }: Props) 
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               {copied ? "Copied" : "Copy"}
             </Button>
+          </div>
+        )}
+        {!streaming && content && actions && actions.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {actions.map((a, i) => (
+              <Button key={i} size="sm" variant="outline"
+                className="h-7 text-xs gap-1.5 rounded-full"
+                onClick={a.onClick}>
+                {a.icon ? <a.icon className="size-3.5" /> : null}
+                {a.label}
+              </Button>
+            ))}
           </div>
         )}
       </div>
