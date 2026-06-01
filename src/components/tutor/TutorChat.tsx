@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, BookOpen, CalendarDays, Brain, PanelLeftOpen, PanelLeftClose } from "lucide-react";
+import { Sparkles, BookOpen, CalendarDays, Brain, PanelLeftOpen, PanelLeftClose, ListChecks, Compass, GraduationCap, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ interface Msg { role: "user" | "assistant"; content: string; attachments?: Attac
 
 const SUGGESTIONS_STUDENT = [
   { icon: Brain, label: "Quiz me on photosynthesis", skill: "quiz", input: { topic: "photosynthesis" } },
+  { icon: ListChecks, label: "Walk me through quadratic equations step by step", skill: "explain_steps", input: { topic: "quadratic equations" } },
+  { icon: Compass, label: "What should I study next?", skill: "recommend" },
   { icon: BookOpen, label: "Explain my last exam", skill: "explain_exam" },
   { icon: CalendarDays, label: "Plan my study week", skill: "plan_week" },
   { icon: Sparkles, label: "Summarize the note I uploaded", skill: "summarize" },
@@ -33,6 +35,7 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [stepsMode, setStepsMode] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -118,6 +121,8 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
     return s === "explain_exam" ? "Explain my last exam"
       : s === "plan_week" ? "Plan my study week"
       : s === "summarize" ? "Summarize my notes"
+      : s === "explain_steps" ? "Break this down step-by-step"
+      : s === "recommend" ? "What should I study next?"
       : "Quiz me";
   }
 
@@ -134,6 +139,12 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
     if (!school || !user) return;
     let convId = activeId;
     if (!convId) { convId = await newConversation(); if (!convId) return; }
+    // Route through explain_steps skill when toggle is on (student only).
+    if (stepsMode && portalRole === "student" && text.trim()) {
+      setStepsMode(false);
+      await runSkill("explain_steps", { topic: text.trim() });
+      return;
+    }
     setMessages(m => [...m, { role: "user", content: text, attachments }]);
     setStreaming(true); setStreamText("");
     abortRef.current = new AbortController();
@@ -197,6 +208,21 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
 
   function stop() { abortRef.current?.abort(); }
 
+  // Compute follow-up actions for the latest assistant message only.
+  function lastAssistantActions(): { label: string; onClick: () => void; icon?: any }[] {
+    if (portalRole !== "student") return [];
+    if (streaming) return [];
+    const lastIdx = messages.length - 1;
+    if (lastIdx < 0 || messages[lastIdx].role !== "assistant") return [];
+    const lastUser = [...messages].reverse().find(m => m.role === "user");
+    const topic = (lastUser?.content || "").slice(0, 120).trim() || "this topic";
+    return [
+      { icon: Brain, label: "Quiz me on this", onClick: () => runSkill("quiz", { topic }) },
+      { icon: Zap, label: "Try a harder one", onClick: () => runSkill("quiz", { topic, difficulty: "hard" }) },
+      { icon: GraduationCap, label: "Explain like I'm 12", onClick: () => runSkill("explain_steps", { topic, level: "simple, like I'm 12" }) },
+    ];
+  }
+
   const suggestions = portalRole === "student" ? SUGGESTIONS_STUDENT : SUGGESTIONS_TEACHER;
   const intro = portalRole === "student"
     ? "Your study companion. Ask anything, upload notes, record a question."
@@ -254,9 +280,14 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
             </div>
           ) : (
             <>
-              {messages.map((m, i) => (
-                <MessageBubble key={i} role={m.role} content={m.content} attachments={m.attachments} />
-              ))}
+              {(() => {
+                const actions = lastAssistantActions();
+                const lastIdx = messages.length - 1;
+                return messages.map((m, i) => (
+                  <MessageBubble key={i} role={m.role} content={m.content} attachments={m.attachments}
+                    actions={i === lastIdx && m.role === "assistant" ? actions : undefined} />
+                ));
+              })()}
               {streaming && (
                 <MessageBubble role="assistant" content={streamText} streaming />
               )}
@@ -265,6 +296,25 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
         </div>
 
         {user && (
+          <>
+          {portalRole === "student" && (
+            <div className="px-3 sm:px-4 pt-2 -mb-1 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setStepsMode(s => !s)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
+                  stepsMode
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background border-border text-muted-foreground hover:text-foreground"
+                )}
+                title="Next message will be answered as a numbered, scaffolded breakdown"
+              >
+                <ListChecks className="size-3.5" />
+                {stepsMode ? "Step-by-step mode on" : "Step-by-step mode"}
+              </button>
+            </div>
+          )}
           <Composer
             bucket="tutor-uploads"
             userId={user.id}
@@ -274,6 +324,7 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
             placeholder={portalRole === "teacher" ? "Ask your co-teacher anything…" : "Ask anything — I'll help you learn"}
             onSubmit={send}
           />
+          </>
         )}
       </div>
     </div>
