@@ -70,6 +70,8 @@ import ExamInterface from "./pages/student/ExamInterface";
 import StudentResults from "./pages/student/Results";
 import Library from "./pages/student/Library";
 import AITutor from "./pages/student/AITutor";
+import StudentExamReview from "./pages/student/ExamReview";
+import TeacherAITutor from "./pages/teacher/AITutor";
 import StudentCalendar from "./pages/student/Calendar";
 import StudentLessonNotes from "./pages/student/LessonNotes";
 import StudentAssignments from "./pages/student/Assignments";
@@ -209,6 +211,7 @@ const App = () => (
               <Route path="teacher/behavior" element={<RoleGate allow="teacher"><TeacherBehavior /></RoleGate>} />
               <Route path="teacher/parent-comms" element={<RoleGate allow="teacher"><TeacherParentComms /></RoleGate>} />
               <Route path="teacher/inbox" element={<RoleGate allow="teacher"><Inbox /></RoleGate>} />
+              <Route path="teacher/ai-tutor" element={<RoleGate allow="teacher"><TeacherAITutor /></RoleGate>} />
 
               <Route path="student" element={<RoleGate allow="student"><StudentDashboard /></RoleGate>} />
               <Route path="student/classes" element={<RoleGate allow="student"><StudentClasses /></RoleGate>} />
@@ -221,6 +224,7 @@ const App = () => (
               <Route path="student/library" element={<RoleGate allow="student"><Library /></RoleGate>} />
               <Route path="student/lesson-notes" element={<RoleGate allow="student"><StudentLessonNotes /></RoleGate>} />
               <Route path="student/ai-tutor" element={<RoleGate allow="student"><AITutor /></RoleGate>} />
+              <Route path="student/review" element={<RoleGate allow="student"><StudentExamReview /></RoleGate>} />
               <Route path="student/calendar" element={<RoleGate allow="student"><StudentCalendar /></RoleGate>} />
               <Route path="student/assignments" element={<RoleGate allow="student"><StudentAssignments /></RoleGate>} />
               <Route path="student/gradebook" element={<RoleGate allow="student"><StudentGradebook /></RoleGate>} />
