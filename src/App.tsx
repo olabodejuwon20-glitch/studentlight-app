@@ -73,6 +73,7 @@ import Library from "./pages/student/Library";
 import AITutor from "./pages/student/AITutor";
 import StudentExamReview from "./pages/student/ExamReview";
 import TeacherAITutor from "./pages/teacher/AITutor";
+import TeacherAIMarking from "./pages/teacher/AIMarking";
 import StudentCalendar from "./pages/student/Calendar";
 import StudentLessonNotes from "./pages/student/LessonNotes";
 import StudentAssignments from "./pages/student/Assignments";
