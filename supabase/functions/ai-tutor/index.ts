@@ -223,6 +223,16 @@ Deno.serve(async (req) => {
       } else if (skill === "recommend") {
         const ctx = await loadStudentContext(admin, user.id, school_id);
         injected = contextNote(ctx) || "No curriculum data on record yet.";
+      } else if (skill === "adaptive_practice") {
+        const ctx = await loadStudentContext(admin, user.id, school_id);
+        const weakest = ctx.weakTopics[0];
+        if (weakest) {
+          injected = `Weakest topic: ${weakest.topic}${(weakest as any).subject_code ? ` (${(weakest as any).subject_code})` : ""} — current mastery ${Math.round(weakest.mastery * 100)}% over ${weakest.total} attempts.`;
+          skill_input.topic = skill_input.topic || weakest.topic;
+          skill_input.count = skill_input.count || 5;
+        } else {
+          injected = "No mastery data yet — pick any topic to start a 5-question booster.";
+        }
       }
 
       const prompts: Record<string, string> = {
@@ -260,6 +270,10 @@ For each: **Topic** — one line on *why* (cite the data, e.g. "mastery 40% on 2
 One short paragraph tying the priorities to upcoming exams or weak subjects.
 
 Keep it under 200 words. Be specific and encouraging.`,
+        adaptive_practice: `Generate a focused 5-question MCQ booster on the student's weakest topic.
+${injected}
+Format each as: question, then **A) B) C) D)** options, then on a new line "Answer: X — short explanation".
+Number them 1–5. Keep difficulty calibrated to a learner currently scoring around the mastery shown above.`,
       };
 
       const skillMsgs = [
