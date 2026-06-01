@@ -6,6 +6,7 @@ import {
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
   Building2, Ticket, Upload, Bus, Megaphone, NotebookPen, FolderOpen, UserCog,
   BookOpenCheck, ClipboardList, BarChart3, Award, Mail, Inbox as InboxIcon,
+  Bot, Brain, ShieldAlert, Gauge, BookMarked, PenLine,
 } from "lucide-react";
 import { ROLE_META, Role, useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
@@ -40,6 +41,11 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Reports",   to: "reports",   icon: FileBarChart },
     { label: "Invites",   to: "invites",   icon: Ticket },
     { label: "Bulk Upload", to: "bulk",    icon: Upload },
+    { label: "Parent Alerts", to: "parent-alerts", icon: ShieldAlert },
+    { label: "Copilot",   to: "copilot",   icon: Brain },
+    { label: "Knowledge", to: "knowledge", icon: BookMarked },
+    { label: "AI Activity", to: "ai-activity", icon: Activity },
+    { label: "AI Settings", to: "ai-settings", icon: Sparkles },
     { label: "Settings",  to: "settings",  icon: Settings },
     { label: "Help",      to: "/app/help", icon: HelpCircle },
   ],
@@ -53,7 +59,8 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Behavior",    to: "behavior",    icon: Award },
     { label: "Parent Comms",to: "parent-comms",icon: Mail },
     { label: "Inbox",       to: "inbox",       icon: InboxIcon },
-    { label: "AI Co-Teacher", to: "ai-tutor",  icon: Sparkles },
+    { label: "AI Co-Teacher", to: "ai-tutor",  icon: Bot },
+    { label: "AI Marking",  to: "ai-marking",  icon: PenLine },
     { label: "Lesson Plan", to: "lesson-plan", icon: NotebookPen },
     { label: "Lesson Notes", to: "lesson-notes", icon: BookOpenCheck },
     { label: "Library",     to: "library",     icon: Library },
@@ -141,6 +148,12 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "inbox":      { title: "Inbox",              sub: "All your conversations" },
   "mock":       { title: "NECO / JAMB Mock",   sub: "Pick subjects and sit a UTME-style timed mock" },
   "practice":   { title: "Practice Mode",      sub: "Study from your library — no timer, no score" },
+  "ai-marking":  { title: "AI Essay Marking",   sub: "Upload essays and let AI draft rubric-based feedback" },
+  "parent-alerts":{ title: "Parent Risk Alerts", sub: "AI-drafted alerts for attendance, grades, and fees" },
+  "copilot":     { title: "Principal Copilot",  sub: "Ask anything about your school — backed by live data" },
+  "knowledge":   { title: "Knowledge Base",     sub: "Curate documents the AI can reason over" },
+  "ai-activity": { title: "AI Activity",        sub: "Usage, latency, and spend by feature" },
+  "ai-settings": { title: "AI Settings",        sub: "Budgets and feature toggles for AI" },
 };
 
 export default function AppLayout() {

@@ -3,6 +3,7 @@ import {
   NotebookPen, Wallet, Building2, Bus, Megaphone, FileBarChart, Ticket, Upload, Settings,
   ClipboardCheck, ClipboardList, BarChart3, Award, Mail, FilePlus2, PencilRuler, MessagesSquare,
   FolderOpen, ListChecks, Sparkles, UserSquare2, Activity, Package,
+  Bot, Brain, ShieldAlert, Gauge, BookMarked, PenLine,
 } from "lucide-react";
 import { ModuleManifest } from "./types";
 
@@ -121,6 +122,33 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
   {
     slug: "ai-tutor", name: "AI Tutor", category: "intelligence", icon: Sparkles,
     sidebar: [{ label: "AI Tutor", to: "ai-tutor", icon: Sparkles, roles: ["student"] }],
+  },
+  {
+    slug: "ai-co-teacher", name: "AI Co-Teacher", category: "intelligence", icon: Bot, core: true,
+    sidebar: [{ label: "AI Co-Teacher", to: "ai-tutor", icon: Bot, roles: ["teacher"] }],
+  },
+  {
+    slug: "ai-marking", name: "AI Essay Marking", category: "intelligence", icon: PenLine, core: true,
+    sidebar: [{ label: "AI Marking", to: "ai-marking", icon: PenLine, roles: ["teacher"] }],
+  },
+  {
+    slug: "parent-alerts", name: "Parent Risk Alerts", category: "intelligence", icon: ShieldAlert, core: true,
+    sidebar: [{ label: "Parent Alerts", to: "parent-alerts", icon: ShieldAlert, roles: ["admin"] }],
+  },
+  {
+    slug: "principal-copilot", name: "Principal Copilot", category: "intelligence", icon: Brain, core: true,
+    sidebar: [{ label: "Copilot", to: "copilot", icon: Brain, roles: ["admin"] }],
+  },
+  {
+    slug: "knowledge-base", name: "Knowledge Base", category: "intelligence", icon: BookMarked, core: true,
+    sidebar: [{ label: "Knowledge", to: "knowledge", icon: BookMarked, roles: ["admin"] }],
+  },
+  {
+    slug: "ai-governance", name: "AI Governance", category: "intelligence", icon: Gauge, core: true,
+    sidebar: [
+      { label: "AI Activity", to: "ai-activity", icon: Activity, roles: ["admin"] },
+      { label: "AI Settings", to: "ai-settings", icon: Settings, roles: ["admin"] },
+    ],
   },
 
   // ---- Finance ----
