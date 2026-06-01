@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { ParentWeeklyDigest } from "@/components/ai/ParentWeeklyDigest";
 
 export default function ParentDashboard() {
   const { school, user, displayName, activeRole } = useSchool();
@@ -189,6 +190,10 @@ export default function ParentDashboard() {
                 </ResponsiveContainer></div>}
             </SectionCard>
           </div>
+
+          {school && active && (
+            <ParentWeeklyDigest schoolId={school.id} studentId={active.id} studentName={active.full_name || active.email} />
+          )}
 
           <SectionCard title="Quick actions">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
