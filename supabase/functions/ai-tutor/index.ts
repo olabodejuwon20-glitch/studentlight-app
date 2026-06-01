@@ -24,7 +24,7 @@ function sysFor(role: string | undefined) {
 
 // Pulls a light-weight curriculum snapshot for a student.
 async function loadStudentContext(admin: any, user_id: string, school_id: string) {
-  const [{ data: enrollments }, { data: recentResults }, { data: recentAR }, { data: upcomingExams }] = await Promise.all([
+  const [{ data: enrollments }, { data: recentResults }, { data: recentAR }, { data: upcomingExams }, { data: mastery }] = await Promise.all([
     admin.from("class_enrollments")
       .select("classes(name, subject, grade_level)")
       .eq("student_id", user_id).eq("school_id", school_id),
@@ -42,6 +42,10 @@ async function loadStudentContext(admin: any, user_id: string, school_id: string
       .gte("scheduled_at", new Date().toISOString())
       .lte("scheduled_at", new Date(Date.now() + 14 * 86400e3).toISOString())
       .order("scheduled_at").limit(10),
+    admin.from("student_topic_mastery")
+      .select("subject_code, topic, attempts, correct, ema_mastery, last_attempt_at")
+      .eq("school_id", school_id).eq("student_id", user_id)
+      .order("ema_mastery", { ascending: true }).limit(20),
   ]);
 
   const subjects = Array.from(new Set(
@@ -64,11 +68,25 @@ async function loadStudentContext(admin: any, user_id: string, school_id: string
       topicAgg[topic].total += t;
     }
   }
-  const weakTopics = Object.entries(topicAgg)
-    .map(([topic, a]) => ({ topic, mastery: a.total ? a.correct / a.total : 0, total: a.total }))
-    .filter(t => t.total >= 2)
-    .sort((a, b) => a.mastery - b.mastery)
-    .slice(0, 6);
+  // Prefer the persistent mastery rollup; fall back to per-attempt aggregation.
+  let weakTopics: { topic: string; mastery: number; total: number; subject_code?: string | null }[];
+  if (mastery && mastery.length) {
+    weakTopics = mastery
+      .filter((m: any) => Number(m.attempts) >= 2)
+      .slice(0, 6)
+      .map((m: any) => ({
+        topic: m.topic,
+        subject_code: m.subject_code,
+        mastery: Number(m.ema_mastery),
+        total: Number(m.attempts),
+      }));
+  } else {
+    weakTopics = Object.entries(topicAgg)
+      .map(([topic, a]) => ({ topic, mastery: a.total ? a.correct / a.total : 0, total: a.total }))
+      .filter(t => t.total >= 2)
+      .sort((a, b) => a.mastery - b.mastery)
+      .slice(0, 6);
+  }
 
   return {
     subjects,
@@ -205,6 +223,16 @@ Deno.serve(async (req) => {
       } else if (skill === "recommend") {
         const ctx = await loadStudentContext(admin, user.id, school_id);
         injected = contextNote(ctx) || "No curriculum data on record yet.";
+      } else if (skill === "adaptive_practice") {
+        const ctx = await loadStudentContext(admin, user.id, school_id);
+        const weakest = ctx.weakTopics[0];
+        if (weakest) {
+          injected = `Weakest topic: ${weakest.topic}${(weakest as any).subject_code ? ` (${(weakest as any).subject_code})` : ""} — current mastery ${Math.round(weakest.mastery * 100)}% over ${weakest.total} attempts.`;
+          skill_input.topic = skill_input.topic || weakest.topic;
+          skill_input.count = skill_input.count || 5;
+        } else {
+          injected = "No mastery data yet — pick any topic to start a 5-question booster.";
+        }
       }
 
       const prompts: Record<string, string> = {
@@ -242,6 +270,10 @@ For each: **Topic** — one line on *why* (cite the data, e.g. "mastery 40% on 2
 One short paragraph tying the priorities to upcoming exams or weak subjects.
 
 Keep it under 200 words. Be specific and encouraging.`,
+        adaptive_practice: `Generate a focused 5-question MCQ booster on the student's weakest topic.
+${injected}
+Format each as: question, then **A) B) C) D)** options, then on a new line "Answer: X — short explanation".
+Number them 1–5. Keep difficulty calibrated to a learner currently scoring around the mastery shown above.`,
       };
 
       const skillMsgs = [
