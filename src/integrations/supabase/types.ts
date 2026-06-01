@@ -2382,6 +2382,82 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_alerts: {
+        Row: {
+          ai_job_id: string | null
+          approval_id: string | null
+          created_at: string
+          dedupe_key: string
+          draft_message: string | null
+          id: string
+          kind: string
+          parent_id: string | null
+          school_id: string
+          sent_at: string | null
+          severity: string
+          signal: Json
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_job_id?: string | null
+          approval_id?: string | null
+          created_at?: string
+          dedupe_key: string
+          draft_message?: string | null
+          id?: string
+          kind: string
+          parent_id?: string | null
+          school_id: string
+          sent_at?: string | null
+          severity?: string
+          signal?: Json
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_job_id?: string | null
+          approval_id?: string | null
+          created_at?: string
+          dedupe_key?: string
+          draft_message?: string | null
+          id?: string
+          kind?: string
+          parent_id?: string | null
+          school_id?: string
+          sent_at?: string | null
+          severity?: string
+          signal?: Json
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_alerts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_alerts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_alerts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_comms: {
         Row: {
           body: string
