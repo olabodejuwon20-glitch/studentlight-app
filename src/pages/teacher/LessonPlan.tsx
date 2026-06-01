@@ -146,8 +146,7 @@ export default function TeacherLessonPlan() {
         created_by: user.id,
         title: `${active.topic} — quick check`,
         type: "school_test",
-        subject: active.subject,
-        config: { duration_minutes: 20 },
+        config: { duration_minutes: 20, subject: active.subject },
         status: "draft",
       }).select().single();
       if (aerr) throw aerr;
