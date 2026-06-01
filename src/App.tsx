@@ -44,6 +44,8 @@ import AdminModules from "./pages/admin/Modules";
 import AdminEnrollments from "./pages/admin/Enrollments";
 import AdminOnboarding from "./pages/admin/Onboarding";
 import AdminParentAlerts from "./pages/admin/ParentAlerts";
+import AdminAIActivity from "./pages/admin/AIActivity";
+import AdminAISettings from "./pages/admin/AISettings";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
 import Inbox from "./pages/shared/Inbox";
@@ -196,6 +198,8 @@ const App = () => (
               <Route path="admin/settings" element={<RoleGate allow="admin"><AdminSettings /></RoleGate>} />
               <Route path="admin/onboarding" element={<RoleGate allow="admin"><AdminOnboarding /></RoleGate>} />
               <Route path="admin/parent-alerts" element={<RoleGate allow="admin"><AdminParentAlerts /></RoleGate>} />
+              <Route path="admin/ai-activity" element={<RoleGate allow="admin"><AdminAIActivity /></RoleGate>} />
+              <Route path="admin/ai-settings" element={<RoleGate allow="admin"><AdminAISettings /></RoleGate>} />
               <Route path="help" element={<HelpPage />} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
