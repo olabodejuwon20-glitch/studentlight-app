@@ -8,6 +8,7 @@ import { SectionCard } from "@/components/dashboard/SectionCard";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { EmptyState } from "@/components/EmptyState";
 import { necoDistribution, necoSummary, necoGrade, NECO_GRADE_COLORS } from "@/lib/neco";
+import { ReportCommentDialog } from "@/components/ai/ReportCommentDialog";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip, Cell } from "recharts";
 
 export default function TeacherReports() {
@@ -64,6 +65,7 @@ export default function TeacherReports() {
           <p className="text-sm text-muted-foreground">NECO-aligned analytics for your classes</p>
         </div>
         <div className="flex gap-2">
+          {school && rs.length > 0 && <ReportCommentDialog schoolId={school.id} results={rs as any} />}
           <Button size="sm" variant="outline" onClick={exportCSV}><Download className="size-4" /> <span className="hidden sm:inline ml-1">CSV</span></Button>
           <Button size="sm" variant="outline" onClick={exportPDF}><FileText className="size-4" /> <span className="hidden sm:inline ml-1">PDF</span></Button>
         </div>
