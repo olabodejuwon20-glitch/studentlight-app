@@ -77,7 +77,7 @@ export default function Assessments() {
           icon={ClipboardCheck}
           title="No assessments yet"
           desc="Create a school test, exam, or an AI-generated assessment."
-          cta={<Button onClick={() => setCreateOpen(true)}><Plus className="size-4 mr-1.5" />New assessment</Button>}
+          action={<Button onClick={() => setCreateOpen(true)}><Plus className="size-4 mr-1.5" />New assessment</Button>}
         />
       ) : (
         <ul className="divide-y divide-border">
