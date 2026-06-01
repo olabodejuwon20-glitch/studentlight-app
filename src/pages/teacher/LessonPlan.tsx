@@ -145,7 +145,7 @@ export default function TeacherLessonPlan() {
         school_id: school.id,
         created_by: user.id,
         title: `${active.topic} — quick check`,
-        type: "class_test",
+        type: "school_test",
         subject: active.subject,
         config: { duration_minutes: 20 },
         status: "draft",
@@ -175,9 +175,8 @@ export default function TeacherLessonPlan() {
       {/* Left: drafts list + generator */}
       <div className="space-y-4">
         <SectionCard
-          title="New AI lesson plan"
-          subtitle="Tell the AI what to draft — review and approve before sharing"
-          icon={Wand2}
+          title={<span className="flex items-center gap-2"><Wand2 className="size-4 text-primary" /> New AI lesson plan</span>}
+          description="Tell the AI what to draft — review and approve before sharing"
         >
           <div className="space-y-3">
             {classes.length > 0 && (
@@ -245,7 +244,7 @@ export default function TeacherLessonPlan() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Your plans" icon={BookOpen}>
+        <SectionCard title={<span className="flex items-center gap-2"><BookOpen className="size-4 text-primary" /> Your plans</span>}>
           {plans.length === 0 ? (
             <p className="text-sm text-muted-foreground">No plans yet — generate one above.</p>
           ) : (
@@ -281,14 +280,13 @@ export default function TeacherLessonPlan() {
           <EmptyState
             icon={BookOpen}
             title="No lesson plan selected"
-            description="Pick a plan on the left or draft a new one with AI."
+            desc="Pick a plan on the left or draft a new one with AI."
           />
         ) : (
           <SectionCard
-            title={active.topic}
-            subtitle={`${active.subject} · ${active.grade_level || "—"} · ${active.duration_minutes} min · ${active.curriculum || "—"}`}
-            icon={BookOpen}
-            right={
+            title={<span className="flex items-center gap-2"><BookOpen className="size-4 text-primary" /> {active.topic}</span>}
+            description={`${active.subject} · ${active.grade_level || "—"} · ${active.duration_minutes} min · ${active.curriculum || "—"}`}
+            action={
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={active.status} />
                 {active.status === "draft" && (
