@@ -123,7 +123,7 @@ export default function AIMarking() {
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : rows.length === 0 ? (
-        <EmptyState icon={Sparkles} title="Nothing to mark" description="Essay/short-answer submissions will appear here." />
+        <EmptyState icon={Sparkles} title="Nothing to mark" desc="Essay/short-answer submissions will appear here." />
       ) : (
         <ul className="space-y-4">
           {rows.map(r => {
