@@ -16,7 +16,10 @@ export type Database = {
     Tables: {
       ai_chats: {
         Row: {
+          attachments: Json
+          audio_url: string | null
           content: string
+          conversation_id: string | null
           created_at: string
           id: string
           role: string
@@ -24,7 +27,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachments?: Json
+          audio_url?: string | null
           content: string
+          conversation_id?: string | null
           created_at?: string
           id?: string
           role: string
@@ -32,7 +38,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attachments?: Json
+          audio_url?: string | null
           content?: string
+          conversation_id?: string | null
           created_at?: string
           id?: string
           role?: string
@@ -40,6 +49,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ai_chats_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ai_chats_school_id_fkey"
             columns: ["school_id"]
@@ -62,6 +78,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ai_conversations: {
+        Row: {
+          archived: boolean
+          created_at: string
+          id: string
+          last_message_at: string
+          pinned: boolean
+          school_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          pinned?: boolean
+          school_id: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          pinned?: boolean
+          school_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       announcements: {
         Row: {
@@ -1280,6 +1329,7 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachments: Json
           body: string
           created_at: string
           id: string
@@ -1289,6 +1339,7 @@ export type Database = {
           sender_id: string
         }
         Insert: {
+          attachments?: Json
           body: string
           created_at?: string
           id?: string
@@ -1298,6 +1349,7 @@ export type Database = {
           sender_id: string
         }
         Update: {
+          attachments?: Json
           body?: string
           created_at?: string
           id?: string
@@ -2931,6 +2983,19 @@ export type Database = {
           q_school_id: string
         }[]
       }
+      get_exam_review: {
+        Args: { _attempt_id: string }
+        Returns: {
+          q_correct_index: number
+          q_id: string
+          q_is_correct: boolean
+          q_options: Json
+          q_points: number
+          q_position: number
+          q_prompt: string
+          q_selected_index: number
+        }[]
+      }
       get_mock_questions_for_session: {
         Args: { _session_id: string }
         Returns: {
@@ -2938,6 +3003,20 @@ export type Database = {
           q_options: Json
           q_position: number
           q_prompt: string
+          q_subject_id: string
+        }[]
+      }
+      get_mock_review: {
+        Args: { _session_id: string }
+        Returns: {
+          q_correct_index: number
+          q_explanation: string
+          q_id: string
+          q_is_correct: boolean
+          q_options: Json
+          q_position: number
+          q_prompt: string
+          q_selected_index: number
           q_subject_id: string
         }[]
       }
