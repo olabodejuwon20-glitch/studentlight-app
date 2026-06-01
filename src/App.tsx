@@ -43,6 +43,7 @@ import AdminLessonNotes from "./pages/admin/LessonNotes";
 import AdminModules from "./pages/admin/Modules";
 import AdminEnrollments from "./pages/admin/Enrollments";
 import AdminOnboarding from "./pages/admin/Onboarding";
+import AdminParentAlerts from "./pages/admin/ParentAlerts";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
 import Inbox from "./pages/shared/Inbox";
