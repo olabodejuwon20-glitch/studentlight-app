@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       _school: assessment.school_id, _user: user.id, _role: "teacher",
     });
     const { data: isAdmin } = await admin.rpc("is_school_admin", {
-      _school_id: assessment.school_id, _user: user.id,
+      _school: assessment.school_id, _user: user.id,
     });
     if (!roleOk && !isAdmin) return json({ error: "Forbidden" }, 403);
 
