@@ -148,6 +148,12 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "inbox":      { title: "Inbox",              sub: "All your conversations" },
   "mock":       { title: "NECO / JAMB Mock",   sub: "Pick subjects and sit a UTME-style timed mock" },
   "practice":   { title: "Practice Mode",      sub: "Study from your library — no timer, no score" },
+  "ai-marking":  { title: "AI Essay Marking",   sub: "Upload essays and let AI draft rubric-based feedback" },
+  "parent-alerts":{ title: "Parent Risk Alerts", sub: "AI-drafted alerts for attendance, grades, and fees" },
+  "copilot":     { title: "Principal Copilot",  sub: "Ask anything about your school — backed by live data" },
+  "knowledge":   { title: "Knowledge Base",     sub: "Curate documents the AI can reason over" },
+  "ai-activity": { title: "AI Activity",        sub: "Usage, latency, and spend by feature" },
+  "ai-settings": { title: "AI Settings",        sub: "Budgets and feature toggles for AI" },
 };
 
 export default function AppLayout() {
