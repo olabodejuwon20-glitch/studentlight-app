@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, MessagesSquare, Search, ArrowLeft } from "lucide-react";
+import { MessagesSquare, Search, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Composer } from "@/components/tutor/Composer";
+import { AttachmentView } from "@/components/tutor/MessageBubble";
+import { Attachment } from "@/lib/uploads";
 
 /** Messaging UI — peer list (school members) + thread view + composer. Wired to messages table. */
 export function MessagesPanel() {
@@ -47,11 +49,17 @@ export function MessagesPanel() {
   }, [active, user, school]);
 
   async function send() {
-    if (!text.trim() || !active || !user || !school) return;
-    const body = text.trim();
-    setText("");
-    const { error } = await supabase.from("messages").insert({ school_id: school.id, sender_id: user.id, recipient_id: active.user_id, body });
-    if (error) { toast.error(error.message); setText(body); }
+    // legacy stub — composer handles sending now
+  }
+
+  async function sendComposer(body: string, attachments: Attachment[]) {
+    if (!active || !user || !school) return;
+    if (!body.trim() && !attachments.length) return;
+    const { error } = await supabase.from("messages").insert({
+      school_id: school.id, sender_id: user.id, recipient_id: active.user_id,
+      body: body || "(attachment)", attachments: attachments as any,
+    });
+    if (error) toast.error(error.message);
   }
 
   const filtered = peers.filter(p => !filter || (p.profile?.full_name || p.profile?.email || "").toLowerCase().includes(filter.toLowerCase()));
@@ -93,17 +101,32 @@ export function MessagesPanel() {
           <>
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               {thread.length === 0 ? <div className="text-sm text-muted-foreground text-center py-10">Say hi 👋</div> :
-                thread.map(m => (
-                  <div key={m.id} className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.sender_id === user!.id ? "ml-auto bg-primary text-primary-foreground" : "bg-muted"}`}>
-                    {m.body}
-                    <div className="text-[10px] opacity-70 mt-0.5">{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
-                  </div>
-                ))}
+                thread.map(m => {
+                  const mine = m.sender_id === user!.id;
+                  const atts = (m.attachments as Attachment[]) ?? [];
+                  return (
+                    <div key={m.id} className={`max-w-[80%] ${mine ? "ml-auto" : ""} space-y-1.5`}>
+                      {atts.map((a, i) => <AttachmentView key={i} a={a} mine={mine} />)}
+                      {m.body && m.body !== "(attachment)" && (
+                        <div className={`rounded-lg px-3 py-2 text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                          {m.body}
+                          <div className="text-[10px] opacity-70 mt-0.5">{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               <div ref={endRef} />
             </div>
-            <div className="mt-3 flex gap-2">
-              <Input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} placeholder="Type a message…" />
-              <Button onClick={send}><Send className="size-4" /></Button>
+            <div className="-mx-4 -mb-4">
+              <Composer
+                bucket="message-attachments"
+                userId={user!.id}
+                prefix={`dm-${active.user_id}`}
+                placeholder="Type a message…"
+                transcribeVoice={false}
+                onSubmit={sendComposer}
+              />
             </div>
           </>}
       </SectionCard>
