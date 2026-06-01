@@ -181,6 +181,15 @@ Mastery + topic_mastery ► Adaptive practice, Learning paths, Predictions, Benc
 Approval ledger ────────► Mediator, Invigilator review, Eval harness training data
 ```
 
+---
+
+## Progress log
+
+- ✅ Phase 1 complete (F1 helper, F2 ledger, F3 mastery, lesson planner, marking, parent alerts, admin AI panel, mastery-aware tutor).
+- ✅ Phase 2.1 RAG foundation: `vector` extension, `knowledge_documents`, `knowledge_chunks` (HNSW), `match_knowledge_chunks` RPC, shared `embed.ts` helper, `ingest-knowledge` + `rag-search` edge functions, admin Knowledge page.
+- ✅ Phase 2.2 Principal Copilot v1: agentic loop with 10 typed tools (students_at_risk, fee_collection_rate, attendance_summary, top_weak_topics, teachers_missing_results, assessment_coverage, compare_classes, list_pending_approvals, knowledge_search, draft_parent_message), admin Copilot chat UI at `admin/copilot` with citation trace.
+- ⏭ Next: 2.3 adaptive practice booster page, 2.4 bulk report-card comments, 2.5 automation rule builder UI, 2.6 Co-Teacher slash commands (`/notes`, `/policy`, `/curriculum`).
+
 ## Risks & guardrails (apply to every phase)
 
 - **RLS is the only boundary.** No new feature merges without RLS proof.
