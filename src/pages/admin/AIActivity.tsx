@@ -100,7 +100,7 @@ export default function AIActivity() {
         <StatCard label="Calls (last 200)" value={String(totals.count)} icon={Activity} />
         <StatCard label="Total tokens" value={totals.tokens.toLocaleString()} icon={Zap} tone="info" />
         <StatCard label="Total cost" value={`$${totals.cost.toFixed(4)}`} icon={DollarSign} tone="success" />
-        <StatCard label="Avg latency" value={`${totals.count ? Math.round(totals.latency / totals.count) : 0} ms`} icon={Clock} sub={`${totals.errors} errors`} tone={totals.errors ? "danger" : "info"} />
+        <StatCard label="Avg latency" value={`${totals.count ? Math.round(totals.latency / totals.count) : 0} ms`} icon={Clock} sub={`${totals.errors} errors`} tone={totals.errors ? "warning" : "info"} />
       </div>
 
       <SectionCard title="Spend by feature" description="Where your AI budget is going.">
