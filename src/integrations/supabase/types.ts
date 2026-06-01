@@ -1743,6 +1743,65 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_plans: {
+        Row: {
+          ai_job_id: string | null
+          class_id: string | null
+          content: string
+          created_at: string
+          curriculum: string | null
+          duration_minutes: number
+          grade_level: string | null
+          id: string
+          school_id: string
+          status: string
+          subject: string
+          teacher_id: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          ai_job_id?: string | null
+          class_id?: string | null
+          content: string
+          created_at?: string
+          curriculum?: string | null
+          duration_minutes?: number
+          grade_level?: string | null
+          id?: string
+          school_id: string
+          status?: string
+          subject: string
+          teacher_id: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          ai_job_id?: string | null
+          class_id?: string | null
+          content?: string
+          created_at?: string
+          curriculum?: string | null
+          duration_minutes?: number
+          grade_level?: string | null
+          id?: string
+          school_id?: string
+          status?: string
+          subject?: string
+          teacher_id?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_plans_ai_job_id_fkey"
+            columns: ["ai_job_id"]
+            isOneToOne: false
+            referencedRelation: "ai_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       library_files: {
         Row: {
           category: string | null
