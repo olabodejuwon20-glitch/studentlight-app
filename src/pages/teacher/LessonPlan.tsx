@@ -1,107 +1,371 @@
-import { useEffect, useState } from "react";
-import { BookOpen, Save, Loader2, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {
+  Sparkles, Loader2, Save, Trash2, BookOpen, Send, FileText, Wand2, Pencil,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
-import { SectionCard } from "@/components/dashboard/SectionCard";
-import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { SectionCard } from "@/components/dashboard/SectionCard";
+import { EmptyState } from "@/components/EmptyState";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
-type Plan = { title: string; subject: string; class: string; date: string; duration: string; objectives: string; materials: string; activities: string; assessment: string; homework: string };
-const EMPTY: Plan = { title: "", subject: "", class: "", date: "", duration: "", objectives: "", materials: "", activities: "", assessment: "", homework: "" };
+interface Plan {
+  id: string;
+  subject: string;
+  topic: string;
+  grade_level: string | null;
+  curriculum: string | null;
+  duration_minutes: number;
+  content: string;
+  status: "draft" | "approved" | "shared" | "archived";
+  class_id: string | null;
+  updated_at: string;
+}
 
-/** Lesson plans are stored as ai_chats with role='lesson_plan' and JSON content. */
+const CURRICULA = ["WAEC", "NECO", "JAMB", "NERDC"];
+
 export default function TeacherLessonPlan() {
   const { school, user } = useSchool();
-  const [plans, setPlans] = useState<any[]>([]);
-  const [form, setForm] = useState<Plan>(EMPTY);
-  const [busy, setBusy] = useState(false);
+  const [classes, setClasses] = useState<{ id: string; name: string; subject: string | null; grade_level: string | null }[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [draft, setDraft] = useState({
+    subject: "", topic: "", grade_level: "SS2", duration_minutes: 40,
+    curriculum: "WAEC", class_id: "", notes: "",
+  });
+  const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const load = async () => {
+  const active = useMemo(() => plans.find(p => p.id === activeId) ?? null, [plans, activeId]);
+
+  useEffect(() => {
     if (!school || !user) return;
-    const { data } = await supabase.from("ai_chats").select("*").eq("school_id", school.id).eq("user_id", user.id).eq("role", "lesson_plan").order("created_at", { ascending: false });
-    setPlans(data ?? []);
-  };
-  useEffect(() => { load(); }, [school, user]);
+    (async () => {
+      const [{ data: cls }, { data: lp }] = await Promise.all([
+        supabase.from("classes").select("id,name,subject,grade_level")
+          .eq("school_id", school.id).order("name"),
+        supabase.from("lesson_plans").select("*")
+          .eq("teacher_id", user.id).order("updated_at", { ascending: false }).limit(60),
+      ]);
+      setClasses(cls ?? []);
+      setPlans((lp ?? []) as Plan[]);
+      if (!activeId && lp && lp.length) setActiveId(lp[0].id);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [school, user]);
 
-  function parse(content: string): Plan | null {
-    try { const j = JSON.parse(content); return typeof j === "object" && j ? j : null; } catch { return null; }
+  function onPickClass(id: string) {
+    setDraft(d => ({ ...d, class_id: id }));
+    const c = classes.find(x => x.id === id);
+    if (c) {
+      setDraft(d => ({
+        ...d,
+        class_id: id,
+        subject: c.subject || d.subject,
+        grade_level: c.grade_level || d.grade_level,
+      }));
+    }
   }
 
-  async function add() {
-    if (!form.title.trim() || !school || !user) return toast.error("Title is required");
-    setBusy(true);
-    const { error } = await supabase.from("ai_chats").insert({ school_id: school.id, user_id: user.id, role: "lesson_plan", content: JSON.stringify(form) });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    setForm(EMPTY); toast.success("Lesson plan saved"); await load();
+  async function generate() {
+    if (!school || !user) return;
+    if (!draft.subject || !draft.topic) {
+      toast.error("Subject and topic are required");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-lesson-plan", {
+        body: {
+          school_id: school.id,
+          subject: draft.subject,
+          topic: draft.topic,
+          grade_level: draft.grade_level,
+          duration_minutes: Number(draft.duration_minutes) || 40,
+          curriculum: draft.curriculum,
+          class_id: draft.class_id || null,
+          notes: draft.notes,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const plan = data?.plan as Plan;
+      setPlans(ps => [plan, ...ps]);
+      setActiveId(plan.id);
+      toast.success("Lesson plan drafted by AI — review & approve");
+    } catch (e: any) {
+      toast.error(e?.message || "Generation failed");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function saveActive(patch: Partial<Plan>) {
+    if (!active) return;
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.from("lesson_plans")
+        .update(patch)
+        .eq("id", active.id)
+        .select().single();
+      if (error) throw error;
+      setPlans(ps => ps.map(p => p.id === active.id ? (data as Plan) : p));
+      toast.success("Saved");
+    } catch (e: any) {
+      toast.error(e?.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function remove(id: string) {
-    await supabase.from("ai_chats").delete().eq("id", id);
-    await load();
+    if (!confirm("Delete this lesson plan?")) return;
+    const { error } = await supabase.from("lesson_plans").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    setPlans(ps => ps.filter(p => p.id !== id));
+    if (activeId === id) setActiveId(null);
   }
 
-  const set = (k: keyof Plan) => (e: any) => setForm({ ...form, [k]: e.target.value });
+  async function convertToAssessment() {
+    if (!active || !school || !user) return;
+    toast.info("Generating assessment from this lesson…");
+    try {
+      // 1) create a parent assessment record
+      const { data: assessment, error: aerr } = await supabase.from("assessments").insert({
+        school_id: school.id,
+        created_by: user.id,
+        title: `${active.topic} — quick check`,
+        type: "class_test",
+        subject: active.subject,
+        config: { duration_minutes: 20 },
+        status: "draft",
+      }).select().single();
+      if (aerr) throw aerr;
+      // 2) ask question generator to populate it
+      const { error: gerr } = await supabase.functions.invoke("generate-questions", {
+        body: {
+          assessment_id: assessment.id,
+          subject: active.subject,
+          topic: active.topic,
+          grade_level: active.grade_level || "SS2",
+          curriculum: active.curriculum || "WAEC",
+          count: 10,
+          difficulty: "mixed",
+        },
+      });
+      if (gerr) throw gerr;
+      toast.success("Assessment created — review questions in Assessments");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to create assessment");
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <SectionCard title="New lesson plan" description="Structure your next class">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div className="space-y-1"><Label className="text-xs">Title</Label><Input value={form.title} onChange={set("title")} placeholder="Photosynthesis intro" /></div>
-          <div className="space-y-1"><Label className="text-xs">Subject</Label><Input value={form.subject} onChange={set("subject")} placeholder="Biology" /></div>
-          <div className="space-y-1"><Label className="text-xs">Class</Label><Input value={form.class} onChange={set("class")} placeholder="JSS 2" /></div>
-          <div className="space-y-1"><Label className="text-xs">Date</Label><Input type="date" value={form.date} onChange={set("date")} /></div>
-          <div className="space-y-1"><Label className="text-xs">Duration (min)</Label><Input type="number" value={form.duration} onChange={set("duration")} placeholder="40" /></div>
-        </div>
-        <div className="grid lg:grid-cols-2 gap-3 mt-3">
-          <div className="space-y-1"><Label className="text-xs">Objectives</Label><Textarea rows={3} value={form.objectives} onChange={set("objectives")} placeholder="By the end of the lesson, students will…" /></div>
-          <div className="space-y-1"><Label className="text-xs">Materials</Label><Textarea rows={3} value={form.materials} onChange={set("materials")} placeholder="Charts, slides, lab kits…" /></div>
-          <div className="space-y-1"><Label className="text-xs">Activities</Label><Textarea rows={4} value={form.activities} onChange={set("activities")} placeholder="Step-by-step lesson flow" /></div>
-          <div className="space-y-1"><Label className="text-xs">Assessment</Label><Textarea rows={4} value={form.assessment} onChange={set("assessment")} placeholder="How learning will be checked" /></div>
-          <div className="space-y-1 lg:col-span-2"><Label className="text-xs">Homework</Label><Textarea rows={2} value={form.homework} onChange={set("homework")} placeholder="Optional follow-up tasks" /></div>
-        </div>
-        <div className="mt-3 flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setForm(EMPTY)}>Clear</Button>
-          <Button onClick={add} disabled={busy}>{busy ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Save className="size-4 mr-2" />}Save plan</Button>
-        </div>
-      </SectionCard>
+    <div className="grid lg:grid-cols-[320px,1fr] gap-6">
+      {/* Left: drafts list + generator */}
+      <div className="space-y-4">
+        <SectionCard
+          title="New AI lesson plan"
+          subtitle="Tell the AI what to draft — review and approve before sharing"
+          icon={Wand2}
+        >
+          <div className="space-y-3">
+            {classes.length > 0 && (
+              <div>
+                <Label className="text-xs">Class (optional)</Label>
+                <Select value={draft.class_id} onValueChange={onPickClass}>
+                  <SelectTrigger><SelectValue placeholder="Pick a class" /></SelectTrigger>
+                  <SelectContent>
+                    {classes.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name} {c.subject ? `· ${c.subject}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Subject</Label>
+                <Input value={draft.subject}
+                  onChange={e => setDraft(d => ({ ...d, subject: e.target.value }))}
+                  placeholder="Biology" />
+              </div>
+              <div>
+                <Label className="text-xs">Class</Label>
+                <Input value={draft.grade_level}
+                  onChange={e => setDraft(d => ({ ...d, grade_level: e.target.value }))}
+                  placeholder="SS2" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Topic</Label>
+              <Input value={draft.topic}
+                onChange={e => setDraft(d => ({ ...d, topic: e.target.value }))}
+                placeholder="e.g. Photosynthesis" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Minutes</Label>
+                <Input type="number" min={15} max={180} value={draft.duration_minutes}
+                  onChange={e => setDraft(d => ({ ...d, duration_minutes: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <Label className="text-xs">Curriculum</Label>
+                <Select value={draft.curriculum}
+                  onValueChange={v => setDraft(d => ({ ...d, curriculum: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CURRICULA.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Notes for the AI (optional)</Label>
+              <Textarea rows={2} value={draft.notes}
+                onChange={e => setDraft(d => ({ ...d, notes: e.target.value }))}
+                placeholder="Focus on practical applications…" />
+            </div>
+            <Button className="w-full gap-2" onClick={generate} disabled={generating}>
+              {generating ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+              {generating ? "Drafting…" : "Generate with AI"}
+            </Button>
+          </div>
+        </SectionCard>
 
-      <SectionCard title="My lesson plans" description={`${plans.length} saved`}>
-        {plans.length === 0 ? <EmptyState icon={BookOpen} title="No lesson plans yet" /> :
-          <ul className="space-y-3">{plans.map(p => {
-            const j = parse(p.content);
-            return (
-              <li key={p.id} className="rounded-lg border border-border p-4 bg-card">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="font-semibold">{j?.title || "Lesson plan"}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {[j?.subject, j?.class, j?.date && new Date(j.date).toLocaleDateString(), j?.duration && `${j.duration} min`].filter(Boolean).join(" · ") || new Date(p.created_at).toLocaleString()}
+        <SectionCard title="Your plans" icon={BookOpen}>
+          {plans.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No plans yet — generate one above.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {plans.map(p => (
+                <li key={p.id}>
+                  <button
+                    onClick={() => setActiveId(p.id)}
+                    className={cn(
+                      "w-full text-left rounded-lg border border-border bg-background hover:bg-secondary/60 px-3 py-2 transition-colors",
+                      activeId === p.id && "ring-2 ring-primary border-primary"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FileText className="size-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-medium truncate flex-1">{p.topic}</span>
+                      <StatusBadge status={p.status} />
                     </div>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={() => remove(p.id)}><Trash2 className="size-4 text-destructive" /></Button>
-                </div>
-                {j ? (
-                  <div className="mt-3 grid sm:grid-cols-2 gap-3 text-sm">
-                    {j.objectives && <Field label="Objectives" v={j.objectives} />}
-                    {j.materials && <Field label="Materials" v={j.materials} />}
-                    {j.activities && <Field label="Activities" v={j.activities} />}
-                    {j.assessment && <Field label="Assessment" v={j.assessment} />}
-                    {j.homework && <Field label="Homework" v={j.homework} />}
-                  </div>
-                ) : <div className="mt-2 text-sm whitespace-pre-wrap">{p.content}</div>}
-              </li>
-            );
-          })}</ul>}
-      </SectionCard>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {p.subject} · {p.grade_level || "—"} · {p.duration_minutes}m
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
+      </div>
+
+      {/* Right: preview + edit */}
+      <div>
+        {!active ? (
+          <EmptyState
+            icon={BookOpen}
+            title="No lesson plan selected"
+            description="Pick a plan on the left or draft a new one with AI."
+          />
+        ) : (
+          <SectionCard
+            title={active.topic}
+            subtitle={`${active.subject} · ${active.grade_level || "—"} · ${active.duration_minutes} min · ${active.curriculum || "—"}`}
+            icon={BookOpen}
+            right={
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge status={active.status} />
+                {active.status === "draft" && (
+                  <Button size="sm" variant="outline" onClick={() => saveActive({ status: "approved" })}>
+                    Approve
+                  </Button>
+                )}
+                {active.status === "approved" && (
+                  <Button size="sm" variant="outline" onClick={() => saveActive({ status: "shared" })}>
+                    <Send className="size-3.5 mr-1.5" /> Mark shared
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" onClick={convertToAssessment}>
+                  <Wand2 className="size-3.5 mr-1.5" /> Convert to assessment
+                </Button>
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(active.id)}>
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
+            }
+          >
+            <EditableContent
+              key={active.id}
+              initial={active.content}
+              saving={saving}
+              onSave={(content) => saveActive({ content })}
+            />
+          </SectionCard>
+        )}
+      </div>
     </div>
   );
 }
 
-function Field({ label, v }: { label: string; v: string }) {
-  return <div><div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-0.5">{label}</div><div className="whitespace-pre-wrap">{v}</div></div>;
+function StatusBadge({ status }: { status: string }) {
+  const variant: "default" | "secondary" | "outline" =
+    status === "approved" ? "default"
+    : status === "shared" ? "secondary"
+    : "outline";
+  return <Badge variant={variant} className="capitalize">{status}</Badge>;
+}
+
+function EditableContent({ initial, saving, onSave }: {
+  initial: string; saving: boolean; onSave: (s: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(initial);
+  useEffect(() => { setDraft(initial); setEditing(false); }, [initial]);
+
+  if (editing) {
+    return (
+      <div className="space-y-3">
+        <Textarea rows={28} value={draft}
+          onChange={e => setDraft(e.target.value)}
+          className="font-mono text-xs" />
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => { onSave(draft); setEditing(false); }} disabled={saving}>
+            {saving ? <Loader2 className="size-3.5 mr-1.5 animate-spin" /> : <Save className="size-3.5 mr-1.5" />}
+            Save
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => { setDraft(initial); setEditing(false); }}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{initial}</ReactMarkdown>
+      </div>
+      <div className="mt-3">
+        <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+          <Pencil className="size-3.5 mr-1.5" /> Edit
+        </Button>
+      </div>
+    </div>
+  );
 }
