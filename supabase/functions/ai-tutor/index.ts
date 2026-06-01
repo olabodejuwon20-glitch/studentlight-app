@@ -10,7 +10,8 @@ const STUDENT_SYS = `You are Legacy Tutor — a warm, sharp study companion for 
 - Use short paragraphs, bullet points, and LaTeX-style math when helpful.
 - Encourage active recall: end answers with a quick check-question when natural.
 - If the student attaches an image, read it carefully before answering.
-- Be concise unless asked for depth.`;
+- Be concise unless asked for depth.
+- When the student's curriculum context (subjects, grade level, recent topics) is provided in a system note, tailor examples and vocabulary to it. Reference the syllabus they actually study.`;
 
 const TEACHER_SYS = `You are Legacy Co-Teacher — an assistant for educators.
 Help with lesson plans, scheme of work, rubrics, exam-question generation, marking guides,
@@ -19,6 +20,77 @@ Always structure outputs (headings, bullets) so the teacher can paste them into 
 
 function sysFor(role: string | undefined) {
   return role === "teacher" ? TEACHER_SYS : STUDENT_SYS;
+}
+
+// Pulls a light-weight curriculum snapshot for a student.
+async function loadStudentContext(admin: any, user_id: string, school_id: string) {
+  const [{ data: enrollments }, { data: recentResults }, { data: recentAR }, { data: upcomingExams }] = await Promise.all([
+    admin.from("class_enrollments")
+      .select("classes(name, subject, grade_level)")
+      .eq("student_id", user_id).eq("school_id", school_id),
+    admin.from("results")
+      .select("subject, score, grade, term, created_at")
+      .eq("student_id", user_id).eq("school_id", school_id)
+      .order("created_at", { ascending: false }).limit(20),
+    admin.from("assessment_results")
+      .select("per_topic, score, created_at")
+      .eq("student_id", user_id)
+      .order("created_at", { ascending: false }).limit(5),
+    admin.from("exams")
+      .select("title, subject, scheduled_at")
+      .eq("school_id", school_id).not("scheduled_at", "is", null)
+      .gte("scheduled_at", new Date().toISOString())
+      .lte("scheduled_at", new Date(Date.now() + 14 * 86400e3).toISOString())
+      .order("scheduled_at").limit(10),
+  ]);
+
+  const subjects = Array.from(new Set(
+    (enrollments ?? []).map((e: any) => e.classes?.subject).filter(Boolean)
+  ));
+  const level = (enrollments ?? []).map((e: any) => e.classes?.grade_level).filter(Boolean)[0] ?? null;
+
+  // Weak topics from per_topic JSON across last attempts
+  const topicAgg: Record<string, { correct: number; total: number }> = {};
+  for (const ar of recentAR ?? []) {
+    const pt = (ar as any).per_topic;
+    if (!pt || typeof pt !== "object") continue;
+    for (const [topic, v] of Object.entries(pt)) {
+      const vv = v as any;
+      const c = Number(vv?.correct ?? 0);
+      const t = Number(vv?.total ?? 0);
+      if (!t) continue;
+      topicAgg[topic] = topicAgg[topic] ?? { correct: 0, total: 0 };
+      topicAgg[topic].correct += c;
+      topicAgg[topic].total += t;
+    }
+  }
+  const weakTopics = Object.entries(topicAgg)
+    .map(([topic, a]) => ({ topic, mastery: a.total ? a.correct / a.total : 0, total: a.total }))
+    .filter(t => t.total >= 2)
+    .sort((a, b) => a.mastery - b.mastery)
+    .slice(0, 6);
+
+  return {
+    subjects,
+    level,
+    weakTopics,
+    recentResults: (recentResults ?? []).slice(0, 10),
+    upcomingExams: upcomingExams ?? [],
+  };
+}
+
+function contextNote(ctx: Awaited<ReturnType<typeof loadStudentContext>>) {
+  if (!ctx.subjects.length && !ctx.weakTopics.length) return "";
+  const parts: string[] = [];
+  if (ctx.level) parts.push(`Grade level: ${ctx.level}`);
+  if (ctx.subjects.length) parts.push(`Subjects: ${ctx.subjects.join(", ")}`);
+  if (ctx.weakTopics.length) {
+    parts.push(`Weak topics (mastery): ${ctx.weakTopics.map(t => `${t.topic} ${Math.round(t.mastery * 100)}%`).join("; ")}`);
+  }
+  if (ctx.upcomingExams.length) {
+    parts.push(`Upcoming exams: ${ctx.upcomingExams.map((e: any) => `${e.title} (${e.subject}, ${new Date(e.scheduled_at).toDateString()})`).join("; ")}`);
+  }
+  return `Student context — ${parts.join(" | ")}`;
 }
 
 async function callGateway(body: any, stream = false) {
@@ -130,14 +202,46 @@ Deno.serve(async (req) => {
           .order("scheduled_at").limit(10);
         injected = `Subjects: ${(enrollments ?? []).map((e: any) => e.classes?.subject || e.classes?.name).filter(Boolean).join(", ") || "none"}.\n` +
           `Upcoming exams: ${(exams ?? []).map((e: any) => `${e.title} (${e.subject}, ${new Date(e.scheduled_at).toDateString()})`).join("; ") || "none"}.`;
+      } else if (skill === "recommend") {
+        const ctx = await loadStudentContext(admin, user.id, school_id);
+        injected = contextNote(ctx) || "No curriculum data on record yet.";
       }
 
       const prompts: Record<string, string> = {
-        quiz: `Generate a 5-question multiple-choice quiz on: ${skill_input.topic || message || "general study"}.
-Render each as: question, then **A) B) C) D)** options, then on a new line "Answer: X — short explanation". Number 1–5.`,
+        quiz: `Generate a ${skill_input.count || 5}-question multiple-choice quiz on: ${skill_input.topic || message || "general study"}.
+Difficulty: ${skill_input.difficulty || "mixed"}. Reading level: ${skill_input.level || "age-appropriate"}.
+Render each as: question, then **A) B) C) D)** options, then on a new line "Answer: X — short explanation". Number 1–${skill_input.count || 5}.`,
         summarize: `Summarize the attached note into: (1) a 5-bullet summary, (2) 5 flashcards (Q → A). Use clear headings.`,
         explain_exam: `Walk the student through their wrong answers below. For each: state the right answer, explain why, then one tip to avoid the mistake.\n\n${injected}`,
         plan_week: `Build a Mon–Sun study schedule (2 focused 45-min sessions/day) using this context:\n${injected}\nFormat as a markdown table: Day | Morning | Evening.`,
+        explain_steps: `Teach this step-by-step at a ${skill_input.level || "clear, age-appropriate"} level: "${skill_input.topic || message || "the concept above"}".
+Use this exact structure with markdown headings:
+### Goal
+One sentence on what the student will be able to do.
+### Key idea
+The core concept in 2–3 sentences with an analogy.
+### Step-by-step
+Numbered steps (1, 2, 3 …). Each step: what to do, why it works, and one tiny example.
+### Worked example
+A complete worked problem showing every step.
+### Your turn
+One short check-question for the student to attempt (do not reveal the answer).
+### Common mistake
+One sentence on the pitfall to avoid.`,
+        recommend: `You are advising a student on what to study next. Use ONLY the curriculum data below — do not invent subjects or scores.
+${injected}
+
+Respond with:
+### Top 3 priorities
+For each: **Topic** — one line on *why* (cite the data, e.g. "mastery 40% on 2 attempts", "exam in 5 days"), then a single concrete next action chosen from:
+- "Take a 10-question booster" (mention the topic so they can tap Quiz me)
+- "Walk through it step-by-step"
+- "Review your last exam mistakes"
+
+### This week's focus
+One short paragraph tying the priorities to upcoming exams or weak subjects.
+
+Keep it under 200 words. Be specific and encouraging.`,
       };
 
       const skillMsgs = [
@@ -164,6 +268,15 @@ Render each as: question, then **A) B) C) D)** options, then on a new line "Answ
     }
 
     // ---------- DEFAULT CHAT (streaming) ----------
+    // Lightweight curriculum context for students (so free-form chat stays relevant).
+    let ctxNote = "";
+    if (portalRole === "student") {
+      try {
+        const ctx = await loadStudentContext(admin, user.id, school_id);
+        ctxNote = contextNote(ctx);
+      } catch (e) { console.warn("[ai-tutor] context load failed", e); }
+    }
+
     // Load conversation history
     const { data: history } = await admin
       .from("ai_chats")
@@ -173,6 +286,7 @@ Render each as: question, then **A) B) C) D)** options, then on a new line "Answ
       .limit(60);
 
     const msgs: any[] = [{ role: "system", content: sysFor(portalRole) }];
+    if (ctxNote) msgs.push({ role: "system", content: ctxNote });
     for (const h of history ?? []) {
       msgs.push({ role: h.role, content: buildUserContent(h.content, h.attachments as any[]) });
     }
