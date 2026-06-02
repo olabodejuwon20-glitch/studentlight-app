@@ -248,6 +248,9 @@ export default function AppLayout() {
     if (!grouped.has(key)) grouped.set(key, [] as any);
     (grouped.get(key) as any).push(it);
   });
+  // Apply deterministic ordering inside the AI section so every portal lists
+  // AI tools in the same sequence.
+  if (grouped.has("AI")) grouped.set("AI", sortAI(grouped.get("AI") as any) as any);
   const orderedSections = [
     ...SECTION_ORDER.filter(s => grouped.has(s)),
     ...Array.from(grouped.keys()).filter(s => !SECTION_ORDER.includes(s)),
