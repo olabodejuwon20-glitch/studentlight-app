@@ -1,10 +1,9 @@
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { Copy, Check, Volume2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Attachment, bytesToHuman } from "@/lib/uploads";
 import { Button } from "@/components/ui/button";
+import { AIMarkdown } from "@/components/ai/AIMarkdown";
 
 interface Props {
   role: "user" | "assistant";
@@ -24,11 +23,11 @@ export function MessageBubble({ role, content, attachments, streaming, actions }
 
   if (role === "user") {
     return (
-      <div className="flex justify-end px-4 group">
-        <div className="max-w-[85%] sm:max-w-[75%] space-y-2">
+      <div className="flex justify-end px-3 sm:px-4 group">
+        <div className="max-w-[88%] sm:max-w-[75%] space-y-2">
           {attachments?.map((a, i) => <AttachmentView key={i} a={a} mine />)}
           {content && (
-            <div className="rounded-2xl rounded-tr-md bg-primary text-primary-foreground px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed">
+            <div className="rounded-2xl rounded-tr-md bg-primary text-primary-foreground px-3.5 py-2.5 text-[14px] sm:text-sm whitespace-pre-wrap leading-relaxed break-words">
               {content}
             </div>
           )}
@@ -38,19 +37,19 @@ export function MessageBubble({ role, content, attachments, streaming, actions }
   }
 
   return (
-    <div className="px-4 group">
-      <div className="max-w-full sm:max-w-[90%]">
-        <div className="prose prose-sm dark:prose-invert max-w-none break-words prose-pre:bg-secondary prose-pre:text-foreground prose-code:before:hidden prose-code:after:hidden prose-code:bg-secondary prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[13px]">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {content || (streaming ? "" : "…")}
-          </ReactMarkdown>
+    <div className="px-3 sm:px-4 group">
+      <div className="flex gap-2.5 sm:gap-3 max-w-full">
+        <div className="hidden sm:grid size-7 shrink-0 rounded-full bg-primary/10 place-items-center mt-0.5">
+          <span className="text-[10px] font-bold text-primary">AI</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <AIMarkdown content={content || (streaming ? "" : "…")} compact />
           {streaming && (
             <span className="inline-block w-1.5 h-4 bg-foreground/70 align-middle ml-0.5 animate-pulse" />
           )}
-        </div>
         {!streaming && content && (
-          <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1.5" onClick={copy}>
+          <div className="mt-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1.5 px-2" onClick={copy}>
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               {copied ? "Copied" : "Copy"}
             </Button>
@@ -68,6 +67,7 @@ export function MessageBubble({ role, content, attachments, streaming, actions }
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
