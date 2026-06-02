@@ -193,11 +193,13 @@ export async function aiCall(opts: AiCallOptions): Promise<AiCallResult> {
       }).eq("id", jobId);
     }
     // Best-effort quota bump
-    await admin().rpc("bump_ai_quota", {
-      _school_id: opts.schoolId,
-      _tokens: usage.total,
-      _cost: costUsd,
-    }).catch(() => {});
+    try {
+      await admin().rpc("bump_ai_quota", {
+        _school_id: opts.schoolId,
+        _tokens: usage.total,
+        _cost: costUsd,
+      });
+    } catch (_) { /* ignore */ }
 
     return { reply, toolCalls, raw: data, jobId, usage, costUsd, model };
   } catch (e: any) {
