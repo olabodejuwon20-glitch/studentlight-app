@@ -20,6 +20,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/comms/NotificationBell";
+import { RealtimeNotifier } from "@/components/comms/RealtimeNotifier";
 import { OnboardingGate } from "@/components/admin/OnboardingGate";
 import { HelpCircle } from "lucide-react";
 
@@ -260,6 +261,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen flex bg-background">
+      <RealtimeNotifier />
       <aside className={cn(
         "fixed lg:sticky lg:top-0 lg:h-screen lg:self-start inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
         collapsed ? "w-[76px]" : "w-[260px]",
