@@ -66,6 +66,23 @@ function sectionFor(to: string) {
   return SECTION_OF[to] ?? "More";
 }
 
+// Consistent ordering for items inside the AI section across every role.
+const AI_ORDER = [
+  "copilot",       // admin: principal copilot
+  "ai-tutor",      // student: tutor / teacher: co-teacher
+  "ai-marking",    // teacher: AI essay/test marking
+  "parent-alerts", // admin: AI parent risk alerts
+  "knowledge",     // admin: RAG knowledge base
+  "ai-activity",   // admin: AI usage / activity
+  "ai-settings",   // admin: AI governance settings
+];
+function sortAI<T extends { to: string }>(arr: T[]) {
+  return [...arr].sort((a, b) => {
+    const ai = AI_ORDER.indexOf(a.to); const bi = AI_ORDER.indexOf(b.to);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+}
+
 const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
   admin: [
     { label: "Dashboard", to: "",          icon: LayoutDashboard },
