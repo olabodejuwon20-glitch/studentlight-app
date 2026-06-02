@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Sparkles, Loader2, RefreshCw } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AIMarkdown } from "@/components/ai/AIMarkdown";
 
 export function ParentWeeklyDigest({ schoolId, studentId, studentName }: {
   schoolId: string; studentId: string; studentName?: string;
@@ -56,9 +56,9 @@ export function ParentWeeklyDigest({ schoolId, studentId, studentName }: {
         </div>
       )}
       {digest && (
-        <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-display prose-headings:mt-3 prose-headings:mb-1 prose-p:my-1 prose-ul:my-1">
-          <ReactMarkdown>{digest}</ReactMarkdown>
-          <p className="text-[11px] text-muted-foreground not-prose mt-3">AI-generated from your child's records. Verify with the school for anything important.</p>
+        <div>
+          <AIMarkdown content={digest} compact />
+          <p className="text-[11px] text-muted-foreground mt-3">AI-generated from your child's records. Verify with the school for anything important.</p>
         </div>
       )}
     </SectionCard>
