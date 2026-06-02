@@ -19,11 +19,13 @@ interface Props {
   accept?: string;
   /** Whether to transcribe voice notes server-side and attach the transcript. */
   transcribeVoice?: boolean;
+  /** Notifies the parent when the user is composing — used for typing indicators. */
+  onTextChange?: (text: string) => void;
 }
 
 export function Composer({
   bucket, userId, prefix, disabled, busy, placeholder = "Message…",
-  onSubmit, onStop, accept = "image/*,application/pdf,.txt,.md,.docx", transcribeVoice = true,
+  onSubmit, onStop, accept = "image/*,application/pdf,.txt,.md,.docx", transcribeVoice = true, onTextChange,
 }: Props) {
   const [text, setText] = useState("");
   const [pending, setPending] = useState<Attachment[]>([]);
@@ -151,7 +153,7 @@ export function Composer({
             <input ref={fileRef} type="file" accept={accept} multiple hidden onChange={onPickFiles} />
             <Textarea
               value={text}
-              onChange={e => setText(e.target.value)}
+              onChange={e => { setText(e.target.value); onTextChange?.(e.target.value); }}
               onKeyDown={onKey}
               placeholder={placeholder}
               disabled={disabled}
