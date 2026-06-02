@@ -377,6 +377,17 @@ export default function AppLayout() {
           </OnboardingGate>
         </main>
       </div>
+
+      {activeRole === "admin" && (
+        <NavLink
+          to={schoolPath(school.slug, `/app/admin/copilot`)}
+          title="Ask Principal Copilot"
+          className="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full pl-4 pr-5 py-3 shadow-lg bg-primary text-primary-foreground hover:opacity-90 transition-all hover:scale-105"
+        >
+          <Brain className="size-5" />
+          <span className="hidden sm:inline text-sm font-semibold">Ask Copilot</span>
+        </NavLink>
+      )}
     </div>
   );
 }
