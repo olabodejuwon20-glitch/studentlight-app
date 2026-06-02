@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { Sparkles, Send, Loader2, Wrench } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { AIMarkdown } from "@/components/ai/AIMarkdown";
 
 type Msg = { role: "user" | "assistant"; content: string; trace?: any[] };
 
@@ -59,7 +59,7 @@ export default function Copilot() {
       description="Ask anything about your school — attendance, fees, results, weak topics, approvals."
       action={<Badge variant="secondary" className="gap-1"><Sparkles className="size-3" /> Run as Principal</Badge>}
     >
-      <div ref={scrollRef} className="h-[55vh] overflow-y-auto rounded-lg border border-border bg-muted/20 p-4 space-y-4">
+      <div ref={scrollRef} className="h-[60vh] sm:h-[55vh] overflow-y-auto rounded-lg border border-border bg-muted/20 p-3 sm:p-4 space-y-4">
         {messages.length === 0 && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Try one of these:</p>
@@ -78,15 +78,13 @@ export default function Copilot() {
         )}
         {messages.map((m, i) => (
           <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+            <div className={`max-w-[92%] sm:max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm ${
               m.role === "user"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground whitespace-pre-wrap"
                 : "bg-background border border-border"
             }`}>
               {m.role === "assistant" ? (
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
-                </div>
+                <AIMarkdown content={m.content} compact />
               ) : m.content}
               {m.role === "assistant" && m.trace && m.trace.length > 0 && (
                 <details className="mt-2 text-xs text-muted-foreground">
