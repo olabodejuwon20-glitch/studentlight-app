@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { AIMarkdown } from "@/components/ai/AIMarkdown";
 import {
   Sparkles, Loader2, Save, Trash2, BookOpen, Send, FileText, Wand2, Pencil,
 } from "lucide-react";
@@ -355,9 +354,7 @@ function EditableContent({ initial, saving, onSave }: {
   }
   return (
     <div>
-      <div className="prose prose-sm dark:prose-invert max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{initial}</ReactMarkdown>
-      </div>
+      <AIMarkdown content={initial} compact />
       <div className="mt-3">
         <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
           <Pencil className="size-3.5 mr-1.5" /> Edit
