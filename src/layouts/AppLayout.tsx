@@ -23,6 +23,49 @@ import { NotificationBell } from "@/components/comms/NotificationBell";
 import { OnboardingGate } from "@/components/admin/OnboardingGate";
 import { HelpCircle } from "lucide-react";
 
+// Group every sidebar destination into a labelled section.
+// Keys are the `to` field used by NAV / module manifests.
+const SECTION_OF: Record<string, string> = {
+  "": "Overview",
+  // People
+  "students": "People", "teachers": "People", "children": "People",
+  "invites": "People", "bulk": "People", "enrollments": "People",
+  // Academics
+  "classes": "Academics", "timetable": "Academics", "calendar": "Academics",
+  "attendance": "Academics", "assignments": "Academics", "gradebook": "Academics",
+  "behavior": "Academics", "library": "Academics", "lesson-notes": "Academics",
+  "lesson-plan": "Academics", "question-bank": "Academics", "resources": "Academics",
+  "register-subjects": "Academics",
+  // Assessments
+  "tests": "Assessments", "assessments": "Assessments", "grading": "Assessments",
+  "exams": "Assessments", "results": "Assessments", "mock": "Assessments",
+  "practice": "Assessments", "proctoring": "Assessments",
+  // AI
+  "ai-tutor": "AI", "ai-marking": "AI", "parent-alerts": "AI",
+  "copilot": "AI", "knowledge": "AI", "ai-activity": "AI", "ai-settings": "AI",
+  // Communication
+  "messages": "Communication", "inbox": "Communication",
+  "announcements": "Communication", "parent-comms": "Communication",
+  "teacher-comms": "Communication", "activity": "Communication",
+  // Finance
+  "fees": "Finance",
+  // Operations
+  "hostel": "Operations", "transport": "Operations",
+  // Reports
+  "reports": "Reports",
+  // System
+  "settings": "System", "modules": "System", "/app/help": "System",
+};
+
+const SECTION_ORDER = [
+  "Overview", "People", "Academics", "Assessments",
+  "AI", "Communication", "Finance", "Operations", "Reports", "System",
+];
+
+function sectionFor(to: string) {
+  return SECTION_OF[to] ?? "More";
+}
+
 const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
   admin: [
     { label: "Dashboard", to: "",          icon: LayoutDashboard },
@@ -181,6 +224,17 @@ export default function AppLayout() {
         })
         .map(({ label, to, icon }) => ({ label, to, icon }))
     : NAV[activeRole];
+  // Group items into sections preserving the role-defined order within each group.
+  const grouped = new Map<string, typeof items>();
+  items.forEach((it) => {
+    const key = sectionFor(it.to);
+    if (!grouped.has(key)) grouped.set(key, [] as any);
+    (grouped.get(key) as any).push(it);
+  });
+  const orderedSections = [
+    ...SECTION_ORDER.filter(s => grouped.has(s)),
+    ...Array.from(grouped.keys()).filter(s => !SECTION_ORDER.includes(s)),
+  ];
   const userLabel = displayName || email || "User";
   const initials = userLabel.split(/[\s@]/).filter(Boolean).map(s => s[0]).slice(0, 2).join("").toUpperCase();
 
@@ -208,26 +262,41 @@ export default function AppLayout() {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <ul className="space-y-1">
-            {items.map((it) => {
-              const path = !it.to
-                ? schoolPath(school.slug, `/app/${activeRole}`)
-                : it.to.startsWith("/")
-                  ? schoolPath(school.slug, it.to)
-                  : schoolPath(school.slug, `/app/${activeRole}/${it.to}`);
-              return (
-                <li key={path}>
-                  <NavLink to={path} end={!it.to} onClick={() => setMobileOpen(false)}
-                    className={({ isActive }) =>
-                      cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                        isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
-                    <it.icon className="size-[18px] shrink-0" />
-                    {!collapsed && <span>{it.label}</span>}
-                  </NavLink>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="space-y-5">
+            {orderedSections.map((section) => (
+              <div key={section}>
+                {!collapsed && (
+                  <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                    {section}
+                  </div>
+                )}
+                {collapsed && section !== orderedSections[0] && (
+                  <div className="mx-3 mb-1.5 h-px bg-sidebar-border" />
+                )}
+                <ul className="space-y-1">
+                  {(grouped.get(section) ?? []).map((it) => {
+                    const path = !it.to
+                      ? schoolPath(school.slug, `/app/${activeRole}`)
+                      : it.to.startsWith("/")
+                        ? schoolPath(school.slug, it.to)
+                        : schoolPath(school.slug, `/app/${activeRole}/${it.to}`);
+                    return (
+                      <li key={path}>
+                        <NavLink to={path} end={!it.to} onClick={() => setMobileOpen(false)}
+                          title={collapsed ? it.label : undefined}
+                          className={({ isActive }) =>
+                            cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                              isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
+                          <it.icon className="size-[18px] shrink-0" />
+                          {!collapsed && <span>{it.label}</span>}
+                        </NavLink>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
         </nav>
 
         <div className="p-3 border-t border-sidebar-border">
