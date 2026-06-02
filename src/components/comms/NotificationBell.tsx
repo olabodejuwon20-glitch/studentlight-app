@@ -18,11 +18,18 @@ export function NotificationBell() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("platform_announcements")
-      .select("id,title,body,priority,created_at")
-      .order("created_at", { ascending: false })
-      .limit(5)
-      .then(({ data }) => setAnnouncements((data ?? []) as PlatformAnnouncement[]));
+    const load = () =>
+      supabase.from("platform_announcements")
+        .select("id,title,body,priority,created_at")
+        .order("created_at", { ascending: false })
+        .limit(5)
+        .then(({ data }) => setAnnouncements((data ?? []) as PlatformAnnouncement[]));
+    load();
+    const ch = supabase
+      .channel(`announcements:${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "platform_announcements" }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
 
   const total = unread + announcements.length;
