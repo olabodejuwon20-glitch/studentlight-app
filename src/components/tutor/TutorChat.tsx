@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, BookOpen, CalendarDays, Brain, PanelLeftOpen, PanelLeftClose, ListChecks, Compass, GraduationCap, Zap } from "lucide-react";
+import { Sparkles, BookOpen, CalendarDays, Brain, PanelLeftOpen, PanelLeftClose, ListChecks, Compass, GraduationCap, Zap, Menu, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { MessageBubble } from "./MessageBubble";
 import { Composer } from "./Composer";
@@ -35,6 +36,7 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [stepsMode, setStepsMode] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -229,7 +231,7 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
     : "Your teaching co-pilot. Plan lessons, draft messages, generate questions.";
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden flex h-[calc(100vh-180px)] min-h-[500px]">
+    <div className="rounded-xl border border-border bg-card overflow-hidden flex h-[calc(100dvh-140px)] sm:h-[calc(100vh-180px)] min-h-[500px]">
       {/* Sidebar */}
       <aside className={cn(
         "border-r border-border bg-background/50 transition-all duration-200 shrink-0",
@@ -239,7 +241,7 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
         <ConversationList
           items={conversations}
           activeId={activeId}
-          onSelect={setActiveId}
+          onSelect={(id) => { setActiveId(id); setMobileNavOpen(false); }}
           onNew={() => newConversation()}
           onRename={rename}
           onDelete={remove}
@@ -248,30 +250,51 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+        <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border">
+          {/* Mobile drawer trigger */}
+          <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+            <SheetTrigger asChild>
+              <Button size="icon" variant="ghost" className="size-9 md:hidden" aria-label="Conversations">
+                <Menu className="size-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-[85vw] max-w-[300px]">
+              <ConversationList
+                items={conversations}
+                activeId={activeId}
+                onSelect={(id) => { setActiveId(id); setMobileNavOpen(false); }}
+                onNew={async () => { await newConversation(); setMobileNavOpen(false); }}
+                onRename={rename}
+                onDelete={remove}
+                onTogglePin={togglePin}
+              />
+            </SheetContent>
+          </Sheet>
           <Button size="icon" variant="ghost" className="size-8 hidden md:inline-flex" onClick={() => setSidebarOpen(s => !s)}>
             {sidebarOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
           </Button>
-          <Sparkles className="size-5 text-primary" />
-          <div className="font-semibold">{portalRole === "teacher" ? "Legacy Co-Teacher" : "Legacy Tutor"}</div>
+          <Sparkles className="size-4 sm:size-5 text-primary" />
+          <div className="font-semibold text-sm sm:text-base truncate">{portalRole === "teacher" ? "Legacy Co-Teacher" : "Legacy Tutor"}</div>
           <div className="ml-auto md:hidden">
-            <Button size="sm" variant="outline" onClick={() => newConversation()}>New</Button>
+            <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => newConversation()}>
+              <Plus className="size-3.5" /> New
+            </Button>
           </div>
         </div>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto py-6 space-y-6">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto py-4 sm:py-6 space-y-5 sm:space-y-6">
           {messages.length === 0 && !streaming ? (
-            <div className="px-4 max-w-2xl mx-auto text-center py-10 sm:py-20">
-              <div className="mx-auto size-12 rounded-2xl bg-primary/10 grid place-items-center mb-4">
-                <Sparkles className="size-6 text-primary" />
+            <div className="px-4 max-w-2xl mx-auto text-center py-8 sm:py-20">
+              <div className="mx-auto size-11 sm:size-12 rounded-2xl bg-primary/10 grid place-items-center mb-3 sm:mb-4">
+                <Sparkles className="size-5 sm:size-6 text-primary" />
               </div>
-              <h2 className="font-display text-2xl font-bold mb-2">How can I help you today?</h2>
-              <p className="text-sm text-muted-foreground mb-6">{intro}</p>
-              <div className="grid sm:grid-cols-2 gap-2 text-left">
+              <h2 className="font-display text-xl sm:text-2xl font-bold mb-2">How can I help you today?</h2>
+              <p className="text-[13px] sm:text-sm text-muted-foreground mb-5 sm:mb-6">{intro}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
                 {suggestions.map((s: any, i) => (
                   <button key={i}
                     onClick={() => s.skill ? runSkill(s.skill, s.input) : send(s.label, [])}
-                    className="rounded-xl border border-border bg-background hover:bg-secondary/60 p-3 flex items-start gap-3 text-sm transition-colors">
+                    className="rounded-xl border border-border bg-background hover:bg-secondary/60 active:bg-secondary p-3 flex items-start gap-3 text-[13px] sm:text-sm transition-colors text-left">
                     <s.icon className="size-4 text-primary mt-0.5 shrink-0" />
                     <span>{s.label}</span>
                   </button>
