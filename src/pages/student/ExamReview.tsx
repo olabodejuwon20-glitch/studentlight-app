@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { schoolPath } from "@/lib/tenant";
 import { toast } from "sonner";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { AIMarkdown } from "@/components/ai/AIMarkdown";
 
 interface Row {
   q_id: string; q_position: number; q_prompt: string; q_options: any;
@@ -137,14 +136,12 @@ Explain in 3-5 sentences why the correct answer is right and (if wrong) why the 
                 {open && (
                   <div className="mt-2 rounded-lg bg-secondary/60 p-3 text-sm">
                     {r.q_explanation && !explanations[r.q_id] && (
-                      <div className="prose prose-sm dark:prose-invert max-w-none mb-2"><em>{r.q_explanation}</em></div>
+                      <div className="mb-2"><AIMarkdown content={r.q_explanation} compact /></div>
                     )}
                     {pending[r.q_id] ? (
                       <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-3.5 animate-spin" /> Thinking…</div>
                     ) : explanations[r.q_id] ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{explanations[r.q_id]}</ReactMarkdown>
-                      </div>
+                      <AIMarkdown content={explanations[r.q_id]} compact />
                     ) : !r.q_explanation && (
                       <div className="text-muted-foreground">Tap "Why?" again to get AI explanation.</div>
                     )}
