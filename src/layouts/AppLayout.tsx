@@ -66,6 +66,23 @@ function sectionFor(to: string) {
   return SECTION_OF[to] ?? "More";
 }
 
+// Consistent ordering for items inside the AI section across every role.
+const AI_ORDER = [
+  "copilot",       // admin: principal copilot
+  "ai-tutor",      // student: tutor / teacher: co-teacher
+  "ai-marking",    // teacher: AI essay/test marking
+  "parent-alerts", // admin: AI parent risk alerts
+  "knowledge",     // admin: RAG knowledge base
+  "ai-activity",   // admin: AI usage / activity
+  "ai-settings",   // admin: AI governance settings
+];
+function sortAI<T extends { to: string }>(arr: T[]) {
+  return [...arr].sort((a, b) => {
+    const ai = AI_ORDER.indexOf(a.to); const bi = AI_ORDER.indexOf(b.to);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+}
+
 const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
   admin: [
     { label: "Dashboard", to: "",          icon: LayoutDashboard },
@@ -231,6 +248,9 @@ export default function AppLayout() {
     if (!grouped.has(key)) grouped.set(key, [] as any);
     (grouped.get(key) as any).push(it);
   });
+  // Apply deterministic ordering inside the AI section so every portal lists
+  // AI tools in the same sequence.
+  if (grouped.has("AI")) grouped.set("AI", sortAI(grouped.get("AI") as any) as any);
   const orderedSections = [
     ...SECTION_ORDER.filter(s => grouped.has(s)),
     ...Array.from(grouped.keys()).filter(s => !SECTION_ORDER.includes(s)),
