@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Users, GraduationCap, BookOpen, DollarSign, Activity, UserPlus, FileBarChart } from "lucide-react";
+import { Users, GraduationCap, BookOpen, DollarSign, Activity, UserPlus, FileBarChart, Brain, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
+import { Link } from "react-router-dom";
+import { schoolPath } from "@/lib/tenant";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -94,6 +96,24 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      <Link
+        to={schoolPath(school?.slug, `/app/admin/copilot`)}
+        className="block group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 sm:p-6 hover:border-primary/40 transition-all"
+      >
+        <div className="flex items-center gap-4">
+          <div className="size-12 sm:size-14 rounded-xl bg-primary text-primary-foreground grid place-items-center shrink-0 shadow-lg">
+            <Brain className="size-6 sm:size-7" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-display text-lg sm:text-xl font-bold leading-tight">Principal Copilot</div>
+            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+              Ask anything about your school — attendance, fees, results, weak topics. Backed by live data.
+            </p>
+          </div>
+          <ArrowRight className="size-5 text-primary shrink-0 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </Link>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard label="Total Students" value={counts.students.toLocaleString()} icon={Users} tone="admin" trend="12.5%" />
         <StatCard label="Total Teachers" value={counts.teachers.toLocaleString()} icon={GraduationCap} tone="success" trend="8.4%" />
