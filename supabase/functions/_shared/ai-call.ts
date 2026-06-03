@@ -2,6 +2,7 @@
 // Handles: auth context, per-school quota check, model routing, retries,
 // 402/429 surfacing, and writes a row to public.ai_jobs with cost + tokens.
 import { createClient, SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import { cacheKey, getCached, putCached } from "./ai-cache.ts";
 
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,6 +36,12 @@ export interface AiCallOptions {
   inputForLog?: any;                  // stored on ai_jobs.input
   /** Skip writing to ai_jobs (rare; e.g. for ephemeral diagnostics). */
   skipLog?: boolean;
+  /** Bypass the cache (force a fresh model call). */
+  skipCache?: boolean;
+  /** Override TTL for the cached response, in days. */
+  cacheTtlDays?: number;
+  /** Extra scope mixed into the cache key (e.g. { class_id, locale }). */
+  cacheScope?: Record<string, any>;
 }
 
 export interface AiCallResult {
@@ -116,6 +123,57 @@ export async function aiCall(opts: AiCallOptions): Promise<AiCallResult> {
   const model = opts.model ?? "google/gemini-3-flash-preview";
   const t0 = Date.now();
 
+  // Cache lookup (skip for streaming or when explicitly bypassed).
+  const cacheable = !opts.stream && !opts.skipCache;
+  let key: string | null = null;
+  if (cacheable) {
+    try {
+      key = await cacheKey(opts.kind, model, opts.messages, {
+        ...(opts.cacheScope ?? {}),
+        school_id: opts.schoolId,
+        tools: opts.tools ?? null,
+        tool_choice: opts.tool_choice ?? null,
+        temperature: opts.temperature ?? null,
+        reasoning: opts.reasoning ?? null,
+      });
+      const hit = await getCached(key);
+      if (hit) {
+        let jobId: string | null = null;
+        if (!opts.skipLog) {
+          const { data: job } = await admin()
+            .from("ai_jobs")
+            .insert({
+              school_id: opts.schoolId,
+              user_id: opts.userId ?? null,
+              kind: opts.kind,
+              status: "done",
+              model,
+              input: opts.inputForLog ?? null,
+              prompt_tokens: 0,
+              completion_tokens: 0,
+              total_tokens: 0,
+              cost_usd: 0,
+              latency_ms: Date.now() - t0,
+              finished_at: new Date().toISOString(),
+              output: { cached: true, reply: String(hit.response?.reply ?? "").slice(0, 4000) },
+            })
+            .select("id")
+            .single();
+          jobId = job?.id ?? null;
+        }
+        return {
+          reply: hit.response?.reply ?? "",
+          toolCalls: hit.response?.toolCalls ?? undefined,
+          raw: { cached: true, ...hit.response?.raw },
+          jobId,
+          usage: { prompt: 0, completion: 0, total: 0 },
+          costUsd: 0,
+          model,
+        };
+      }
+    } catch (_) { /* ignore — fall through to live call */ }
+  }
+
   // Insert queued job row (best-effort)
   let jobId: string | null = null;
   if (!opts.skipLog) {
@@ -191,6 +249,15 @@ export async function aiCall(opts: AiCallOptions): Promise<AiCallResult> {
         finished_at: new Date().toISOString(),
         output: { reply: reply.slice(0, 4000), tool_calls: toolCalls ?? null },
       }).eq("id", jobId);
+    }
+    // Persist to cache (best-effort).
+    if (cacheable && key) {
+      try {
+        await putCached(key, opts.schoolId, opts.kind, model,
+          { reply, toolCalls: toolCalls ?? null },
+          { prompt: usage.prompt, completion: usage.completion },
+          costUsd, opts.cacheTtlDays);
+      } catch (_) { /* ignore */ }
     }
     // Best-effort quota bump
     try {
