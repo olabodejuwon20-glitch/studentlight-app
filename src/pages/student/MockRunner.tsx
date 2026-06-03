@@ -181,6 +181,7 @@ export default function MockRunner() {
     <ExamShell
       modeLabel={modeLabel}
       ModeIcon={ModeIcon}
+      preferFullscreen={!!(session as any)?.fullscreen}
       subjects={subjects}
       activeSubject={activeSubject}
       setActiveSubject={(id) => { setActiveSubject(id); setActiveIdx(0); }}
