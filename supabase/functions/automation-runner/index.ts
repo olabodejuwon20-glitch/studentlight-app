@@ -220,6 +220,26 @@ async function runForSchool(school_id: string) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
+    // Require a shared cron secret (or a valid super-admin JWT) before doing any work.
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const incoming = req.headers.get("x-cron-secret");
+    let authorized = !!cronSecret && incoming === cronSecret;
+    if (!authorized) {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        const token = authHeader.replace("Bearer ", "");
+        const { data: claims } = await admin.auth.getClaims(token);
+        const uid = claims?.claims?.sub as string | undefined;
+        if (uid) {
+          const { data: isSuper } = await admin.rpc("is_super_admin", { _user: uid });
+          if (isSuper === true) authorized = true;
+        }
+      }
+    }
+    if (!authorized) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
+    }
+
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const targetSchool = body.school_id as string | undefined;
 
