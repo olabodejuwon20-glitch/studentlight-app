@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, Navigate } from "react-router-dom";
 import {
-  ChevronDown, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
+  ChevronDown, ChevronRight, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
   Settings, ClipboardCheck, FilePlus2, Calendar, Library, Sparkles, MessagesSquare,
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
   Building2, Ticket, Upload, Bus, Megaphone, NotebookPen, FolderOpen, UserCog,
@@ -259,6 +259,8 @@ export default function AppLayout() {
   const userLabel = displayName || email || "User";
   const initials = userLabel.split(/[\s@]/).filter(Boolean).map(s => s[0]).slice(0, 2).join("").toUpperCase();
 
+  const { pathname } = useLocation();
+
   return (
     <div className="min-h-screen flex bg-background">
       <RealtimeNotifier />
@@ -286,38 +288,18 @@ export default function AppLayout() {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <div className="space-y-5">
             {orderedSections.map((section) => (
-              <div key={section}>
-                {!collapsed && (
-                  <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                    {section}
-                  </div>
-                )}
-                {collapsed && section !== orderedSections[0] && (
-                  <div className="mx-3 mb-1.5 h-px bg-sidebar-border" />
-                )}
-                <ul className="space-y-1">
-                  {(grouped.get(section) ?? []).map((it) => {
-                    const path = !it.to
-                      ? schoolPath(school.slug, `/app/${activeRole}`)
-                      : it.to.startsWith("/")
-                        ? schoolPath(school.slug, it.to)
-                        : schoolPath(school.slug, `/app/${activeRole}/${it.to}`);
-                    return (
-                      <li key={path}>
-                        <NavLink to={path} end={!it.to} onClick={() => setMobileOpen(false)}
-                          title={collapsed ? it.label : undefined}
-                          className={({ isActive }) =>
-                            cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                              isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
-                          <it.icon className="size-[18px] shrink-0" />
-                          {!collapsed && <span>{it.label}</span>}
-                        </NavLink>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
+            <SidebarSection
+              key={section}
+              section={section}
+              items={(grouped.get(section) ?? []) as any}
+              collapsed={collapsed}
+              isFirstSection={section === orderedSections[0]}
+              activeRole={activeRole}
+              schoolSlug={school.slug}
+              pathname={pathname}
+              onNavigate={() => setMobileOpen(false)}
+            />
+          ))}
           </div>
         </nav>
 
