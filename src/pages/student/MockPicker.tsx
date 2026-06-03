@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Maximize2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -31,6 +33,8 @@ export default function MockPicker() {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [starting, setStarting] = useState(false);
   const [useReal, setUseReal] = useState(true);
+  const [perSubject, setPerSubject] = useState<number>(20);
+  const [fullscreen, setFullscreen] = useState<boolean>(false);
 
   const { data: subjects, isLoading } = useQuery({
     queryKey: ["mock-subjects", school?.id],
@@ -122,7 +126,9 @@ export default function MockPicker() {
           student_id: user.id,
           mode,
           duration_minutes: rule.minutes,
-          total_questions: chosenCount * 20,
+          total_questions: chosenCount * perSubject,
+          questions_per_subject: perSubject,
+          fullscreen,
         })
         .select("id")
         .single();
@@ -172,6 +178,27 @@ export default function MockPicker() {
               </div>
             }
           >
+            {/* Exam controls */}
+            <div className="mb-4 grid sm:grid-cols-2 gap-4 rounded-xl border border-border bg-muted/30 p-4">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Questions per subject</label>
+                  <span className="text-sm font-bold tabular-nums">{perSubject}</span>
+                </div>
+                <Slider value={[perSubject]} min={5} max={20} step={5} onValueChange={(v) => setPerSubject(v[0] ?? 20)} />
+                <p className="text-[11px] text-muted-foreground mt-1.5">Total: {chosenCount * perSubject || rule.pick * perSubject} questions across {rule.pick} subjects.</p>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Maximize2 className="size-3.5" /> Start in full‑screen
+                  </label>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">Off by default — you decide when to go distraction‑free.</p>
+                </div>
+                <Switch checked={fullscreen} onCheckedChange={setFullscreen} />
+              </div>
+            </div>
+
             {isLoading ? (
               <div className="py-10 grid place-items-center text-muted-foreground"><Loader2 className="size-4 animate-spin" /></div>
             ) : (

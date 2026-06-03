@@ -2315,9 +2315,12 @@ export type Database = {
       }
       mock_sessions: {
         Row: {
+          ai_summary: Json | null
           duration_minutes: number
+          fullscreen: boolean
           id: string
           mode: string
+          questions_per_subject: number
           school_id: string
           started_at: string
           status: string
@@ -2327,9 +2330,12 @@ export type Database = {
           total_score: number | null
         }
         Insert: {
+          ai_summary?: Json | null
           duration_minutes?: number
+          fullscreen?: boolean
           id?: string
           mode: string
+          questions_per_subject?: number
           school_id: string
           started_at?: string
           status?: string
@@ -2339,9 +2345,12 @@ export type Database = {
           total_score?: number | null
         }
         Update: {
+          ai_summary?: Json | null
           duration_minutes?: number
+          fullscreen?: boolean
           id?: string
           mode?: string
+          questions_per_subject?: number
           school_id?: string
           started_at?: string
           status?: string
@@ -3211,6 +3220,8 @@ export type Database = {
           created_at: string
           grade: string | null
           id: string
+          published_at: string | null
+          published_by: string | null
           remarks: string | null
           school_id: string
           score: number
@@ -3223,6 +3234,8 @@ export type Database = {
           created_at?: string
           grade?: string | null
           id?: string
+          published_at?: string | null
+          published_by?: string | null
           remarks?: string | null
           school_id: string
           score: number
@@ -3235,6 +3248,8 @@ export type Database = {
           created_at?: string
           grade?: string | null
           id?: string
+          published_at?: string | null
+          published_by?: string | null
           remarks?: string | null
           school_id?: string
           score?: number
@@ -4227,6 +4242,10 @@ export type Database = {
       publish_assessment: {
         Args: { _assessment_id: string }
         Returns: undefined
+      }
+      publish_results: {
+        Args: { _ids: string[]; _publish?: boolean }
+        Returns: number
       }
       redeem_invite: { Args: { _code: string }; Returns: string }
       seed_mock_bank: { Args: { _school: string }; Returns: undefined }

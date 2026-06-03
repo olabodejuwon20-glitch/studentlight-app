@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileBarChart, TrendingUp, Award, Target, Download, FileText, FileDown } from "lucide-react";
+import { FileBarChart, TrendingUp, Award, Target, Download, FileText, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { downloadCSV, printToPDF, tableHTML, safeHtml } from "@/lib/exporters";
-import { downloadResultSlip } from "@/lib/slip";
 import { toast } from "sonner";
+import { ResultSlipButton } from "@/components/results/ResultSlipButton";
+import { SchoolResultCard } from "@/components/results/SchoolResultCard";
+import { Link } from "react-router-dom";
+import { schoolPath } from "@/lib/tenant";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -17,13 +21,18 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 export default function StudentResults() {
   const { school, user } = useSchool();
   const [rows, setRows] = useState<any[]>([]);
-  const [slipLoading, setSlipLoading] = useState(false);
+  const [mocks, setMocks] = useState<any[]>([]);
   const [termFilter, setTermFilter] = useState<string>("all");
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
   useEffect(() => {
     if (!school || !user) return;
-    supabase.from("results").select("*").eq("school_id", school.id).eq("student_id", user.id).order("created_at", { ascending: false })
-      .then(({ data }) => setRows(data ?? []));
+    (async () => {
+      const [{ data: r }, { data: m }] = await Promise.all([
+        supabase.from("results").select("*").eq("school_id", school.id).eq("student_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("mock_sessions").select("id,mode,total_score,total_questions,submitted_at,status").eq("student_id", user.id).eq("status", "submitted").order("submitted_at", { ascending: false }),
+      ]);
+      setRows(r ?? []); setMocks(m ?? []);
+    })();
   }, [school, user]);
 
   const terms = useMemo(() => Array.from(new Set(rows.map(r => r.term).filter(Boolean))), [rows]);
@@ -49,14 +58,17 @@ export default function StudentResults() {
   // Key forces both charts (and the list) to remount + replay enter animation on every filter change.
   const animKey = `${termFilter}|${subjectFilter}|${filtered.length}`;
 
+  const necoMocks = mocks.filter(m => m.mode === "neco_sim");
+  const jambMocks = mocks.filter(m => m.mode === "jamb_sim");
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display font-semibold text-lg">My results</h2>
-          <p className="text-sm text-muted-foreground">NECO-aligned academic performance</p>
+          <p className="text-sm text-muted-foreground">School exams (published), plus your NECO &amp; JAMB mock attempts</p>
         </div>
-        <div className="flex gap-2">
+        <div className="hidden sm:flex gap-2">
           <Button size="sm" variant="outline" disabled={!filtered.length}
             onClick={() => downloadCSV(`${school?.slug || "school"}-my-results.csv`,
               filtered.map(r => ({ Subject: r.subject, Score: Math.round(Number(r.score))+"%", Grade: necoGrade(Number(r.score)), Term: r.term, Date: new Date(r.created_at).toLocaleDateString() })))}>
@@ -76,19 +88,28 @@ export default function StudentResults() {
             }}>
             <FileText className="size-4" /> <span className="hidden sm:inline ml-1">PDF</span>
           </Button>
-          <Button size="sm" disabled={!rows.length || slipLoading || !user}
-            onClick={async () => {
-              if (!user) return;
-              setSlipLoading(true);
-              try { await downloadResultSlip(user.id); toast.success("Result slip downloaded"); }
-              catch (e: any) { toast.error(e.message ?? "Failed to generate slip"); }
-              finally { setSlipLoading(false); }
-            }}>
-            <FileDown className="size-4" /> <span className="hidden sm:inline ml-1">{slipLoading ? "Generating…" : "Result slip"}</span>
-          </Button>
         </div>
       </div>
 
+      {/* Prominent slip CTA — full width on mobile */}
+      {rows.length > 0 && (
+        <div className="rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/10 via-card to-student/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="font-display font-semibold text-base">Official Result Slip</div>
+            <p className="text-xs text-muted-foreground">Generates a verified PDF with school logo, your profile, NECO grades and a verification QR code.</p>
+          </div>
+          <ResultSlipButton studentId={user?.id} size="default" />
+        </div>
+      )}
+
+      <Tabs defaultValue="school" className="w-full">
+        <TabsList className="grid grid-cols-3 sm:inline-grid sm:grid-flow-col w-full sm:w-auto">
+          <TabsTrigger value="school" className="gap-1.5"><GraduationCap className="size-3.5" />School</TabsTrigger>
+          <TabsTrigger value="neco" className="gap-1.5"><Award className="size-3.5" />NECO ({necoMocks.length})</TabsTrigger>
+          <TabsTrigger value="jamb" className="gap-1.5"><GraduationCap className="size-3.5" />JAMB ({jambMocks.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="school" className="space-y-6 mt-5">
       {rows.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">Filter:</span>
@@ -113,17 +134,16 @@ export default function StudentResults() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Overall average" value={s.count ? `${s.average}%` : "—"} icon={TrendingUp} tone="student" sub={`Grade ${s.grade}`} />
-        <StatCard label="Credit pass rate" value={`${s.credit}%`} icon={Target} tone="success" sub="C6 or better" />
-        <StatCard label="Best score" value={s.count ? `${s.best}%` : "—"} icon={Award} tone="warning" sub="Top subject" />
-        <StatCard label="Subjects" value={String(bySubj.length)} icon={FileBarChart} tone="info" sub="Recorded" />
-      </div>
-
       {filtered.length === 0 ? (
-        <SectionCard title="My results"><EmptyState icon={FileBarChart} title={rows.length === 0 ? "No results yet" : "No results match these filters"} /></SectionCard>
+        <SectionCard title="School exam results">
+          <EmptyState icon={FileBarChart}
+            title={rows.length === 0 ? "No results published yet" : "No results match these filters"}
+            desc={rows.length === 0 ? "Your school exam results will appear here once your school approves and publishes them." : undefined} />
+        </SectionCard>
       ) : (
         <div key={animKey} className="space-y-6 animate-fade-in">
+          <SchoolResultCard results={filtered} />
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <SectionCard title="NECO grade distribution" description="A1–F9 across all subjects">
               <div className="h-[260px]">
@@ -153,25 +173,46 @@ export default function StudentResults() {
               </div>
             </SectionCard>
           </div>
-
-          <SectionCard title="My results" description="NECO grading: A1–F9">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{filtered.map((r, i) => {
-              const g = necoGrade(Number(r.score));
-              return (
-                <div key={r.id} className="rounded-xl border border-border p-5 bg-card animate-fade-in" style={{ animationDelay: `${Math.min(i, 12) * 35}ms`, animationFillMode: "backwards" }}>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground">{r.subject}</div>
-                    <Badge variant="outline" style={{ background: NECO_GRADE_COLORS[g] + "22", color: NECO_GRADE_COLORS[g], borderColor: NECO_GRADE_COLORS[g] + "55" }}>{g}</Badge>
-                  </div>
-                  <div className="text-3xl font-display font-bold mt-2">{Math.round(Number(r.score))}%</div>
-                  <div className="text-xs text-muted-foreground mt-1">{r.term} · {NECO_GRADE_REMARKS[g]}</div>
-                  {r.remarks && <div className="text-xs mt-2 italic text-muted-foreground">"{r.remarks}"</div>}
-                </div>
-              );
-            })}</div>
-          </SectionCard>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="neco" className="mt-5">
+          <MockList items={necoMocks} label="NECO" slug={school?.slug} />
+        </TabsContent>
+        <TabsContent value="jamb" className="mt-5">
+          <MockList items={jambMocks} label="JAMB" slug={school?.slug} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function MockList({ items, label, slug }: { items: any[]; label: string; slug?: string }) {
+  if (items.length === 0) {
+    return (
+      <SectionCard title={`${label} mock attempts`}>
+        <EmptyState icon={Award} title={`No ${label} mocks yet`} desc="Start a mock from the NECO/JAMB Mock page to see your detailed AI result here." />
+      </SectionCard>
+    );
+  }
+  return (
+    <div className="grid sm:grid-cols-2 gap-4">
+      {items.map((m) => {
+        const pct = m.total_questions ? Math.round((m.total_score / m.total_questions) * 100) : 0;
+        return (
+          <Link key={m.id} to={schoolPath(slug, `/app/student/mock/${m.id}/result`)}
+            className="rounded-xl border border-border bg-card p-4 hover:border-primary/40 hover:shadow-soft transition group">
+            <div className="flex items-center justify-between mb-2">
+              <Badge variant="secondary">{label} mock</Badge>
+              <span className="text-xs text-muted-foreground">{new Date(m.submitted_at).toLocaleDateString()}</span>
+            </div>
+            <div className="font-display font-bold text-2xl">{pct}%</div>
+            <div className="text-xs text-muted-foreground">{m.total_score}/{m.total_questions} correct</div>
+            <div className="text-[11px] text-primary font-medium mt-3 group-hover:underline">View AI analysis →</div>
+          </Link>
+        );
+      })}
     </div>
   );
 }

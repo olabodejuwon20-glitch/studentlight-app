@@ -16,20 +16,29 @@ export default function StudentDashboard() {
   const [attPct, setAttPct] = useState(0);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [recentResults, setRecentResults] = useState<any[]>([]);
+  const [mockStats, setMockStats] = useState<{ count: number; avg: number; last: any }>({ count: 0, avg: 0, last: null });
 
   useEffect(() => {
     if (!school || !user) return;
     (async () => {
-      const [{ data: ex }, { data: rs }, { data: att }, { data: ann }] = await Promise.all([
+      const [{ data: ex }, { data: rs }, { data: att }, { data: ann }, { data: mocks }] = await Promise.all([
         supabase.from("exams").select("id,title,subject,scheduled_at,status").eq("school_id", school.id).in("status", ["scheduled","active"]).order("scheduled_at", { ascending: true }).limit(5),
         supabase.from("results").select("subject,score,created_at").eq("student_id", user.id).order("created_at", { ascending: true }),
         supabase.from("attendance").select("status").eq("student_id", user.id),
         supabase.from("announcements").select("title,body,created_at").eq("school_id", school.id).order("created_at", { ascending: false }).limit(3),
+        supabase.from("mock_sessions").select("mode,total_score,total_questions,submitted_at").eq("student_id", user.id).eq("status", "submitted").order("submitted_at", { ascending: false }),
       ]);
       setExams(ex ?? []); setResults(rs ?? []); setAnnouncements(ann ?? []);
       setRecentResults((rs ?? []).slice(-5).reverse());
       const t = att?.length ?? 0;
       setAttPct(t ? Math.round(((att!.filter(a => a.status === "present").length) / t) * 100) : 0);
+      const ms = mocks ?? [];
+      const pcts = ms.map((m: any) => (m.total_questions ? (m.total_score / m.total_questions) * 100 : 0));
+      setMockStats({
+        count: ms.length,
+        avg: pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : 0,
+        last: ms[0] ?? null,
+      });
     })();
   }, [school, user]);
 
@@ -56,10 +65,10 @@ export default function StudentDashboard() {
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Upcoming Exams" value={String(exams.length)} icon={ListChecks} tone="student" sub={exams[0] ? `Next: ${exams[0].title}` : "No upcoming"} />
-        <StatCard label="Average Score" value={overall ? `${overall}%` : "—"} icon={Star} tone="success" sub="All subjects" />
+        <StatCard label="School Exam Avg" value={overall ? `${overall}%` : "—"} icon={Star} tone="success" sub={`${results.length} subjects · published`} />
+        <StatCard label="NECO / JAMB Mock Avg" value={mockStats.count ? `${mockStats.avg}%` : "—"} icon={ListChecks} tone="student" sub={mockStats.count ? `${mockStats.count} mock attempt${mockStats.count > 1 ? "s" : ""}` : "No mocks yet"} />
         <StatCard label="Attendance" value={`${attPct}%`} icon={ClipboardCheck} tone="success" sub="This term" />
-        <StatCard label="Recent Score" value={latest ? `${latest}%` : "—"} icon={Star} tone="warning" sub={results[results.length - 1]?.subject ?? "—"} />
+        <StatCard label="Upcoming Exams" value={String(exams.length)} icon={FileText} tone="warning" sub={exams[0] ? `Next: ${exams[0].title}` : "No upcoming"} />
       </div>
 
       <SectionCard title="Quick access">

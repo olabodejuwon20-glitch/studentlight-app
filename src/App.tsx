@@ -88,6 +88,7 @@ import StudentBehavior from "./pages/student/Behavior";
 import StudentGradebook from "./pages/student/Gradebook";
 import MockPicker from "./pages/student/MockPicker";
 import MockRunner from "./pages/student/MockRunner";
+import MockResult from "./pages/student/MockResult";
 import Practice from "./pages/student/Practice";
 import StudentRegisterSubjects from "./pages/student/RegisterSubjects";
 import StudentMyAssessments from "./pages/student/MyAssessments";
@@ -235,6 +236,7 @@ const App = () => (
               <Route path="student/assessments" element={<RoleGate allow="student"><StudentMyAssessments /></RoleGate>} />
               <Route path="student/mock" element={<RoleGate allow="student"><MockPicker /></RoleGate>} />
               <Route path="student/mock/:sessionId" element={<RoleGate allow="student"><MockRunner /></RoleGate>} />
+              <Route path="student/mock/:sessionId/result" element={<RoleGate allow="student"><MockResult /></RoleGate>} />
               <Route path="student/practice" element={<RoleGate allow="student"><Practice /></RoleGate>} />
               <Route path="student/results" element={<RoleGate allow="student"><StudentResults /></RoleGate>} />
               <Route path="student/library" element={<RoleGate allow="student"><Library /></RoleGate>} />

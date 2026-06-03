@@ -88,8 +88,14 @@ export default function MockRunner() {
   const allQuestions = data?.questions ?? [];
 
   const subjectQuestions = useMemo(
-    () => allQuestions.filter(q => q.subject_id === activeSubject).sort((a, b) => a.position - b.position),
-    [allQuestions, activeSubject],
+    () => {
+      const limit = (session as any)?.questions_per_subject ?? 20;
+      return allQuestions
+        .filter(q => q.subject_id === activeSubject)
+        .sort((a, b) => a.position - b.position)
+        .slice(0, limit);
+    },
+    [allQuestions, activeSubject, session],
   );
   const currentQ = subjectQuestions[activeIdx];
 
@@ -150,7 +156,7 @@ export default function MockRunner() {
       const total = (graded as any)?.total_score ?? 0;
       const totalQ = (graded as any)?.total_questions ?? allQuestions.length;
       toast.success(auto ? "Time up — auto-submitted" : `Submitted. Score: ${total}/${totalQ}`);
-      nav(schoolPath(slug, `/app/student/review?session=${sessionId}`));
+      nav(schoolPath(slug, `/app/student/mock/${sessionId}/result`));
     } catch (e: any) {
       toast.error(e.message ?? "Submit failed");
     } finally {
@@ -175,6 +181,7 @@ export default function MockRunner() {
     <ExamShell
       modeLabel={modeLabel}
       ModeIcon={ModeIcon}
+      preferFullscreen={!!(session as any)?.fullscreen}
       subjects={subjects}
       activeSubject={activeSubject}
       setActiveSubject={(id) => { setActiveSubject(id); setActiveIdx(0); }}
@@ -205,7 +212,7 @@ export default function MockRunner() {
 
 function ExamShell(props: any) {
   const {
-    modeLabel, ModeIcon, subjects, activeSubject, setActiveSubject, activeSubjectMeta,
+    modeLabel, ModeIcon, preferFullscreen, subjects, activeSubject, setActiveSubject, activeSubjectMeta,
     subjectQuestions, answers, activeIdx, setActiveIdx, answeredInSubject,
     totalAnswered, totalQuestions, secondsLeft, isSubmitted, submitting, onSubmit,
     currentQ, onSelect, onToggleMark, onNextSubject,
@@ -216,10 +223,10 @@ function ExamShell(props: any) {
   useEffect(() => {
     const sync = () => setIsFs(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", sync);
-    // Best-effort enter fullscreen on mount (requires user gesture on some browsers; ignore if blocked)
-    shellRef.current?.requestFullscreen?.().catch(() => {});
+    // Only auto-enter fullscreen if the student opted in.
+    if (preferFullscreen) shellRef.current?.requestFullscreen?.().catch(() => {});
     return () => document.removeEventListener("fullscreenchange", sync);
-  }, []);
+  }, [preferFullscreen]);
 
   function toggleFs() {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -229,7 +236,12 @@ function ExamShell(props: any) {
   const lowTime = secondsLeft < 300;
 
   return (
-    <div ref={shellRef} className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div ref={shellRef} className={cn(
+      "bg-background flex flex-col",
+      preferFullscreen || isFs
+        ? "fixed inset-0 z-50"
+        : "-mx-4 sm:-mx-6 -my-4 sm:-my-6 min-h-[calc(100vh-4rem)]",
+    )}>
       {/* Minimal top bar */}
       <header className="shrink-0 border-b border-border bg-card/80 backdrop-blur">
         <div className="flex items-center gap-3 px-4 sm:px-6 h-14">
@@ -281,7 +293,7 @@ function ExamShell(props: any) {
                 </div>
               </SheetContent>
             </Sheet>
-            <Button size="sm" variant="ghost" onClick={toggleFs} aria-label="Toggle fullscreen" className="px-2 hidden sm:inline-flex">
+            <Button size="sm" variant="ghost" onClick={toggleFs} aria-label="Toggle fullscreen" className="px-2">
               {isFs ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
             </Button>
             <Button size="sm" onClick={onSubmit} disabled={submitting || isSubmitted}>
