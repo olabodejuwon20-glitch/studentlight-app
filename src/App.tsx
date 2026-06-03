@@ -88,6 +88,7 @@ import StudentBehavior from "./pages/student/Behavior";
 import StudentGradebook from "./pages/student/Gradebook";
 import MockPicker from "./pages/student/MockPicker";
 import MockRunner from "./pages/student/MockRunner";
+import MockResult from "./pages/student/MockResult";
 import Practice from "./pages/student/Practice";
 import StudentRegisterSubjects from "./pages/student/RegisterSubjects";
 import StudentMyAssessments from "./pages/student/MyAssessments";
