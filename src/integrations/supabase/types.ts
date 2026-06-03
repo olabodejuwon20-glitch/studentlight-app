@@ -73,6 +73,57 @@ export type Database = {
           },
         ]
       }
+      ai_cache: {
+        Row: {
+          cache_key: string
+          completion_tokens: number
+          cost_saved_usd: number
+          cost_usd: number
+          created_at: string
+          expires_at: string
+          hits: number
+          kind: string
+          last_used_at: string
+          model: string
+          prompt_tokens: number
+          response: Json
+          school_id: string
+          tokens_saved: number
+        }
+        Insert: {
+          cache_key: string
+          completion_tokens?: number
+          cost_saved_usd?: number
+          cost_usd?: number
+          created_at?: string
+          expires_at?: string
+          hits?: number
+          kind: string
+          last_used_at?: string
+          model: string
+          prompt_tokens?: number
+          response: Json
+          school_id: string
+          tokens_saved?: number
+        }
+        Update: {
+          cache_key?: string
+          completion_tokens?: number
+          cost_saved_usd?: number
+          cost_usd?: number
+          created_at?: string
+          expires_at?: string
+          hits?: number
+          kind?: string
+          last_used_at?: string
+          model?: string
+          prompt_tokens?: number
+          response?: Json
+          school_id?: string
+          tokens_saved?: number
+        }
+        Relationships: []
+      }
       ai_chats: {
         Row: {
           attachments: Json
@@ -4096,6 +4147,10 @@ export type Database = {
     Functions: {
       apply_payment: { Args: { _payment_id: string }; Returns: undefined }
       bump_ai_quota: {
+        Args: { _cost: number; _school_id: string; _tokens: number }
+        Returns: undefined
+      }
+      bump_ai_quota_savings: {
         Args: { _cost: number; _school_id: string; _tokens: number }
         Returns: undefined
       }
