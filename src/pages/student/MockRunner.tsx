@@ -212,7 +212,7 @@ export default function MockRunner() {
 
 function ExamShell(props: any) {
   const {
-    modeLabel, ModeIcon, subjects, activeSubject, setActiveSubject, activeSubjectMeta,
+    modeLabel, ModeIcon, preferFullscreen, subjects, activeSubject, setActiveSubject, activeSubjectMeta,
     subjectQuestions, answers, activeIdx, setActiveIdx, answeredInSubject,
     totalAnswered, totalQuestions, secondsLeft, isSubmitted, submitting, onSubmit,
     currentQ, onSelect, onToggleMark, onNextSubject,
@@ -223,10 +223,10 @@ function ExamShell(props: any) {
   useEffect(() => {
     const sync = () => setIsFs(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", sync);
-    // Best-effort enter fullscreen on mount (requires user gesture on some browsers; ignore if blocked)
-    shellRef.current?.requestFullscreen?.().catch(() => {});
+    // Only auto-enter fullscreen if the student opted in.
+    if (preferFullscreen) shellRef.current?.requestFullscreen?.().catch(() => {});
     return () => document.removeEventListener("fullscreenchange", sync);
-  }, []);
+  }, [preferFullscreen]);
 
   function toggleFs() {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -288,7 +288,7 @@ function ExamShell(props: any) {
                 </div>
               </SheetContent>
             </Sheet>
-            <Button size="sm" variant="ghost" onClick={toggleFs} aria-label="Toggle fullscreen" className="px-2 hidden sm:inline-flex">
+            <Button size="sm" variant="ghost" onClick={toggleFs} aria-label="Toggle fullscreen" className="px-2">
               {isFs ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
             </Button>
             <Button size="sm" onClick={onSubmit} disabled={submitting || isSubmitted}>
