@@ -37,10 +37,28 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     let docId: string | null = body.document_id ?? null;
 
+    // Membership check helper — caller must be admin/teacher of the school
+    async function assertMember(school_id: string) {
+      if (!school_id) return jsonResponse({ error: "school_id required" }, 400);
+      const { data: mem } = await admin
+        .from("memberships")
+        .select("role")
+        .eq("school_id", school_id)
+        .eq("user_id", user!.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (!mem || !["admin", "teacher"].includes(mem.role)) {
+        return jsonResponse({ error: "Forbidden" }, 403);
+      }
+      return null;
+    }
+
     // If no document_id, create one
     if (!docId) {
       const { school_id, title, source_path, mime_type, visibility, class_id, student_id, subject_code, curriculum, text } = body;
       if (!school_id || !title) return jsonResponse({ error: "school_id and title required" }, 400);
+      const forbidden = await assertMember(school_id);
+      if (forbidden) return forbidden;
       const { data: d, error } = await admin.from("knowledge_documents").insert({
         school_id, title, source_path: source_path ?? null, mime_type: mime_type ?? null,
         visibility: visibility ?? "school", class_id: class_id ?? null, student_id: student_id ?? null,
@@ -54,6 +72,12 @@ Deno.serve(async (req) => {
         (body as any).__inline_text = text;
       }
     } else {
+      // Re-ingest path: load doc first, then verify caller membership in its school
+      const { data: existing } = await admin
+        .from("knowledge_documents").select("school_id").eq("id", docId).maybeSingle();
+      if (!existing) return jsonResponse({ error: "document not found" }, 404);
+      const forbidden = await assertMember(existing.school_id);
+      if (forbidden) return forbidden;
       await admin.from("knowledge_documents").update({ status: "processing", error: null }).eq("id", docId);
     }
 

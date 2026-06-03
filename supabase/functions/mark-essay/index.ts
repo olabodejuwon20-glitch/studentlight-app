@@ -103,6 +103,14 @@ Return strict JSON only: {
     parsed.overall_score = overall;
 
     if (answer_id) {
+      // Cross-school guard: ensure the answer belongs to this school
+      const { data: ans } = await admin
+        .from("assessment_answers_v2")
+        .select("id, school_id")
+        .eq("id", answer_id)
+        .eq("school_id", school_id)
+        .maybeSingle();
+      if (!ans) return jsonResponse({ error: "Forbidden" }, 403);
       await admin.from("assessment_answers_v2").update({
         ai_grade: overall,
         ai_feedback: parsed,
