@@ -230,7 +230,12 @@ Deno.serve(async (req) => {
     });
 
     const bytes = await pdf.save();
-    const b64 = btoa(String.fromCharCode(...bytes));
+    let bin = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    const b64 = btoa(bin);
     const filename = `${(profile?.full_name ?? "student").replace(/\s+/g, "_")}_${usedTerm.replace(/\s+/g, "_")}_slip.pdf`;
     return json({ pdf_base64: b64, filename, mime: "application/pdf" });
   } catch (e) {
