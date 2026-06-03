@@ -88,8 +88,14 @@ export default function MockRunner() {
   const allQuestions = data?.questions ?? [];
 
   const subjectQuestions = useMemo(
-    () => allQuestions.filter(q => q.subject_id === activeSubject).sort((a, b) => a.position - b.position),
-    [allQuestions, activeSubject],
+    () => {
+      const limit = (session as any)?.questions_per_subject ?? 20;
+      return allQuestions
+        .filter(q => q.subject_id === activeSubject)
+        .sort((a, b) => a.position - b.position)
+        .slice(0, limit);
+    },
+    [allQuestions, activeSubject, session],
   );
   const currentQ = subjectQuestions[activeIdx];
 
@@ -150,7 +156,7 @@ export default function MockRunner() {
       const total = (graded as any)?.total_score ?? 0;
       const totalQ = (graded as any)?.total_questions ?? allQuestions.length;
       toast.success(auto ? "Time up — auto-submitted" : `Submitted. Score: ${total}/${totalQ}`);
-      nav(schoolPath(slug, `/app/student/review?session=${sessionId}`));
+      nav(schoolPath(slug, `/app/student/mock/${sessionId}/result`));
     } catch (e: any) {
       toast.error(e.message ?? "Submit failed");
     } finally {
