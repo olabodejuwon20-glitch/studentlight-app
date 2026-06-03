@@ -13,15 +13,17 @@ export function SchoolResultCard({ results }: Props) {
   const { school, user, displayName } = useSchool();
   const [profile, setProfile] = useState<any>(null);
   const [membership, setMembership] = useState<any>(null);
+  const [schoolMeta, setSchoolMeta] = useState<any>(null);
 
   useEffect(() => {
     if (!user || !school) return;
     (async () => {
-      const [{ data: p }, { data: m }] = await Promise.all([
+      const [{ data: p }, { data: m }, { data: sm }] = await Promise.all([
         supabase.from("profiles").select("full_name,email,photo_url,gender,dob").eq("id", user.id).maybeSingle(),
         supabase.from("memberships").select("profile_data").eq("school_id", school.id).eq("user_id", user.id).maybeSingle(),
+        supabase.from("schools").select("motto,current_session,current_term,address").eq("id", school.id).maybeSingle(),
       ]);
-      setProfile(p); setMembership(m);
+      setProfile(p); setMembership(m); setSchoolMeta(sm);
     })();
   }, [user, school]);
 
@@ -50,7 +52,7 @@ export function SchoolResultCard({ results }: Props) {
           <div className="min-w-0 flex-1">
             <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">School Examination Result</div>
             <h2 className="font-display text-xl sm:text-2xl font-bold mt-0.5 truncate">{school?.name ?? "School"}</h2>
-            {school?.motto && <p className="text-xs italic text-muted-foreground mt-0.5 line-clamp-1">"{school.motto}"</p>}
+            {schoolMeta?.motto && <p className="text-xs italic text-muted-foreground mt-0.5 line-clamp-1">"{schoolMeta.motto}"</p>}
           </div>
           <Badge variant="secondary" className="hidden sm:inline-flex gap-1.5">
             <ShieldCheck className="size-3" /> Verified
@@ -70,8 +72,8 @@ export function SchoolResultCard({ results }: Props) {
             <Field label="Admission no" value={pdat.admission_no ?? "—"} />
             <Field label="Class" value={pdat.class ?? "—"} />
             <Field label="Gender" value={profile?.gender ?? "—"} />
-            <Field label="Session" value={school?.current_session ?? "—"} />
-            <Field label="Term" value={school?.current_term ?? "—"} />
+            <Field label="Session" value={schoolMeta?.current_session ?? "—"} />
+            <Field label="Term" value={schoolMeta?.current_term ?? "—"} />
             <Field label="Issued" value={new Date().toLocaleDateString()} />
           </div>
         </div>
