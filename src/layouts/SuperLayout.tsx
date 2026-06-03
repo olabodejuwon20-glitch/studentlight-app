@@ -1,8 +1,7 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSchool } from "@/contexts/SchoolContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
 import { Loader2, LayoutDashboard, Building2, Package, KeyRound, Settings2, ShoppingBag, CreditCard, Receipt, Users, Megaphone, LifeBuoy, BarChart3, ShieldCheck, ScrollText, Cog, ChevronLeft, ChevronRight, Search, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -85,23 +84,7 @@ export default function SuperLayout() {
           </div>
           <nav className="flex-1 overflow-y-auto py-3 space-y-4">
             {NAV.map(group => (
-              <div key={group.group}>
-                {!collapsed && <div className="px-4 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">{group.group}</div>}
-                <div className="space-y-0.5 px-2">
-                  {group.items.map(item => (
-                    <NavLink key={item.to} to={item.to} end={(item as any).end}
-                      className={({ isActive }) => cn(
-                        "flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors",
-                        isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                      title={collapsed ? item.label : undefined}
-                    >
-                      <item.icon className="size-4 shrink-0" />
-                      {!collapsed && <span className="truncate">{item.label}</span>}
-                    </NavLink>
-                  ))}
-                </div>
-              </div>
+              <SuperGroup key={group.group} group={group} collapsed={collapsed} pathname={pathname} />
             ))}
           </nav>
           <button onClick={() => setCollapsed(c => !c)} className="h-10 border-t border-border text-muted-foreground hover:bg-muted flex items-center justify-center text-xs gap-1">
@@ -132,5 +115,58 @@ export default function SuperLayout() {
         </div>
       </div>
     </SuperGuard>
+  );
+}
+
+function SuperGroup({ group, collapsed, pathname }: { group: { group: string; items: any[] }; collapsed: boolean; pathname: string }) {
+  const isCollapsible = group.items.length > 1 && group.group !== "Overview";
+  const containsActive = group.items.some(it => (it.end ? pathname === it.to : pathname === it.to || pathname.startsWith(it.to + "/")));
+  const storageKey = `super-sidebar:open:${group.group}`;
+  const [open, setOpen] = useState<boolean>(() => {
+    if (!isCollapsible) return true;
+    try {
+      const v = localStorage.getItem(storageKey);
+      if (v === "1") return true;
+      if (v === "0") return false;
+    } catch {}
+    return containsActive;
+  });
+  useEffect(() => { if (isCollapsible && containsActive) setOpen(true); }, [containsActive, isCollapsible]);
+  const toggle = () => setOpen(o => {
+    const next = !o;
+    try { localStorage.setItem(storageKey, next ? "1" : "0"); } catch {}
+    return next;
+  });
+
+  return (
+    <div>
+      {!collapsed && (
+        isCollapsible ? (
+          <button type="button" onClick={toggle} aria-expanded={open}
+            className="w-full flex items-center justify-between px-4 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-foreground transition-colors">
+            <span>{group.group}</span>
+            <ChevronRight className={cn("size-3 transition-transform", open && "rotate-90")} />
+          </button>
+        ) : (
+          <div className="px-4 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">{group.group}</div>
+        )
+      )}
+      {(collapsed || !isCollapsible || open) && (
+        <div className="space-y-0.5 px-2">
+          {group.items.map((item: any) => (
+            <NavLink key={item.to} to={item.to} end={item.end}
+              className={({ isActive }) => cn(
+                "flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors",
+                isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+              title={collapsed ? item.label : undefined}
+            >
+              <item.icon className="size-4 shrink-0" />
+              {!collapsed && <span className="truncate">{item.label}</span>}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

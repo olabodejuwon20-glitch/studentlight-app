@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, Navigate } from "react-router-dom";
 import {
-  ChevronDown, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
+  ChevronDown, ChevronRight, GraduationCap, LayoutDashboard, Users, BookOpen, FileBarChart,
   Settings, ClipboardCheck, FilePlus2, Calendar, Library, Sparkles, MessagesSquare,
   Wallet, Activity, Sun, Moon, Search, Menu, LogOut, UserSquare2, ListChecks, PencilRuler,
   Building2, Ticket, Upload, Bus, Megaphone, NotebookPen, FolderOpen, UserCog,
@@ -259,6 +259,8 @@ export default function AppLayout() {
   const userLabel = displayName || email || "User";
   const initials = userLabel.split(/[\s@]/).filter(Boolean).map(s => s[0]).slice(0, 2).join("").toUpperCase();
 
+  const { pathname } = useLocation();
+
   return (
     <div className="min-h-screen flex bg-background">
       <RealtimeNotifier />
@@ -286,38 +288,18 @@ export default function AppLayout() {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <div className="space-y-5">
             {orderedSections.map((section) => (
-              <div key={section}>
-                {!collapsed && (
-                  <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                    {section}
-                  </div>
-                )}
-                {collapsed && section !== orderedSections[0] && (
-                  <div className="mx-3 mb-1.5 h-px bg-sidebar-border" />
-                )}
-                <ul className="space-y-1">
-                  {(grouped.get(section) ?? []).map((it) => {
-                    const path = !it.to
-                      ? schoolPath(school.slug, `/app/${activeRole}`)
-                      : it.to.startsWith("/")
-                        ? schoolPath(school.slug, it.to)
-                        : schoolPath(school.slug, `/app/${activeRole}/${it.to}`);
-                    return (
-                      <li key={path}>
-                        <NavLink to={path} end={!it.to} onClick={() => setMobileOpen(false)}
-                          title={collapsed ? it.label : undefined}
-                          className={({ isActive }) =>
-                            cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                              isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
-                          <it.icon className="size-[18px] shrink-0" />
-                          {!collapsed && <span>{it.label}</span>}
-                        </NavLink>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
+            <SidebarSection
+              key={section}
+              section={section}
+              items={(grouped.get(section) ?? []) as any}
+              collapsed={collapsed}
+              isFirstSection={section === orderedSections[0]}
+              activeRole={activeRole}
+              schoolSlug={school.slug}
+              pathname={pathname}
+              onNavigate={() => setMobileOpen(false)}
+            />
+          ))}
           </div>
         </nav>
 
@@ -425,6 +407,111 @@ function PageHeading() {
     <div className="min-w-0">
       <h1 className="font-display text-lg sm:text-xl font-bold leading-tight truncate">{meta.title}</h1>
       <p className="text-xs text-muted-foreground truncate">{meta.sub}</p>
+    </div>
+  );
+}
+
+function SidebarSection({
+  section, items, collapsed, isFirstSection, activeRole, schoolSlug, pathname, onNavigate,
+}: {
+  section: string;
+  items: { label: string; to: string; icon: any }[];
+  collapsed: boolean;
+  isFirstSection: boolean;
+  activeRole: Role;
+  schoolSlug: string;
+  pathname: string;
+  onNavigate: () => void;
+}) {
+  const pathFor = (to: string) =>
+    !to
+      ? schoolPath(schoolSlug, `/app/${activeRole}`)
+      : to.startsWith("/")
+        ? schoolPath(schoolSlug, to)
+        : schoolPath(schoolSlug, `/app/${activeRole}/${to}`);
+
+  const containsActive = items.some(it => {
+    const p = pathFor(it.to);
+    return !it.to ? pathname === p : pathname === p || pathname.startsWith(p + "/");
+  });
+
+  // Single-item or Overview groups never collapse — render flat.
+  const isCollapsible = items.length > 1 && section !== "Overview";
+  const storageKey = `sidebar:open:${activeRole}:${section}`;
+
+  const [open, setOpen] = useState<boolean>(() => {
+    if (!isCollapsible) return true;
+    try {
+      const v = localStorage.getItem(storageKey);
+      if (v === "1") return true;
+      if (v === "0") return false;
+    } catch {}
+    return containsActive; // default: open if it owns the active route
+  });
+
+  // Force the group open whenever navigation lands inside it.
+  useEffect(() => {
+    if (isCollapsible && containsActive) setOpen(true);
+  }, [containsActive, isCollapsible]);
+
+  const toggle = () => {
+    setOpen(o => {
+      const next = !o;
+      try { localStorage.setItem(storageKey, next ? "1" : "0"); } catch {}
+      return next;
+    });
+  };
+
+  return (
+    <div>
+      {!collapsed && (
+        isCollapsible ? (
+          <button
+            type="button"
+            onClick={toggle}
+            aria-expanded={open}
+            className="w-full flex items-center justify-between px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-foreground transition-colors"
+          >
+            <span>{section}</span>
+            <ChevronRight className={cn("size-3 transition-transform", open && "rotate-90")} />
+          </button>
+        ) : (
+          <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+            {section}
+          </div>
+        )
+      )}
+      {collapsed && !isFirstSection && (
+        <div className="mx-3 mb-1.5 h-px bg-sidebar-border" />
+      )}
+      {(collapsed || !isCollapsible || open) && (
+        <ul className="space-y-1">
+          {items.map((it) => {
+            const path = pathFor(it.to);
+            return (
+              <li key={path}>
+                <NavLink
+                  to={path}
+                  end={!it.to}
+                  onClick={onNavigate}
+                  title={collapsed ? it.label : undefined}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+                    )
+                  }
+                >
+                  <it.icon className="size-[18px] shrink-0" />
+                  {!collapsed && <span>{it.label}</span>}
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
