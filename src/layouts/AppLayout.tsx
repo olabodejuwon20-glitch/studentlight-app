@@ -410,3 +410,108 @@ function PageHeading() {
     </div>
   );
 }
+
+function SidebarSection({
+  section, items, collapsed, isFirstSection, activeRole, schoolSlug, pathname, onNavigate,
+}: {
+  section: string;
+  items: { label: string; to: string; icon: any }[];
+  collapsed: boolean;
+  isFirstSection: boolean;
+  activeRole: Role;
+  schoolSlug: string;
+  pathname: string;
+  onNavigate: () => void;
+}) {
+  const pathFor = (to: string) =>
+    !to
+      ? schoolPath(schoolSlug, `/app/${activeRole}`)
+      : to.startsWith("/")
+        ? schoolPath(schoolSlug, to)
+        : schoolPath(schoolSlug, `/app/${activeRole}/${to}`);
+
+  const containsActive = items.some(it => {
+    const p = pathFor(it.to);
+    return !it.to ? pathname === p : pathname === p || pathname.startsWith(p + "/");
+  });
+
+  // Single-item or Overview groups never collapse — render flat.
+  const isCollapsible = items.length > 1 && section !== "Overview";
+  const storageKey = `sidebar:open:${activeRole}:${section}`;
+
+  const [open, setOpen] = useState<boolean>(() => {
+    if (!isCollapsible) return true;
+    try {
+      const v = localStorage.getItem(storageKey);
+      if (v === "1") return true;
+      if (v === "0") return false;
+    } catch {}
+    return containsActive; // default: open if it owns the active route
+  });
+
+  // Force the group open whenever navigation lands inside it.
+  useEffect(() => {
+    if (isCollapsible && containsActive) setOpen(true);
+  }, [containsActive, isCollapsible]);
+
+  const toggle = () => {
+    setOpen(o => {
+      const next = !o;
+      try { localStorage.setItem(storageKey, next ? "1" : "0"); } catch {}
+      return next;
+    });
+  };
+
+  return (
+    <div>
+      {!collapsed && (
+        isCollapsible ? (
+          <button
+            type="button"
+            onClick={toggle}
+            aria-expanded={open}
+            className="w-full flex items-center justify-between px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-foreground transition-colors"
+          >
+            <span>{section}</span>
+            <ChevronRight className={cn("size-3 transition-transform", open && "rotate-90")} />
+          </button>
+        ) : (
+          <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+            {section}
+          </div>
+        )
+      )}
+      {collapsed && !isFirstSection && (
+        <div className="mx-3 mb-1.5 h-px bg-sidebar-border" />
+      )}
+      {(collapsed || !isCollapsible || open) && (
+        <ul className="space-y-1">
+          {items.map((it) => {
+            const path = pathFor(it.to);
+            return (
+              <li key={path}>
+                <NavLink
+                  to={path}
+                  end={!it.to}
+                  onClick={onNavigate}
+                  title={collapsed ? it.label : undefined}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+                    )
+                  }
+                >
+                  <it.icon className="size-[18px] shrink-0" />
+                  {!collapsed && <span>{it.label}</span>}
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
