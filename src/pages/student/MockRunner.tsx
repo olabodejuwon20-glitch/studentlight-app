@@ -236,7 +236,12 @@ function ExamShell(props: any) {
   const lowTime = secondsLeft < 300;
 
   return (
-    <div ref={shellRef} className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div ref={shellRef} className={cn(
+      "bg-background flex flex-col",
+      preferFullscreen || isFs
+        ? "fixed inset-0 z-50"
+        : "-mx-4 sm:-mx-6 -my-4 sm:-my-6 min-h-[calc(100vh-4rem)]",
+    )}>
       {/* Minimal top bar */}
       <header className="shrink-0 border-b border-border bg-card/80 backdrop-blur">
         <div className="flex items-center gap-3 px-4 sm:px-6 h-14">
