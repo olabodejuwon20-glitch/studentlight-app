@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Brain, ShieldAlert, LogIn, LogOut as LogOutIcon, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { superAction } from "@/lib/super";
 
@@ -25,6 +25,21 @@ const KNOWN_INTEGRATIONS = [
   { key: "sentry", name: "Sentry", desc: "Error tracking" },
   { key: "posthog", name: "PostHog", desc: "Product analytics" },
 ];
+
+function formatNumber(n: number | string | null | undefined) {
+  const v = Number(n ?? 0);
+  if (!Number.isFinite(v)) return "0";
+  return v.toLocaleString();
+}
+function formatRelative(iso: string | null | undefined) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return `${Math.floor(diff)}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
 
 export default function SuperSettings() {
   const [s, setS] = useState<Settings | null>(null);
@@ -74,6 +89,8 @@ export default function SuperSettings() {
           <TabsTrigger value="smtp">SMTP</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+          <TabsTrigger value="ai-cache">AI Cache</TabsTrigger>
+          <TabsTrigger value="auth-activity">Auth Activity</TabsTrigger>
         </TabsList>
 
         <TabsContent value="brand">
