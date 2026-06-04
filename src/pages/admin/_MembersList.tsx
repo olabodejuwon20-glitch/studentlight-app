@@ -24,11 +24,10 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
   useEffect(() => {
     if (!school) return;
     (async () => {
-      const { data: m } = await supabase
-        .from("memberships")
-        .select("user_id,created_at,bio_completed,profile_data,role")
-        .eq("school_id", school.id)
-        .eq("role", role);
+      const { data: m } = await supabase.rpc("admin_list_memberships_with_profile", {
+        _school: school.id,
+        _role: role as any,
+      });
       if (!m?.length) return setRows([]);
       const ids = m.map(x => x.user_id);
       const { data: profiles } = await supabase
