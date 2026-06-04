@@ -4320,6 +4320,20 @@ export type Database = {
       seed_mock_bank: { Args: { _school: string }; Returns: undefined }
       start_assessment: { Args: { _assessment_id: string }; Returns: string }
       submit_assessment: { Args: { _attempt_id: string }; Returns: Json }
+      super_ai_cache_stats: { Args: never; Returns: Json }
+      super_recent_auth_events: {
+        Args: { _event?: string; _limit?: number; _since?: string }
+        Returns: {
+          created_at: string
+          email: string
+          event: string
+          full_name: string
+          id: string
+          school_id: string
+          session_id: string
+          user_id: string
+        }[]
+      }
       verify_result_slip: {
         Args: { _id: string }
         Returns: {
