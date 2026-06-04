@@ -18,12 +18,12 @@ export function SchoolResultCard({ results }: Props) {
   useEffect(() => {
     if (!user || !school) return;
     (async () => {
-      const [{ data: p }, { data: m }, { data: sm }] = await Promise.all([
+      const [{ data: p }, { data: pdRaw }, { data: sm }] = await Promise.all([
         supabase.from("profiles").select("full_name,email,photo_url,gender,dob").eq("id", user.id).maybeSingle(),
-        supabase.from("memberships").select("profile_data").eq("school_id", school.id).eq("user_id", user.id).maybeSingle(),
+        supabase.rpc("get_my_membership_profile", { _school: school.id }),
         supabase.from("schools").select("motto,current_session,current_term,address").eq("id", school.id).maybeSingle(),
       ]);
-      setProfile(p); setMembership(m); setSchoolMeta(sm);
+      setProfile(p); setMembership({ profile_data: pdRaw ?? {} }); setSchoolMeta(sm);
     })();
   }, [user, school]);
 

@@ -4145,6 +4145,19 @@ export type Database = {
       }
     }
     Functions: {
+      admin_list_memberships_with_profile: {
+        Args: {
+          _role: Database["public"]["Enums"]["member_role"]
+          _school: string
+        }
+        Returns: {
+          bio_completed: boolean
+          created_at: string
+          profile_data: Json
+          role: Database["public"]["Enums"]["member_role"]
+          user_id: string
+        }[]
+      }
       apply_payment: { Args: { _payment_id: string }; Returns: undefined }
       bump_ai_quota: {
         Args: { _cost: number; _school_id: string; _tokens: number }
@@ -4234,6 +4247,7 @@ export type Database = {
           q_subject_id: string
         }[]
       }
+      get_my_membership_profile: { Args: { _school: string }; Returns: Json }
       get_school_by_slug: {
         Args: { _slug: string }
         Returns: {
