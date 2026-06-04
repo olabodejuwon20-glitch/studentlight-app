@@ -158,7 +158,249 @@ export default function SuperSettings() {
             </div>
           </Section>
         </TabsContent>
+
+        <TabsContent value="ai-cache">
+          <AICachePanel />
+        </TabsContent>
+
+        <TabsContent value="auth-activity">
+          <AuthActivityPanel />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function AICachePanel() {
+  const [data, setData] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  async function load() {
+    setLoading(true);
+    const { data: res, error } = await supabase.rpc("super_ai_cache_stats" as any);
+    if (error) toast.error(error.message);
+    setData(res ?? null);
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  if (loading) return <Skel className="h-72" />;
+  const t = data?.totals ?? {};
+  const byFeature = (data?.by_feature ?? []) as any[];
+  const byRole = (data?.by_role ?? []) as any[];
+  const recent = (data?.recent ?? []) as any[];
+
+  return (
+    <Section
+      title="AI Cache status"
+      description="Hit rate, tokens saved and last cache activity across all schools."
+    >
+      <div className="flex justify-end -mt-2 mb-3">
+        <Button size="sm" variant="outline" onClick={load}><RefreshCw className="size-3.5 mr-1.5" />Refresh</Button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        <Stat label="Hit rate" value={`${t.hit_rate ?? 0}%`} />
+        <Stat label="Cache entries" value={formatNumber(t.entries)} />
+        <Stat label="Total hits" value={formatNumber(t.total_hits)} />
+        <Stat label="Tokens saved" value={formatNumber(t.tokens_saved)} />
+        <Stat label="Cost saved" value={`$${Number(t.cost_saved_usd ?? 0).toFixed(2)}`} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="rounded-md border border-border">
+          <div className="px-3 py-2 border-b border-border text-xs font-semibold flex items-center gap-1.5"><Brain className="size-3.5" /> By feature</div>
+          <div className="max-h-80 overflow-y-auto text-xs">
+            <table className="w-full">
+              <thead className="bg-muted/40 text-muted-foreground"><tr>
+                <th className="text-left px-3 py-1.5">Feature</th>
+                <th className="text-right px-3 py-1.5">Hit %</th>
+                <th className="text-right px-3 py-1.5">Hits</th>
+                <th className="text-right px-3 py-1.5">Tokens saved</th>
+                <th className="text-right px-3 py-1.5">Last</th>
+              </tr></thead>
+              <tbody>
+                {byFeature.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No cache activity yet.</td></tr>}
+                {byFeature.map((r, i) => (
+                  <tr key={i} className="border-t border-border">
+                    <td className="px-3 py-1.5 font-medium">{r.feature}</td>
+                    <td className="px-3 py-1.5 text-right">{r.hit_rate}%</td>
+                    <td className="px-3 py-1.5 text-right">{formatNumber(r.hits)}</td>
+                    <td className="px-3 py-1.5 text-right">{formatNumber(r.tokens_saved)}</td>
+                    <td className="px-3 py-1.5 text-right text-muted-foreground">{formatRelative(r.last_used_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="rounded-md border border-border">
+          <div className="px-3 py-2 border-b border-border text-xs font-semibold">By role (last 60 days)</div>
+          <div className="max-h-80 overflow-y-auto text-xs">
+            <table className="w-full">
+              <thead className="bg-muted/40 text-muted-foreground"><tr>
+                <th className="text-left px-3 py-1.5">Role</th>
+                <th className="text-right px-3 py-1.5">Hit %</th>
+                <th className="text-right px-3 py-1.5">Hits</th>
+                <th className="text-right px-3 py-1.5">Misses</th>
+                <th className="text-right px-3 py-1.5">Last hit</th>
+              </tr></thead>
+              <tbody>
+                {byRole.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No data.</td></tr>}
+                {byRole.map((r, i) => (
+                  <tr key={i} className="border-t border-border">
+                    <td className="px-3 py-1.5 font-medium capitalize">{r.role}</td>
+                    <td className="px-3 py-1.5 text-right">{r.hit_rate}%</td>
+                    <td className="px-3 py-1.5 text-right">{formatNumber(r.hits)}</td>
+                    <td className="px-3 py-1.5 text-right">{formatNumber(r.misses)}</td>
+                    <td className="px-3 py-1.5 text-right text-muted-foreground">{formatRelative(r.last_hit_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-md border border-border mt-4">
+        <div className="px-3 py-2 border-b border-border text-xs font-semibold">Latest cached entries</div>
+        <ul className="divide-y divide-border text-xs">
+          {recent.length === 0 && <li className="px-3 py-3 text-muted-foreground">Nothing cached yet.</li>}
+          {recent.map((r, i) => (
+            <li key={i} className="px-3 py-2 flex items-center justify-between">
+              <span className="font-medium">{r.feature}</span>
+              <span className="text-muted-foreground">{formatNumber(r.hits)} hits · {formatNumber(r.tokens_saved)} tokens · {formatRelative(r.last_used_at)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </Section>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-border bg-card p-3">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-lg font-semibold mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+type AuthRow = { id: string; event: string; user_id: string | null; school_id: string | null; session_id: string | null; created_at: string; full_name: string | null; email: string | null };
+
+function AuthActivityPanel() {
+  const [rows, setRows] = useState<AuthRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "sign_in" | "sign_out" | "sign_up">("all");
+  const [windowDays, setWindowDays] = useState<number>(7);
+  const [q, setQ] = useState("");
+
+  async function load() {
+    setLoading(true);
+    const since = new Date(Date.now() - windowDays * 86400_000).toISOString();
+    const { data, error } = await supabase.rpc("super_recent_auth_events" as any, {
+      _limit: 500,
+      _event: filter === "all" ? null : filter,
+      _since: since,
+    });
+    if (error) toast.error(error.message);
+    setRows((data ?? []) as AuthRow[]);
+    setLoading(false);
+  }
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [filter, windowDays]);
+
+  const filtered = rows.filter(r => {
+    if (!q.trim()) return true;
+    const s = q.toLowerCase();
+    return (r.email || "").toLowerCase().includes(s) || (r.full_name || "").toLowerCase().includes(s);
+  });
+
+  // Suspicious: > 5 sign-ins for the same user in the last 10 min
+  const suspicious = (() => {
+    const cutoff = Date.now() - 10 * 60_000;
+    const by: Record<string, number> = {};
+    rows.forEach(r => {
+      if (r.event !== "sign_in" || !r.user_id) return;
+      if (new Date(r.created_at).getTime() < cutoff) return;
+      by[r.user_id] = (by[r.user_id] ?? 0) + 1;
+    });
+    return Object.entries(by).filter(([, n]) => n >= 5).length;
+  })();
+
+  const counts = {
+    sign_in: rows.filter(r => r.event === "sign_in").length,
+    sign_out: rows.filter(r => r.event === "sign_out").length,
+    sign_up: rows.filter(r => r.event === "sign_up").length,
+  };
+
+  return (
+    <Section title="Authentication activity" description="Monitor sign-in and sign-out events across the platform to spot suspicious access.">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <Stat label="Sign-ins" value={formatNumber(counts.sign_in)} />
+        <Stat label="Sign-outs" value={formatNumber(counts.sign_out)} />
+        <Stat label="Sign-ups" value={formatNumber(counts.sign_up)} />
+        <div className={`rounded-md border p-3 ${suspicious > 0 ? "border-destructive bg-destructive/5" : "border-border bg-card"}`}>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1"><ShieldAlert className="size-3" /> Suspicious users</div>
+          <div className="text-lg font-semibold mt-0.5">{suspicious}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="flex items-center gap-1.5 text-xs">
+          <span className="text-muted-foreground">Event:</span>
+          {(["all","sign_in","sign_out","sign_up"] as const).map(v => (
+            <button key={v} onClick={() => setFilter(v)}
+              className={`px-2 py-1 rounded-md border text-xs ${filter === v ? "bg-foreground text-background border-foreground" : "border-border hover:bg-muted"}`}>{v.replace("_"," ")}</button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5 text-xs">
+          <span className="text-muted-foreground">Window:</span>
+          {[1, 7, 30].map(d => (
+            <button key={d} onClick={() => setWindowDays(d)}
+              className={`px-2 py-1 rounded-md border text-xs ${windowDays === d ? "bg-foreground text-background border-foreground" : "border-border hover:bg-muted"}`}>{d}d</button>
+          ))}
+        </div>
+        <div className="flex-1" />
+        <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search email or name…" className="h-8 w-56" />
+        <Button size="sm" variant="outline" onClick={load}><RefreshCw className="size-3.5 mr-1.5" />Refresh</Button>
+      </div>
+
+      {loading ? <Skel className="h-64" /> : (
+        <div className="rounded-md border border-border overflow-hidden">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/40 text-muted-foreground"><tr>
+              <th className="text-left px-3 py-2">When</th>
+              <th className="text-left px-3 py-2">Event</th>
+              <th className="text-left px-3 py-2">User</th>
+              <th className="text-left px-3 py-2">Email</th>
+              <th className="text-left px-3 py-2">Session</th>
+            </tr></thead>
+            <tbody className="max-h-[480px]">
+              {filtered.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No events.</td></tr>}
+              {filtered.slice(0, 300).map(r => (
+                <tr key={r.id} className="border-t border-border">
+                  <td className="px-3 py-1.5 text-muted-foreground">{formatRelative(r.created_at)}</td>
+                  <td className="px-3 py-1.5">
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                      r.event === "sign_in" ? "bg-success/15 text-success"
+                      : r.event === "sign_out" ? "bg-muted text-muted-foreground"
+                      : "bg-primary/15 text-primary"
+                    }`}>
+                      {r.event === "sign_in" ? <LogIn className="size-3" /> : r.event === "sign_out" ? <LogOutIcon className="size-3" /> : null}
+                      {r.event}
+                    </span>
+                  </td>
+                  <td className="px-3 py-1.5">{r.full_name || <span className="text-muted-foreground">—</span>}</td>
+                  <td className="px-3 py-1.5">{r.email || <span className="text-muted-foreground">anonymous</span>}</td>
+                  <td className="px-3 py-1.5 text-muted-foreground font-mono text-[10px]">{r.session_id ? r.session_id.slice(0, 12) : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Section>
   );
 }
