@@ -321,8 +321,9 @@ function AuthActivityPanel() {
   // Realtime stream — prepend new auth_events as they happen
   useEffect(() => {
     if (!live) return;
+    const nonce = Math.random().toString(36).slice(2, 10);
     const ch = supabase
-      .channel("super:auth_events")
+      .channel(`super:auth_events:${nonce}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "auth_events" }, async (payload: any) => {
         const ev = payload.new;
         if (filter !== "all" && ev.event !== filter) return;
@@ -479,8 +480,9 @@ function LiveErrorsPanel() {
 
   useEffect(() => {
     if (!live) return;
+    const nonce = Math.random().toString(36).slice(2, 10);
     const ch = supabase
-      .channel("super:client_errors")
+      .channel(`super:client_errors:${nonce}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "client_errors" }, (payload: any) => {
         const row = payload.new as ErrRow;
         setRows(prev => [row, ...prev].slice(0, 500));

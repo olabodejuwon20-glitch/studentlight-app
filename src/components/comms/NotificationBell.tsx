@@ -44,8 +44,9 @@ export function NotificationBell() {
     if (!user) return;
     refreshAnnouncements();
     refreshUnreadMsgs();
+    const nonce = Math.random().toString(36).slice(2, 10);
     const ch = supabase
-      .channel(`notif-bell:${user.id}`)
+      .channel(`notif-bell:${user.id}:${nonce}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "platform_announcements" }, refreshAnnouncements)
       .on("postgres_changes", { event: "*", schema: "public", table: "announcement_reads", filter: `user_id=eq.${user.id}` }, refreshAnnouncements)
       .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `recipient_id=eq.${user.id}` }, refreshUnreadMsgs)
