@@ -542,17 +542,16 @@ function LiveErrorsPanel() {
             </tr></thead>
             <tbody>
               {filtered.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No errors recorded.</td></tr>}
-              {filtered.slice(0, 200).map(r => (
-                <>
-                  <tr key={r.id} onClick={() => setExpanded(expanded === r.id ? null : r.id)}
+              {filtered.slice(0, 200).flatMap(r => [
+                  (<tr key={r.id} onClick={() => setExpanded(expanded === r.id ? null : r.id)}
                       className="border-t border-border hover:bg-muted/40 cursor-pointer">
                     <td className="px-3 py-1.5 text-muted-foreground">{formatRelative(r.created_at)}</td>
                     <td className="px-3 py-1.5"><span className="inline-flex px-1.5 py-0.5 rounded text-[10px] bg-destructive/10 text-destructive">{r.source || "error"}</span></td>
                     <td className="px-3 py-1.5 font-medium truncate max-w-[420px]" title={r.message}>{r.message}</td>
                     <td className="px-3 py-1.5 text-muted-foreground truncate" title={r.cause ?? ""}>{r.cause || "—"}</td>
                     <td className="px-3 py-1.5 text-muted-foreground font-mono text-[10px] truncate" title={r.route ?? ""}>{r.route || "—"}</td>
-                  </tr>
-                  {expanded === r.id && (
+                  </tr>),
+                  expanded === r.id ? (
                     <tr key={r.id + ":d"} className="bg-muted/20 border-t border-border">
                       <td colSpan={5} className="px-3 py-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
@@ -569,9 +568,8 @@ function LiveErrorsPanel() {
                         </div>
                       </td>
                     </tr>
-                  )}
-                </>
-              ))}
+                  ) : null,
+              ])}
             </tbody>
           </table>
         </div>
