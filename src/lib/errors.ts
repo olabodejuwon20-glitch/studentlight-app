@@ -7,6 +7,8 @@
  * debugging.
  */
 
+import { reportError } from "@/lib/error-reporter";
+
 const TECH_PATTERNS: { re: RegExp; msg: string }[] = [
   { re: /Edge Function returned a non-2xx/i, msg: "" },
   { re: /FunctionsHttpError|FunctionsFetchError|FunctionsRelayError/i, msg: "" },
@@ -38,6 +40,14 @@ export function friendlyError(e: unknown, fallback = "Something went wrong. Plea
   // Log the real thing for devs.
   // eslint-disable-next-line no-console
   console.error("[error]", e);
+  // Stream to super admin live error feed (silent — caller decides UI)
+  reportError({
+    source: "supabase",
+    message: String(raw || fallback),
+    cause: anyE?.code || anyE?.name,
+    stack: anyE?.stack,
+    silent: true,
+  });
   return pickFromMessage(String(raw || ""), fallback);
 }
 

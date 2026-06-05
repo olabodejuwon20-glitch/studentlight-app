@@ -3,6 +3,7 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 import { RootErrorBoundary } from "./components/ErrorBoundary";
+import { installGlobalErrorReporter } from "./lib/error-reporter";
 
 // Guard service-worker registration against Lovable preview iframe / hosts
 const isInIframe = (() => {
@@ -28,6 +29,8 @@ if (!isPreviewHost && !isInIframe && "serviceWorker" in navigator) {
     regs.forEach((r) => r.unregister());
   });
 }
+
+installGlobalErrorReporter();
 
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>

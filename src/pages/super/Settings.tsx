@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Save, Brain, ShieldAlert, LogIn, LogOut as LogOutIcon, RefreshCw } from "lucide-react";
+import { Loader2, Save, Brain, ShieldAlert, LogIn, LogOut as LogOutIcon, RefreshCw, AlertOctagon, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { superAction } from "@/lib/super";
 
@@ -91,6 +91,7 @@ export default function SuperSettings() {
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
           <TabsTrigger value="ai-cache">AI Cache</TabsTrigger>
           <TabsTrigger value="auth-activity">Auth Activity</TabsTrigger>
+        <TabsTrigger value="live-errors">Live Errors</TabsTrigger>
         </TabsList>
 
         <TabsContent value="brand">
@@ -165,6 +166,10 @@ export default function SuperSettings() {
 
         <TabsContent value="auth-activity">
           <AuthActivityPanel />
+        </TabsContent>
+
+        <TabsContent value="live-errors">
+          <LiveErrorsPanel />
         </TabsContent>
       </Tabs>
     </div>
@@ -296,6 +301,8 @@ function AuthActivityPanel() {
   const [filter, setFilter] = useState<"all" | "sign_in" | "sign_out" | "sign_up">("all");
   const [windowDays, setWindowDays] = useState<number>(7);
   const [q, setQ] = useState("");
+  const [live, setLive] = useState(true);
+  const [liveCount, setLiveCount] = useState(0);
 
   async function load() {
     setLoading(true);
@@ -310,6 +317,29 @@ function AuthActivityPanel() {
     setLoading(false);
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [filter, windowDays]);
+
+  // Realtime stream — prepend new auth_events as they happen
+  useEffect(() => {
+    if (!live) return;
+    const ch = supabase
+      .channel("super:auth_events")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "auth_events" }, async (payload: any) => {
+        const ev = payload.new;
+        if (filter !== "all" && ev.event !== filter) return;
+        const cutoff = Date.now() - windowDays * 86400_000;
+        if (new Date(ev.created_at).getTime() < cutoff) return;
+        // hydrate profile
+        let full_name: string | null = null, email: string | null = null;
+        if (ev.user_id) {
+          const { data: p } = await supabase.from("profiles").select("full_name,email").eq("id", ev.user_id).maybeSingle();
+          full_name = p?.full_name ?? null; email = (p as any)?.email ?? null;
+        }
+        setRows(prev => [{ ...ev, full_name, email } as AuthRow, ...prev].slice(0, 1000));
+        setLiveCount(c => c + 1);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [live, filter, windowDays]);
 
   const filtered = rows.filter(r => {
     if (!q.trim()) return true;
@@ -363,6 +393,13 @@ function AuthActivityPanel() {
           ))}
         </div>
         <div className="flex-1" />
+        <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border ${live ? "border-success/40 bg-success/10 text-success" : "border-border text-muted-foreground"}`}>
+          <Radio className={`size-3 ${live ? "animate-pulse" : ""}`} /> {live ? `Live · ${liveCount} new` : "Paused"}
+        </span>
+        <button onClick={() => { setLive(v => !v); setLiveCount(0); }}
+          className="px-2 py-1 rounded-md border border-border text-xs hover:bg-muted">
+          {live ? "Pause" : "Resume"}
+        </button>
         <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search email or name…" className="h-8 w-56" />
         <Button size="sm" variant="outline" onClick={load}><RefreshCw className="size-3.5 mr-1.5" />Refresh</Button>
       </div>
@@ -397,6 +434,142 @@ function AuthActivityPanel() {
                   <td className="px-3 py-1.5 text-muted-foreground font-mono text-[10px]">{r.session_id ? r.session_id.slice(0, 12) : "—"}</td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Section>
+  );
+}
+
+type ErrRow = {
+  id: string;
+  created_at: string;
+  source: string | null;
+  message: string;
+  cause: string | null;
+  stack: string | null;
+  route: string | null;
+  user_id: string | null;
+  user_agent: string | null;
+  severity: string | null;
+  context: any;
+};
+
+function LiveErrorsPanel() {
+  const [rows, setRows] = useState<ErrRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [live, setLive] = useState(true);
+  const [liveCount, setLiveCount] = useState(0);
+  const [q, setQ] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("client_errors")
+      .select("id,created_at,source,message,cause,stack,route,user_id,user_agent,severity,context")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (error) toast.error(error.message);
+    setRows((data ?? []) as ErrRow[]);
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (!live) return;
+    const ch = supabase
+      .channel("super:client_errors")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "client_errors" }, (payload: any) => {
+        const row = payload.new as ErrRow;
+        setRows(prev => [row, ...prev].slice(0, 500));
+        setLiveCount(c => c + 1);
+        toast.error(row.message, {
+          description: row.cause ? `${row.source ?? "error"} · ${row.cause}` : (row.source ?? "error"),
+          duration: 6000,
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [live]);
+
+  const filtered = rows.filter(r => {
+    if (!q.trim()) return true;
+    const s = q.toLowerCase();
+    return (r.message || "").toLowerCase().includes(s)
+        || (r.cause || "").toLowerCase().includes(s)
+        || (r.route || "").toLowerCase().includes(s)
+        || (r.source || "").toLowerCase().includes(s);
+  });
+
+  const last5m = rows.filter(r => Date.now() - new Date(r.created_at).getTime() < 5 * 60_000).length;
+  const last1h = rows.filter(r => Date.now() - new Date(r.created_at).getTime() < 60 * 60_000).length;
+  const bySource = rows.reduce<Record<string, number>>((acc, r) => { const k = r.source || "unknown"; acc[k] = (acc[k] ?? 0) + 1; return acc; }, {});
+
+  return (
+    <Section title="Live error feed" description="Streams every error users encounter across the platform — with the cause — in real time.">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <Stat label="Last 5 min" value={formatNumber(last5m)} />
+        <Stat label="Last hour" value={formatNumber(last1h)} />
+        <Stat label="Total (window)" value={formatNumber(rows.length)} />
+        <div className="rounded-md border border-border bg-card p-3">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1"><AlertOctagon className="size-3" /> Top source</div>
+          <div className="text-lg font-semibold mt-0.5">{Object.entries(bySource).sort((a,b)=>b[1]-a[1])[0]?.[0] ?? "—"}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border ${live ? "border-success/40 bg-success/10 text-success" : "border-border text-muted-foreground"}`}>
+          <Radio className={`size-3 ${live ? "animate-pulse" : ""}`} /> {live ? `Live · ${liveCount} new` : "Paused"}
+        </span>
+        <button onClick={() => { setLive(v => !v); setLiveCount(0); }}
+          className="px-2 py-1 rounded-md border border-border text-xs hover:bg-muted">{live ? "Pause" : "Resume"}</button>
+        <div className="flex-1" />
+        <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search message, cause, route…" className="h-8 w-72" />
+        <Button size="sm" variant="outline" onClick={load}><RefreshCw className="size-3.5 mr-1.5" />Refresh</Button>
+      </div>
+
+      {loading ? <Skel className="h-64" /> : (
+        <div className="rounded-md border border-border overflow-hidden">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/40 text-muted-foreground"><tr>
+              <th className="text-left px-3 py-2 w-28">When</th>
+              <th className="text-left px-3 py-2 w-24">Source</th>
+              <th className="text-left px-3 py-2">Error</th>
+              <th className="text-left px-3 py-2 w-56">Cause</th>
+              <th className="text-left px-3 py-2 w-48">Route</th>
+            </tr></thead>
+            <tbody>
+              {filtered.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No errors recorded.</td></tr>}
+              {filtered.slice(0, 200).flatMap(r => [
+                  (<tr key={r.id} onClick={() => setExpanded(expanded === r.id ? null : r.id)}
+                      className="border-t border-border hover:bg-muted/40 cursor-pointer">
+                    <td className="px-3 py-1.5 text-muted-foreground">{formatRelative(r.created_at)}</td>
+                    <td className="px-3 py-1.5"><span className="inline-flex px-1.5 py-0.5 rounded text-[10px] bg-destructive/10 text-destructive">{r.source || "error"}</span></td>
+                    <td className="px-3 py-1.5 font-medium truncate max-w-[420px]" title={r.message}>{r.message}</td>
+                    <td className="px-3 py-1.5 text-muted-foreground truncate" title={r.cause ?? ""}>{r.cause || "—"}</td>
+                    <td className="px-3 py-1.5 text-muted-foreground font-mono text-[10px] truncate" title={r.route ?? ""}>{r.route || "—"}</td>
+                  </tr>),
+                  expanded === r.id ? (
+                    <tr key={r.id + ":d"} className="bg-muted/20 border-t border-border">
+                      <td colSpan={5} className="px-3 py-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                          <div>
+                            <div className="text-muted-foreground mb-1">User</div>
+                            <div className="font-mono">{r.user_id || "anonymous"}</div>
+                            <div className="text-muted-foreground mt-2 mb-1">User-Agent</div>
+                            <div className="break-all">{r.user_agent || "—"}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground mb-1">Stack</div>
+                            <pre className="whitespace-pre-wrap break-all max-h-48 overflow-y-auto bg-background rounded border border-border p-2">{r.stack || "—"}</pre>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null,
+              ])}
             </tbody>
           </table>
         </div>

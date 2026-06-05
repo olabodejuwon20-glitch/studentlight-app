@@ -1099,6 +1099,51 @@ export type Database = {
           },
         ]
       }
+      client_errors: {
+        Row: {
+          cause: string | null
+          context: Json | null
+          created_at: string
+          id: string
+          message: string
+          route: string | null
+          school_id: string | null
+          severity: string | null
+          source: string | null
+          stack: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cause?: string | null
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message: string
+          route?: string | null
+          school_id?: string | null
+          severity?: string | null
+          source?: string | null
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cause?: string | null
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string
+          route?: string | null
+          school_id?: string | null
+          severity?: string | null
+          source?: string | null
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       conversation_messages: {
         Row: {
           attachments: Json

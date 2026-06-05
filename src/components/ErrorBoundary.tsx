@@ -1,6 +1,7 @@
 import { Component, ReactNode } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { reportError } from "@/lib/error-reporter";
 
 interface State { error: Error | null }
 
@@ -14,6 +15,13 @@ export class RootErrorBoundary extends Component<{ children: ReactNode }, State>
   componentDidCatch(error: Error, info: { componentStack: string }) {
     // eslint-disable-next-line no-console
     console.error("[RootErrorBoundary]", error, info.componentStack);
+    reportError({
+      source: "react",
+      message: error.message || "React render error",
+      cause: error.name,
+      stack: error.stack,
+      context: { componentStack: info.componentStack?.slice(0, 2000) },
+    });
   }
 
   reset = () => this.setState({ error: null });
