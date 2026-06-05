@@ -15,18 +15,28 @@ const TECH_PATTERNS: { re: RegExp; msg: string }[] = [
   { re: /Failed to fetch|NetworkError|TypeError: Load failed/i, msg: "Network issue — check your internet connection and try again." },
   { re: /JWT expired|invalid (jwt|token)|not authenticated|Unauthorized/i, msg: "Your session has expired. Please sign in again." },
   { re: /permission denied|row-level security|violates row level|RLS|policy/i, msg: "You don't have permission to do that." },
-  { re: /duplicate key|already exists|unique constraint/i, msg: "This record already exists." },
+  { re: /duplicate key|already exists|unique constraint|conflict/i, msg: "This already exists. Please use a different value." },
   { re: /foreign key|violates foreign key/i, msg: "This action conflicts with related records." },
-  { re: /value too long|invalid input syntax|check constraint/i, msg: "Some of the information you entered isn't valid." },
+  { re: /value too long|invalid input syntax|check constraint|not.null constraint|null value in column/i, msg: "Some of the information you entered isn't valid." },
   { re: /rate limit|too many requests/i, msg: "You're doing that too quickly. Please wait a moment and try again." },
+  // Internal / library jargon — never show raw to users
+  { re: /postgres_changes|realtime[:.]|channel|subscribe\(\)|websocket|wss?:\/\//i, msg: "Connection hiccup — please refresh and try again." },
+  { re: /pgrst\d+|relation .* does not exist|column .* does not exist|syntax error at or near|function .* does not exist/i, msg: "We hit a problem processing your request. Please try again." },
+  { re: /at\s+\w+\s*\(|TypeError|ReferenceError|SyntaxError|undefined is not|cannot read prop/i, msg: "Something went wrong on our side. Please try again." },
+  { re: /supabase|postgrest|gotrue|kong|fetch failed|aborted|cors/i, msg: "We couldn't complete that just now. Please try again." },
 ];
 
 function pickFromMessage(raw: string, fallback: string): string {
   for (const { re, msg } of TECH_PATTERNS) {
     if (re.test(raw)) return msg || fallback;
   }
-  // Keep short, already-friendly messages.
-  if (raw && raw.length < 180 && !/\b(at\s+\w+|stack|undefined is not|cannot read)/i.test(raw)) {
+  // Keep short, already-friendly messages. Reject anything that looks technical
+  // (UUIDs, code identifiers, snake_case, file paths, error codes).
+  if (
+    raw &&
+    raw.length < 160 &&
+    !/[{}<>]|::|\/\w+\/|_[a-z]+_|[a-f0-9]{8}-[a-f0-9]{4}|\bE\d{3}\b|\bPGRST\b/i.test(raw)
+  ) {
     return raw;
   }
   return fallback;
