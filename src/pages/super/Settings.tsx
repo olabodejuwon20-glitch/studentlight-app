@@ -301,6 +301,8 @@ function AuthActivityPanel() {
   const [filter, setFilter] = useState<"all" | "sign_in" | "sign_out" | "sign_up">("all");
   const [windowDays, setWindowDays] = useState<number>(7);
   const [q, setQ] = useState("");
+  const [live, setLive] = useState(true);
+  const [liveCount, setLiveCount] = useState(0);
 
   async function load() {
     setLoading(true);
@@ -315,6 +317,29 @@ function AuthActivityPanel() {
     setLoading(false);
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [filter, windowDays]);
+
+  // Realtime stream — prepend new auth_events as they happen
+  useEffect(() => {
+    if (!live) return;
+    const ch = supabase
+      .channel("super:auth_events")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "auth_events" }, async (payload: any) => {
+        const ev = payload.new;
+        if (filter !== "all" && ev.event !== filter) return;
+        const cutoff = Date.now() - windowDays * 86400_000;
+        if (new Date(ev.created_at).getTime() < cutoff) return;
+        // hydrate profile
+        let full_name: string | null = null, email: string | null = null;
+        if (ev.user_id) {
+          const { data: p } = await supabase.from("profiles").select("full_name,email").eq("id", ev.user_id).maybeSingle();
+          full_name = p?.full_name ?? null; email = (p as any)?.email ?? null;
+        }
+        setRows(prev => [{ ...ev, full_name, email } as AuthRow, ...prev].slice(0, 1000));
+        setLiveCount(c => c + 1);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [live, filter, windowDays]);
 
   const filtered = rows.filter(r => {
     if (!q.trim()) return true;
@@ -368,6 +393,13 @@ function AuthActivityPanel() {
           ))}
         </div>
         <div className="flex-1" />
+        <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border ${live ? "border-success/40 bg-success/10 text-success" : "border-border text-muted-foreground"}`}>
+          <Radio className={`size-3 ${live ? "animate-pulse" : ""}`} /> {live ? `Live · ${liveCount} new` : "Paused"}
+        </span>
+        <button onClick={() => { setLive(v => !v); setLiveCount(0); }}
+          className="px-2 py-1 rounded-md border border-border text-xs hover:bg-muted">
+          {live ? "Pause" : "Resume"}
+        </button>
         <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search email or name…" className="h-8 w-56" />
         <Button size="sm" variant="outline" onClick={load}><RefreshCw className="size-3.5 mr-1.5" />Refresh</Button>
       </div>
