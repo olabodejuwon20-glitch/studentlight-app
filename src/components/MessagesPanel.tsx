@@ -65,7 +65,8 @@ export function MessagesPanel() {
     };
     load();
 
-    const ch = supabase.channel(`msg-thread:${user.id}:${active.user_id}`)
+    const nonce1 = Math.random().toString(36).slice(2, 10);
+    const ch = supabase.channel(`msg-thread:${user.id}:${active.user_id}:${nonce1}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload: any) => {
         const m = payload.new;
         if (!m) return;
@@ -93,7 +94,8 @@ export function MessagesPanel() {
   useEffect(() => {
     if (!active || !user) return;
     const ids = [user.id, active.user_id].sort();
-    const ch = supabase.channel(`typing:${ids[0]}:${ids[1]}`, { config: { broadcast: { self: false } } })
+    const nonce2 = Math.random().toString(36).slice(2, 10);
+    const ch = supabase.channel(`typing:${ids[0]}:${ids[1]}:${nonce2}`, { config: { broadcast: { self: false } } })
       .on("broadcast", { event: "typing" }, (payload: any) => {
         if (payload?.payload?.user_id !== active.user_id) return;
         setPeerTyping(true);

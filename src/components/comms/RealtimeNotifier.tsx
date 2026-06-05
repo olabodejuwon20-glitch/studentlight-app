@@ -26,8 +26,11 @@ export function RealtimeNotifier() {
     let retry: number | null = null;
 
     const subscribe = () => {
+      const nonce = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
+        ? (crypto as any).randomUUID().slice(0, 8)
+        : Math.random().toString(36).slice(2, 10);
       const ch = supabase
-        .channel(`notifier:${user.id}:${school.id}`)
+        .channel(`notifier:${user.id}:${school.id}:${nonce}`)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${user.id}` },

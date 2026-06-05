@@ -43,62 +43,75 @@ export default function MockResult() {
   const ModeIcon = summary.mode === "jamb_sim" ? GraduationCap : Award;
   const modeLabel = summary.mode === "jamb_sim" ? "JAMB CBT Mock" : "NECO CBT Mock";
   const pct = summary.percentage as number;
-  const band = pct >= 70 ? { tone: "text-success", ring: "ring-success/40", bg: "bg-success/10", verdict: "Excellent" }
-    : pct >= 50 ? { tone: "text-primary", ring: "ring-primary/40", bg: "bg-primary/10", verdict: "Good effort" }
-    : pct >= 40 ? { tone: "text-warning", ring: "ring-warning/40", bg: "bg-warning/10", verdict: "Keep pushing" }
-    : { tone: "text-destructive", ring: "ring-destructive/40", bg: "bg-destructive/10", verdict: "More practice needed" };
+  const band = pct >= 70 ? { tone: "text-success", bar: "bg-success", soft: "bg-success/10", verdict: "Excellent" }
+    : pct >= 50 ? { tone: "text-primary", bar: "bg-primary", soft: "bg-primary/10", verdict: "Good effort" }
+    : pct >= 40 ? { tone: "text-warning", bar: "bg-warning", soft: "bg-warning/10", verdict: "Keep pushing" }
+    : { tone: "text-destructive", bar: "bg-destructive", soft: "bg-destructive/10", verdict: "More practice needed" };
+
+  const avgPerSubject = Math.round(
+    summary.per_subject.reduce((a: number, b: any) => a + b.percentage, 0) / Math.max(1, summary.per_subject.length)
+  );
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-10">
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="absolute inset-0 -z-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--student)/0.18),transparent_60%),radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.14),transparent_55%)]" aria-hidden />
-        <div className="relative p-5 sm:p-8">
-          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="size-10 rounded-xl bg-primary/15 grid place-items-center"><ModeIcon className="size-5 text-primary" /></div>
-              <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Mock Result</div>
-                <h1 className="font-display font-bold text-lg sm:text-xl">{modeLabel}</h1>
-              </div>
+    <div className="max-w-3xl mx-auto space-y-5 pb-10 px-1">
+      {/* Compact performance card */}
+      <div className="rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="size-10 rounded-xl bg-primary/15 grid place-items-center shrink-0">
+              <ModeIcon className="size-5 text-primary" />
             </div>
-            <Badge variant="secondary">Practice — does not affect school transcript</Badge>
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Mock Result</div>
+              <h1 className="font-display font-bold text-base sm:text-lg truncate">{modeLabel}</h1>
+            </div>
           </div>
+          <Badge variant="secondary" className="text-[10px] hidden sm:inline-flex">Practice only</Badge>
+        </div>
 
-          <div className="grid sm:grid-cols-[auto_1fr] gap-6 items-center">
-            <div className={cn("relative size-32 sm:size-40 rounded-full ring-8 grid place-items-center", band.ring, band.bg)}>
-              <div className="text-center">
-                <div className={cn("font-display text-4xl sm:text-5xl font-bold leading-none", band.tone)}>{pct}%</div>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1 font-semibold">{band.verdict}</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <StatTile icon={Trophy} label="Score" value={`${summary.total_score}/${summary.total_questions}`} />
-              <StatTile icon={Target} label="Subjects" value={String(summary.per_subject.length)} />
-              {summary.jamb_projection != null
-                ? <StatTile icon={TrendingUp} label="Projected JAMB" value={`${summary.jamb_projection}/400`} />
-                : <StatTile icon={TrendingUp} label="Avg / subject" value={`${Math.round(summary.per_subject.reduce((a: number, b: any) => a + b.percentage, 0) / Math.max(1, summary.per_subject.length))}%`} />}
-            </div>
+        <div className="flex items-baseline justify-between mb-2">
+          <div>
+            <div className={cn("font-display text-3xl sm:text-4xl font-bold leading-none", band.tone)}>{pct}%</div>
+            <div className="text-[11px] text-muted-foreground mt-1 font-medium">{band.verdict}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Overall</div>
+            <div className="text-sm font-semibold tabular-nums mt-0.5">{summary.total_score}/{summary.total_questions}</div>
           </div>
         </div>
+        <div className={cn("h-2 rounded-full overflow-hidden", band.soft)}>
+          <div className={cn("h-full rounded-full transition-all", band.bar)} style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+
+      {/* Equal-sized stat cards */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <StatTile icon={Trophy} label="Score" value={`${summary.total_score}/${summary.total_questions}`} />
+        <StatTile icon={Target} label="Subjects" value={String(summary.per_subject.length)} />
+        {summary.jamb_projection != null
+          ? <StatTile icon={TrendingUp} label="Projected JAMB" value={`${summary.jamb_projection}/400`} />
+          : <StatTile icon={TrendingUp} label="Avg / Subject" value={`${avgPerSubject}%`} />}
       </div>
 
       {/* Per-subject */}
       <SectionCard title="Subject breakdown" description="How you did in each paper">
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="space-y-3">
           {summary.per_subject.map((s: any) => (
-            <div key={s.id} className="rounded-xl border border-border p-4 bg-card">
-              <div className="flex items-center justify-between mb-2">
+            <div key={s.id} className="rounded-xl border border-border bg-card shadow-sm p-3.5">
+              <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="size-2.5 rounded-full shrink-0" style={{ background: s.color }} />
                   <div className="font-semibold text-sm truncate">{s.name}</div>
                 </div>
-                <span className="tabular-nums text-sm font-bold">{s.score}/{s.total}</span>
+                <span className="tabular-nums text-sm font-bold shrink-0">{s.score}/{s.total}</span>
               </div>
               <div className="h-2 rounded-full bg-secondary overflow-hidden">
                 <div className="h-full rounded-full transition-all" style={{ width: `${s.percentage}%`, background: s.color }} />
               </div>
-              <div className="text-[11px] text-muted-foreground mt-1.5">{s.percentage}% · {s.answered} answered</div>
+              <div className="flex items-center justify-between mt-1.5 text-[11px] text-muted-foreground">
+                <span className="font-semibold tabular-nums">{s.percentage}%</span>
+                <span>{s.answered} answered</span>
+              </div>
             </div>
           ))}
         </div>
@@ -118,10 +131,10 @@ export default function MockResult() {
 
       {/* Footer actions */}
       <div className="flex flex-col sm:flex-row gap-2 sm:justify-between">
-        <Button variant="outline" onClick={() => nav(schoolPath(slug, "/app/student/mock"))}>
+        <Button variant="outline" className="w-full sm:w-auto" onClick={() => nav(schoolPath(slug, "/app/student/mock"))}>
           <ArrowLeft className="size-4 mr-1.5" /> Back to mocks
         </Button>
-        <Button onClick={() => nav(schoolPath(slug, `/app/student/review?session=${sessionId}`))}>
+        <Button className="w-full sm:w-auto" onClick={() => nav(schoolPath(slug, `/app/student/review?session=${sessionId}`))}>
           <BookOpenCheck className="size-4 mr-1.5" /> Review every question with AI
         </Button>
       </div>
@@ -131,10 +144,12 @@ export default function MockResult() {
 
 function StatTile({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card/60 p-3">
-      <Icon className="size-4 text-muted-foreground mb-1.5" />
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
-      <div className="font-display font-bold text-base sm:text-lg mt-0.5">{value}</div>
+    <div className="rounded-xl border border-border bg-card shadow-sm p-3 min-h-[88px] flex flex-col justify-between">
+      <Icon className="size-4 text-muted-foreground" />
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-tight">{label}</div>
+        <div className="font-display font-bold text-sm sm:text-base mt-0.5 tabular-nums">{value}</div>
+      </div>
     </div>
   );
 }

@@ -158,8 +158,9 @@ export async function openDirectConversation(args: {
 export function useConversationsRealtime(userId: string | undefined, onChange: () => void) {
   useEffect(() => {
     if (!userId) return;
+    const nonce = Math.random().toString(36).slice(2, 10);
     const ch = supabase
-      .channel(`comms:${userId}`)
+      .channel(`comms:${userId}:${nonce}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "conversation_messages" }, onChange)
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, onChange)
       .subscribe();
@@ -187,8 +188,9 @@ export function useUnreadCount(schoolId: string | undefined, userId: string | un
       if (alive) setCount(unread);
     };
     load();
+    const nonce = Math.random().toString(36).slice(2, 10);
     const ch = supabase
-      .channel(`comms-bell:${userId}`)
+      .channel(`comms-bell:${userId}:${nonce}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "conversation_messages" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "conversation_participants", filter: `user_id=eq.${userId}` }, load)
       .subscribe();

@@ -2,6 +2,7 @@ import { Component, ReactNode } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/lib/error-reporter";
+import { friendlyError } from "@/lib/errors";
 
 interface State { error: Error | null }
 
@@ -28,6 +29,7 @@ export class RootErrorBoundary extends Component<{ children: ReactNode }, State>
 
   render() {
     if (!this.state.error) return this.props.children;
+    const friendly = friendlyError(this.state.error, "An unexpected error occurred. Please try again.");
     return (
       <div className="min-h-screen grid place-items-center bg-background p-6">
         <div className="max-w-md w-full rounded-xl border border-destructive/30 bg-card p-6 shadow-card text-center">
@@ -36,7 +38,7 @@ export class RootErrorBoundary extends Component<{ children: ReactNode }, State>
           </div>
           <h1 className="font-display text-lg font-semibold">Something went wrong</h1>
           <p className="text-sm text-muted-foreground mt-1.5">
-            {this.state.error.message || "An unexpected error occurred. Please try again."}
+            {friendly}
           </p>
           <div className="flex gap-2 justify-center mt-5">
             <Button variant="outline" onClick={() => window.location.reload()}>

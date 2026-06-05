@@ -95,8 +95,9 @@ export default function Inbox() {
       refresh();
     })();
     // realtime subscribe to this conv
+    const nonce = Math.random().toString(36).slice(2, 10);
     const ch = supabase
-      .channel(`conv:${activeId}`)
+      .channel(`conv:${activeId}:${nonce}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "conversation_messages", filter: `conversation_id=eq.${activeId}` },
         (payload) => {
           setMessages((m) => [...m, payload.new as ConversationMessage]);
