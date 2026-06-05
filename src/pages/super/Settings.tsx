@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Save, Brain, ShieldAlert, LogIn, LogOut as LogOutIcon, RefreshCw } from "lucide-react";
+import { Loader2, Save, Brain, ShieldAlert, LogIn, LogOut as LogOutIcon, RefreshCw, AlertOctagon, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { superAction } from "@/lib/super";
 
@@ -91,6 +91,7 @@ export default function SuperSettings() {
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
           <TabsTrigger value="ai-cache">AI Cache</TabsTrigger>
           <TabsTrigger value="auth-activity">Auth Activity</TabsTrigger>
+        <TabsTrigger value="live-errors">Live Errors</TabsTrigger>
         </TabsList>
 
         <TabsContent value="brand">
@@ -165,6 +166,10 @@ export default function SuperSettings() {
 
         <TabsContent value="auth-activity">
           <AuthActivityPanel />
+        </TabsContent>
+
+        <TabsContent value="live-errors">
+          <LiveErrorsPanel />
         </TabsContent>
       </Tabs>
     </div>
