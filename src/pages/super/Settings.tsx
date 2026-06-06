@@ -480,20 +480,29 @@ function LiveErrorsPanel() {
 
   useEffect(() => {
     if (!live) return;
-    const nonce = Math.random().toString(36).slice(2, 10);
-    const ch = supabase
-      .channel(`super:client_errors:${nonce}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "client_errors" }, (payload: any) => {
-        const row = payload.new as ErrRow;
-        setRows(prev => [row, ...prev].slice(0, 500));
-        setLiveCount(c => c + 1);
+    // Poll every 5s for new errors (realtime publication is disabled for client_errors
+    // to prevent cross-tenant data exposure via postgres_changes broadcasts).
+    let lastSeen = rows[0]?.created_at ?? new Date(0).toISOString();
+    const tick = async () => {
+      const { data } = await supabase
+        .from("client_errors")
+        .select("id,created_at,source,message,cause,stack,route,user_id,user_agent,severity,context")
+        .gt("created_at", lastSeen)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (data && data.length) {
+        lastSeen = data[0].created_at;
+        setRows(prev => [...(data as ErrRow[]), ...prev].slice(0, 500));
+        setLiveCount(c => c + data.length);
+        const row = data[0] as ErrRow;
         toast.error(row.message, {
           description: row.cause ? `${row.source ?? "error"} · ${row.cause}` : (row.source ?? "error"),
           duration: 6000,
         });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+      }
+    };
+    const iv = setInterval(tick, 5000);
+    return () => clearInterval(iv);
   }, [live]);
 
   const filtered = rows.filter(r => {
