@@ -121,9 +121,9 @@ Deno.serve(async (req) => {
 
     // Logo
     let logoImg: any = null;
-    if (school?.logo_url) {
+    if (school?.logo_url && isSafeLogoUrl(school.logo_url)) {
       try {
-        const r = await fetch(school.logo_url);
+        const r = await fetch(school.logo_url, { redirect: "error" });
         const ct = r.headers.get("content-type") || "";
         const buf = new Uint8Array(await r.arrayBuffer());
         logoImg = ct.includes("png") ? await pdf.embedPng(buf) : await pdf.embedJpg(buf);
