@@ -117,6 +117,43 @@ export default function MockResult() {
           : <StatTile icon={TrendingUp} label="Avg / Subject" value={`${avgPerSubject}%`} />}
       </div>
 
+      {/* Exam-integrity & retake policy */}
+      {integrity?.lockdown && (
+        <div className={cn("rounded-2xl border p-4 sm:p-5", toneClasses.bg, toneClasses.border)}>
+          <div className="flex items-start gap-3">
+            <div className={cn("size-10 rounded-xl grid place-items-center shrink-0 bg-background border", toneClasses.border)}>
+              {policy.status === "locked"
+                ? <ShieldAlert className={cn("size-5", toneClasses.text)} />
+                : <PolicyIcon className={cn("size-5", toneClasses.text)} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Exam integrity</div>
+                  <div className={cn("font-display font-bold text-base sm:text-lg", toneClasses.text)}>{policy.headline}</div>
+                </div>
+                <Badge variant="outline" className="text-[10px] font-semibold">
+                  {policy.strikes}/{MAX_STRIKES} warnings used
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{policy.message}</p>
+              <div className="flex items-center gap-1.5 mt-3">
+                {Array.from({ length: MAX_STRIKES }).map((_, i) => (
+                  <span key={i} className={cn("h-1.5 flex-1 rounded-full", i < policy.strikes ? toneClasses.fill : "bg-secondary")} />
+                ))}
+              </div>
+              {policy.retakeAt && (
+                <div className="mt-3 text-xs flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="size-3.5" />
+                  Retake unlocks {formatRetakeCountdown(policy.retakeAt)}
+                  {policy.requiresTeacherOverride && " — or sooner with a teacher's approval"}.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Per-subject */}
       <SectionCard title="Subject breakdown" description="How you did in each paper">
         <div className="space-y-3">
