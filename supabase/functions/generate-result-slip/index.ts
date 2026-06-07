@@ -23,6 +23,28 @@ function necoGrade(score: number): { grade: string; remark: string } {
   return { grade: "F9", remark: "Fail" };
 }
 
+/**
+ * SSRF guard for school.logo_url. We only allow https URLs whose hostname matches
+ * the project's Supabase storage host (e.g. <ref>.supabase.co). This blocks
+ * fetches to internal/metadata addresses (169.254.169.254, RFC-1918, etc.).
+ */
+function isSafeLogoUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:") return false;
+    const supaUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supaHost = supaUrl ? new URL(supaUrl).hostname : "";
+    if (!supaHost) return false;
+    // Allow the project's own host (storage is served from the same host).
+    if (u.hostname === supaHost) return true;
+    // Also allow the storage subdomain variant if present.
+    if (u.hostname.endsWith(".supabase.co") && u.hostname === supaHost) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
@@ -121,9 +143,9 @@ Deno.serve(async (req) => {
 
     // Logo
     let logoImg: any = null;
-    if (school?.logo_url) {
+    if (school?.logo_url && isSafeLogoUrl(school.logo_url)) {
       try {
-        const r = await fetch(school.logo_url);
+        const r = await fetch(school.logo_url, { redirect: "error" });
         const ct = r.headers.get("content-type") || "";
         const buf = new Uint8Array(await r.arrayBuffer());
         logoImg = ct.includes("png") ? await pdf.embedPng(buf) : await pdf.embedJpg(buf);
