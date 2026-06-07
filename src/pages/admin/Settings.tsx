@@ -13,6 +13,7 @@ import { buildSchoolUrl } from "@/lib/tenant";
 import { Copy, Upload, Loader2, Image as ImageIcon, Plus, Trash2, Eye, Download, HelpCircle, BookOpen, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { schoolPath } from "@/lib/tenant";
+import { GradingWeightsCard } from "@/components/admin/GradingWeightsCard";
 
 export default function AdminSettings() {
   const { school } = useSchool();
