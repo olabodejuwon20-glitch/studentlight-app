@@ -64,6 +64,18 @@ export default function MockResult() {
     summary.per_subject.reduce((a: number, b: any) => a + b.percentage, 0) / Math.max(1, summary.per_subject.length)
   );
 
+  const policy = getRetakePolicy({
+    strikes: integrity?.strikes ?? 0,
+    submittedAt: integrity?.submitted_at ?? null,
+    lockdown: !!integrity?.lockdown,
+  });
+  const PolicyIcon = policy.status === "locked" ? Lock : policy.status === "cooldown" ? Clock : ShieldCheck;
+  const toneClasses = {
+    success: { bg: "bg-success/5", border: "border-success/30", text: "text-success", fill: "bg-success" },
+    warning: { bg: "bg-warning/5", border: "border-warning/30", text: "text-warning", fill: "bg-warning" },
+    destructive: { bg: "bg-destructive/5", border: "border-destructive/30", text: "text-destructive", fill: "bg-destructive" },
+  }[policy.tone];
+
   return (
     <div className="max-w-3xl mx-auto space-y-5 pb-10 px-1">
       {/* Compact performance card */}
