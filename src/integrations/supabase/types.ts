@@ -3436,46 +3436,70 @@ export type Database = {
       }
       results: {
         Row: {
+          assignment_score: number | null
+          breakdown: Json
+          ca_score: number | null
+          class_id: string | null
           created_at: string
+          exam_score: number | null
           grade: string | null
           id: string
           published_at: string | null
           published_by: string | null
           remarks: string | null
+          report_score: number | null
           school_id: string
           score: number
+          session: string | null
           student_id: string
           subject: string
           teacher_id: string | null
           term: string
+          updated_at: string
         }
         Insert: {
+          assignment_score?: number | null
+          breakdown?: Json
+          ca_score?: number | null
+          class_id?: string | null
           created_at?: string
+          exam_score?: number | null
           grade?: string | null
           id?: string
           published_at?: string | null
           published_by?: string | null
           remarks?: string | null
+          report_score?: number | null
           school_id: string
           score: number
+          session?: string | null
           student_id: string
           subject: string
           teacher_id?: string | null
           term?: string
+          updated_at?: string
         }
         Update: {
+          assignment_score?: number | null
+          breakdown?: Json
+          ca_score?: number | null
+          class_id?: string | null
           created_at?: string
+          exam_score?: number | null
           grade?: string | null
           id?: string
           published_at?: string | null
           published_by?: string | null
           remarks?: string | null
+          report_score?: number | null
           school_id?: string
           score?: number
+          session?: string | null
           student_id?: string
           subject?: string
           teacher_id?: string | null
           term?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -4219,6 +4243,58 @@ export type Database = {
           },
         ]
       }
+      term_grade_weights: {
+        Row: {
+          assignment_pct: number
+          ca_pct: number
+          exam_pct: number
+          passing_pct: number
+          report_pct: number
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_pct?: number
+          ca_pct?: number
+          exam_pct?: number
+          passing_pct?: number
+          report_pct?: number
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_pct?: number
+          ca_pct?: number
+          exam_pct?: number
+          passing_pct?: number
+          report_pct?: number
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "term_grade_weights_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "term_grade_weights_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "term_grade_weights_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       timetable: {
         Row: {
           class_id: string
@@ -4551,6 +4627,22 @@ export type Database = {
       }
       publish_results: {
         Args: { _ids: string[]; _publish?: boolean }
+        Returns: number
+      }
+      recompute_term_result: {
+        Args: {
+          _class?: string
+          _report_score?: number
+          _school: string
+          _session?: string
+          _student: string
+          _subject: string
+          _term: string
+        }
+        Returns: Json
+      }
+      recompute_term_results_for_class: {
+        Args: { _class: string; _session?: string; _term: string }
         Returns: number
       }
       redeem_invite: { Args: { _code: string }; Returns: string }
