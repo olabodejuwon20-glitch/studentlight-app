@@ -193,6 +193,7 @@ export default function AdminSettings() {
           <div className="sm:col-span-2 flex justify-end"><Button type="submit">Save changes</Button></div>
         </form>
           </SectionCard>
+          <GradingWeightsCard />
         </TabsContent>
 
         <TabsContent value="neco" className="space-y-4">
