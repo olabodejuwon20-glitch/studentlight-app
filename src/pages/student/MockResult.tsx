@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Award, GraduationCap, Loader2, Trophy, TrendingUp, Target, ArrowLeft, BookOpenCheck, Sparkles } from "lucide-react";
+import { Award, GraduationCap, Loader2, Trophy, TrendingUp, Target, ArrowLeft, BookOpenCheck, Sparkles, ShieldCheck, ShieldAlert, Clock, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
@@ -10,6 +10,7 @@ import { SectionCard } from "@/components/dashboard/SectionCard";
 import { AIMarkdown } from "@/components/ai/AIMarkdown";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getRetakePolicy, formatRetakeCountdown, MAX_STRIKES } from "@/lib/examRetake";
 
 export default function MockResult() {
   const { sessionId, slug } = useParams<{ sessionId: string; slug: string }>();
@@ -17,16 +18,27 @@ export default function MockResult() {
   const nav = useNavigate();
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [integrity, setIntegrity] = useState<{ strikes: number; lockdown: boolean; submitted_at: string | null } | null>(null);
 
   useEffect(() => {
     if (!sessionId) return;
     (async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.functions.invoke("mock-result-summary", { body: { session_id: sessionId } });
+        const [{ data, error }, { data: sess }] = await Promise.all([
+          supabase.functions.invoke("mock-result-summary", { body: { session_id: sessionId } }),
+          supabase.from("mock_sessions")
+            .select("integrity_events, lockdown, submitted_at")
+            .eq("id", sessionId).maybeSingle(),
+        ]);
         if (error) throw error;
         if ((data as any)?.error) throw new Error((data as any).error);
         setSummary(data);
+        setIntegrity({
+          strikes: Array.isArray((sess as any)?.integrity_events) ? (sess as any).integrity_events.length : 0,
+          lockdown: !!(sess as any)?.lockdown,
+          submitted_at: (sess as any)?.submitted_at ?? null,
+        });
       } catch (e: any) {
         toast.error(e?.message || "Failed to load result");
       } finally { setLoading(false); }
