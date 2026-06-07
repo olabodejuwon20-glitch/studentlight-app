@@ -2624,6 +2624,7 @@ export type Database = {
           pricing_model: string
           slug: string
           status: string
+          term_price_kobo: number
           updated_at: string
           version: string
         }
@@ -2641,6 +2642,7 @@ export type Database = {
           pricing_model?: string
           slug: string
           status?: string
+          term_price_kobo?: number
           updated_at?: string
           version?: string
         }
@@ -2658,6 +2660,7 @@ export type Database = {
           pricing_model?: string
           slug?: string
           status?: string
+          term_price_kobo?: number
           updated_at?: string
           version?: string
         }
@@ -3015,6 +3018,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plan_pricing: {
+        Row: {
+          extra_student_kobo: number
+          included_students: number
+          label: string
+          plan: string
+          sort_order: number
+          term_price_kobo: number
+          updated_at: string
+        }
+        Insert: {
+          extra_student_kobo?: number
+          included_students?: number
+          label: string
+          plan: string
+          sort_order?: number
+          term_price_kobo?: number
+          updated_at?: string
+        }
+        Update: {
+          extra_student_kobo?: number
+          included_students?: number
+          label?: string
+          plan?: string
+          sort_order?: number
+          term_price_kobo?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       platform_announcements: {
         Row: {
@@ -3585,6 +3618,7 @@ export type Database = {
           id: string
           module_id: string
           school_id: string
+          term_price_kobo_override: number | null
         }
         Insert: {
           beta?: boolean
@@ -3595,6 +3629,7 @@ export type Database = {
           id?: string
           module_id: string
           school_id: string
+          term_price_kobo_override?: number | null
         }
         Update: {
           beta?: boolean
@@ -3605,6 +3640,7 @@ export type Database = {
           id?: string
           module_id?: string
           school_id?: string
+          term_price_kobo_override?: number | null
         }
         Relationships: [
           {
@@ -3784,15 +3820,19 @@ export type Database = {
       schools: {
         Row: {
           address: string | null
+          billing_cycle: string
           branding: Json
           created_at: string
           created_by: string
+          currency: string
           current_session: string | null
           current_term: string | null
           email: string | null
           exams_violation_limit: number
+          extra_student_kobo: number | null
           grading_system: string | null
           id: string
+          included_students: number | null
           logo_url: string | null
           motto: string | null
           name: string
@@ -3807,20 +3847,27 @@ export type Database = {
           settings: Json
           slug: string
           status: Database["public"]["Enums"]["school_status"]
+          student_count: number
           suspended_reason: string | null
+          term_ends_at: string | null
+          term_starts_at: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          billing_cycle?: string
           branding?: Json
           created_at?: string
           created_by: string
+          currency?: string
           current_session?: string | null
           current_term?: string | null
           email?: string | null
           exams_violation_limit?: number
+          extra_student_kobo?: number | null
           grading_system?: string | null
           id?: string
+          included_students?: number | null
           logo_url?: string | null
           motto?: string | null
           name: string
@@ -3835,20 +3882,27 @@ export type Database = {
           settings?: Json
           slug: string
           status?: Database["public"]["Enums"]["school_status"]
+          student_count?: number
           suspended_reason?: string | null
+          term_ends_at?: string | null
+          term_starts_at?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          billing_cycle?: string
           branding?: Json
           created_at?: string
           created_by?: string
+          currency?: string
           current_session?: string | null
           current_term?: string | null
           email?: string | null
           exams_violation_limit?: number
+          extra_student_kobo?: number | null
           grading_system?: string | null
           id?: string
+          included_students?: number | null
           logo_url?: string | null
           motto?: string | null
           name?: string
@@ -3863,7 +3917,10 @@ export type Database = {
           settings?: Json
           slug?: string
           status?: Database["public"]["Enums"]["school_status"]
+          student_count?: number
           suspended_reason?: string | null
+          term_ends_at?: string | null
+          term_starts_at?: string | null
           updated_at?: string
         }
         Relationships: []
