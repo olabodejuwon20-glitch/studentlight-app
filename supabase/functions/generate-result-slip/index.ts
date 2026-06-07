@@ -1,5 +1,5 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
+import { PDFDocument, StandardFonts, rgb, degrees } from "npm:pdf-lib@1.17.1";
 import QRCode from "npm:qrcode@1.5.4";
 
 const cors = {
@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
             size: 10,
             font: bold,
             color: rgb(0.93, 0.95, 0.98),
-            rotate: { type: "degrees", angle: -30 } as any,
+            rotate: degrees(-30),
           });
         }
       }
