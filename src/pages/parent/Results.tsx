@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { necoGrade, necoDistribution, necoSummary, NECO_GRADE_COLORS } from "@/lib/neco";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { TermBreakdownBar } from "@/components/results/TermBreakdownBar";
 
 export default function ParentResults() {
   const { school, user } = useSchool();
@@ -134,7 +135,10 @@ export default function ParentResults() {
                 const g = necoGrade(Number(r.score));
                 return (
                   <tr key={r.id} className="border-b border-border last:border-0">
-                    <td className="py-3 font-medium">{r.subject}</td>
+                    <td className="py-3 font-medium">
+                      <div>{r.subject}</div>
+                      <TermBreakdownBar breakdown={r.breakdown} />
+                    </td>
                     <td className="text-right tabular-nums font-semibold">{Math.round(Number(r.score))}%</td>
                     <td className="text-center"><Badge variant="outline" style={{ background: NECO_GRADE_COLORS[g]+"22", color: NECO_GRADE_COLORS[g], borderColor: NECO_GRADE_COLORS[g]+"55" }}>{g}</Badge></td>
                     <td className="text-muted-foreground">{r.term}</td>
