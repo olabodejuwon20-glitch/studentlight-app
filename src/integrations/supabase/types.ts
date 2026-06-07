@@ -1044,8 +1044,60 @@ export type Database = {
           },
         ]
       }
+      class_subject_teachers: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          is_lead: boolean
+          school_id: string
+          session: string | null
+          subject_id: string
+          teacher_user_id: string
+          term: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          is_lead?: boolean
+          school_id: string
+          session?: string | null
+          subject_id: string
+          teacher_user_id: string
+          term?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          is_lead?: boolean
+          school_id?: string
+          session?: string | null
+          subject_id?: string
+          teacher_user_id?: string
+          term?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_subject_teachers_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_subject_teachers_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classes: {
         Row: {
+          arm: string | null
           code: string
           created_at: string
           grade_level: string | null
@@ -1054,8 +1106,10 @@ export type Database = {
           school_id: string
           subject: string | null
           teacher_id: string | null
+          track: string | null
         }
         Insert: {
+          arm?: string | null
           code: string
           created_at?: string
           grade_level?: string | null
@@ -1064,8 +1118,10 @@ export type Database = {
           school_id: string
           subject?: string | null
           teacher_id?: string | null
+          track?: string | null
         }
         Update: {
+          arm?: string | null
           code?: string
           created_at?: string
           grade_level?: string | null
@@ -1074,6 +1130,7 @@ export type Database = {
           school_id?: string
           subject?: string | null
           teacher_id?: string | null
+          track?: string | null
         }
         Relationships: [
           {
@@ -2756,23 +2813,47 @@ export type Database = {
       }
       parent_links: {
         Row: {
+          can_pickup: boolean
           created_at: string
           id: string
+          is_primary: boolean
           parent_user_id: string
+          phone_e164: string | null
+          receives_attendance: boolean
+          receives_behavior: boolean
+          receives_fees: boolean
+          receives_results: boolean
+          relationship: string
           school_id: string
           student_user_id: string
         }
         Insert: {
+          can_pickup?: boolean
           created_at?: string
           id?: string
+          is_primary?: boolean
           parent_user_id: string
+          phone_e164?: string | null
+          receives_attendance?: boolean
+          receives_behavior?: boolean
+          receives_fees?: boolean
+          receives_results?: boolean
+          relationship?: string
           school_id: string
           student_user_id: string
         }
         Update: {
+          can_pickup?: boolean
           created_at?: string
           id?: string
+          is_primary?: boolean
           parent_user_id?: string
+          phone_e164?: string | null
+          receives_attendance?: boolean
+          receives_behavior?: boolean
+          receives_fees?: boolean
+          receives_results?: boolean
+          relationship?: string
           school_id?: string
           student_user_id?: string
         }
@@ -3816,6 +3897,47 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      student_subjects: {
+        Row: {
+          created_at: string
+          id: string
+          school_id: string
+          session: string | null
+          status: string
+          student_id: string
+          subject_id: string
+          term: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          school_id: string
+          session?: string | null
+          status?: string
+          student_id: string
+          subject_id: string
+          term?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          school_id?: string
+          session?: string | null
+          status?: string
+          student_id?: string
+          subject_id?: string
+          term?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_topic_mastery: {
         Row: {
