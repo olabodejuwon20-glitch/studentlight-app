@@ -235,7 +235,9 @@ export default function MockPicker() {
                       <ShieldCheck className="size-3.5" /> Proctored lockdown
                     </label>
                     <p className="text-[11px] text-muted-foreground mt-1.5">
-                      JAMB-style: full-screen enforced, copy/paste & right-click blocked, tab-switches logged. 4 warnings → auto-submit.
+                      JAMB-style: full-screen enforced, copy/paste &amp; right-click blocked, tab-switches logged.
+                      Strike rules: <strong>2</strong> = 1-hour cooldown, <strong>3</strong> = 24-hour cooldown,
+                      <strong> 4</strong> = exam auto-submits and you&apos;re locked out for 7 days unless your teacher unlocks it.
                     </p>
                   </div>
                   <Switch checked={lockdown} onCheckedChange={setLockdown} />
