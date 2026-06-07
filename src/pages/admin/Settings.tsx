@@ -13,6 +13,7 @@ import { buildSchoolUrl } from "@/lib/tenant";
 import { Copy, Upload, Loader2, Image as ImageIcon, Plus, Trash2, Eye, Download, HelpCircle, BookOpen, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { schoolPath } from "@/lib/tenant";
+import { GradingWeightsCard } from "@/components/admin/GradingWeightsCard";
 
 export default function AdminSettings() {
   const { school } = useSchool();
@@ -193,6 +194,7 @@ export default function AdminSettings() {
           <div className="sm:col-span-2 flex justify-end"><Button type="submit">Save changes</Button></div>
         </form>
           </SectionCard>
+          <GradingWeightsCard />
         </TabsContent>
 
         <TabsContent value="neco" className="space-y-4">

@@ -6,6 +6,7 @@ import { necoGrade, necoSummary, NECO_GRADE_REMARKS, NECO_GRADE_COLORS } from "@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ResultSlipButton } from "./ResultSlipButton";
+import { TermBreakdownBar } from "./TermBreakdownBar";
 
 interface Props { results: any[] }
 
@@ -105,7 +106,10 @@ export function SchoolResultCard({ results }: Props) {
             const color = NECO_GRADE_COLORS[g];
             return (
               <li key={r.id} className="grid sm:grid-cols-[1fr_80px_70px_1fr] gap-2 sm:gap-3 items-center py-3 px-2">
-                <div className="font-medium text-sm">{r.subject}</div>
+                <div className="font-medium text-sm">
+                  <div>{r.subject}</div>
+                  <TermBreakdownBar breakdown={r.breakdown} />
+                </div>
                 <div className="sm:text-right tabular-nums font-semibold text-sm flex items-center gap-2 sm:block">
                   <span className="sm:hidden text-[10px] uppercase text-muted-foreground">Score:</span> {sc}%
                 </div>

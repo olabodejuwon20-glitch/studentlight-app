@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PencilRuler, FilePlus2 } from "lucide-react";
+import { PencilRuler, FilePlus2, ClipboardCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { TermResultsTab } from "@/components/teacher/TermResultsTab";
 
 export default function Grading() {
   const { school, user } = useSchool();
@@ -59,7 +60,11 @@ export default function Grading() {
   return (
     <SectionCard title="Grading Center" description="Score exam attempts and assignment submissions">
       <Tabs defaultValue="exams">
-        <TabsList><TabsTrigger value="exams">Exam attempts ({exams.length})</TabsTrigger><TabsTrigger value="assignments">Assignments ({assignments.reduce((a, x) => a + (x.assignment_submissions?.length ?? 0), 0)})</TabsTrigger></TabsList>
+        <TabsList>
+          <TabsTrigger value="exams">Exam attempts ({exams.length})</TabsTrigger>
+          <TabsTrigger value="assignments">Assignments ({assignments.reduce((a, x) => a + (x.assignment_submissions?.length ?? 0), 0)})</TabsTrigger>
+          <TabsTrigger value="term"><ClipboardCheck className="size-3.5 mr-1" />Term Results</TabsTrigger>
+        </TabsList>
         <TabsContent value="exams" className="mt-4">
           {exams.length === 0 ? <EmptyState icon={PencilRuler} title="No submissions yet" /> :
             <table className="w-full text-sm">
@@ -100,6 +105,9 @@ export default function Grading() {
                 </div>
               ))}
             </div>}
+        </TabsContent>
+        <TabsContent value="term" className="mt-4">
+          <TermResultsTab />
         </TabsContent>
       </Tabs>
     </SectionCard>
