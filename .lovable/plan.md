@@ -1,87 +1,88 @@
+## Goal
+Currently CA gradebook entries, assignment submissions, exam attempts, and the published `results` row all live in isolation. We will tie them together so that for every (student, subject, term) we compute **one weighted end-of-term result** that rolls up every component, plus the teacher's report comment.
 
-## NGN per-term pricing overhaul (Part 2)
+## End-of-term formula
 
-Goal: replace the USD monthly model on the Super Admin Subscriptions page with NGN-denominated, per-term pricing that uses a per-school floor + per-student step (capped per tier), plus à-la-carte add-ons priced per term in NGN.
+Per (student, subject, term), the end-of-term score is a **weighted sum out of 100**:
 
-### Schema changes (additive — no enum churn, no breaking columns)
+```text
+term_total =  CA_weight       × (sum CA scores / sum CA max)
+            + Assignment_w    × (avg of graded assignment %)
+            + Exam_w          × (latest counts_to_results exam %)
+            + Report_w        × (optional rubric score from teacher report)
+```
 
-The existing `plan` enum values (`trial|basic|standard|premium|enterprise`) stay; we relabel them in the UI as Trial → Starter → Growth → Premium → Enterprise. This avoids touching the 20+ places `schools.plan` is read.
+Defaults (configurable per school, must total 100):
+- CA / Quiz / Mid-term gradebook entries → **30%**
+- Assignments → **10%**
+- Exam (final, `counts_to_results=true`) → **60%**
+- Report rubric (teacher behaviour/effort score, optional) → **0%** by default
 
-1. **`schools`** — add:
-   - `currency text not null default 'NGN'`
-   - `billing_cycle text not null default 'termly'` (termly | annual)
-   - `included_students int not null default 150`
-   - `extra_student_kobo int not null default 15000` (₦150)
-   - `current_term text` (e.g. `2025/2026-T1`)
-   - `term_starts_at date`, `term_ends_at date`
+NECO grade (A1…F9) is derived from `term_total` using the existing `src/lib/neco.ts` helpers.
 
-2. **`plan_pricing`** — new table, source of truth for tier defaults so super admin can tune pricing without redeploys.
-   ```
-   plan text primary key      -- trial|basic|standard|premium|enterprise
-   label text not null         -- 'Starter','Growth','Premium','Enterprise'
-   term_price_kobo int not null
-   included_students int not null
-   extra_student_kobo int not null
-   sort_order int
-   ```
-   Seed rows:
-   - trial → ₦0 / 30 students / ₦0 extra
-   - basic (Starter) → ₦45,000 / 150 / ₦150
-   - standard (Growth) → ₦120,000 / 500 / ₦120
-   - premium (Premium) → ₦280,000 / 1,500 / ₦100
-   - enterprise → ₦0 / 99,999 / ₦0 (bespoke; super admin sets per-school overrides on `schools`)
+## Database
 
-   RLS: read open to authenticated; write only to super admins.
+New migration:
 
-3. **`modules`** — add `term_price_kobo int not null default 0`. Keep `monthly_price_cents` populated (mirror = `term_price_kobo / 100`) so legacy reads keep working until we remove them later.
+1. `public.term_grade_weights` — one row per school with columns
+   `school_id`, `ca_pct`, `assignment_pct`, `exam_pct`, `report_pct`, `passing_pct` (default 50).
+   Trigger validates the four percentages sum to 100.
+   RLS: admins manage, teachers read.
 
-4. **`school_modules`** — add `term_price_kobo_override int` (nullable) so a specific school can be discounted per add-on.
+2. Extend `public.results` with:
+   - `class_id uuid` (so a result is anchored to a class for sectional reports),
+   - `session text` (e.g. "2025/2026"),
+   - `ca_score`, `assignment_score`, `exam_score`, `report_score` numeric (each out of 100, nullable),
+   - `breakdown jsonb` storing the full computation snapshot,
+   - unique index on `(school_id, student_id, subject, term, session)`.
 
-5. **Add-on seed rows** (insert into `modules` via the insert tool, not migration):
-   - `jamb-mock` ₦25,000 (+ per-student handled in code as `extra_student_kobo`-style; for v1 keep flat)
-   - `offline-cbt` ₦15,000
-   - `qr-result-slip` ₦8,000
-   - `sms-credits` ₦0 (metered separately)
-   - `whatsapp-broadcast` ₦12,000
-   - `paystack-collection` ₦0 (transaction fee model)
-   - `result-checker` ₦0 (revenue share)
-   - `id-card-print` ₦6,000
-   - `biometric-attendance` ₦10,000
-   - `ai-credits` ₦5,000 per bundle
-   - `hostel` ₦8,000
-   - `transport` ₦8,000
+3. RPC `public.recompute_term_result(_school uuid, _student uuid, _subject text, _term text, _session text)`
+   - Security definer, teacher/admin only.
+   - Pulls gradebook CA entries, assignment_submissions joined to assignments (matching subject + term), and the latest submitted exam attempt where `exams.subject = _subject` and `exams.counts_to_results = true` in that term.
+   - Applies the school's weights, writes/updates the row in `public.results`, stores breakdown JSON, computes grade via SQL CASE matching the NECO scale.
 
-### Code changes
+4. RPC `public.recompute_term_results_for_class(_class uuid, _term text, _session text)` — loops every enrolled student × every subject taught in the class and calls the per-student function. Returns count of rows written.
 
-**`src/lib/pricing.ts`** (new):
-- `formatNaira(kobo)` → `₦1,234`
-- `revenueForSchool({ plan, studentCount, addOns, planPricing })` → returns `{ termKobo, annualKobo, breakdown }`. Implements: `base + max(0, students - included) * extraPerStudent + sum(addOns)`.
-- `kobo(naira) / naira(kobo)` helpers.
+5. Existing `publish_results(_ids, _publish)` continues to gate parent/student visibility.
 
-**`src/pages/super/Subscriptions.tsx`** — rewrite (~200 lines):
-- Drop the USD `PLAN_BASE` constant; read `plan_pricing` from DB.
-- Metrics row swaps "MRR" for **"Revenue this term"** and **"Annualised (×3)"**, both in NGN. Keep "Paid tenants" / "On trial" / "Renewals < 14d".
-- Plan column renders the label from `plan_pricing` (Starter/Growth/Premium) instead of the raw enum.
-- Per-row revenue uses the new formula and queries an enrolment count subquery (one extra `select count` per school via a denormalised `schools.student_count` we'll backfill in the same migration).
-- "Manage" dialog adds: included_students override, extra_student_kobo override, currency lock (NGN), and a "billing cycle" toggle (termly/annual).
-- Date column header changes from "Renews" to "Term ends".
+## Edge function (optional, lightweight)
+No new edge function is required — the RPC runs in the DB. The existing `generate-result-slip` will automatically render the new breakdown fields once `results.breakdown` is populated.
 
-**`src/pages/super/SchoolDetail.tsx`** — the inline subscription editor at line ~158 mirrors the same fields.
+## Frontend changes
 
-**`src/pages/super/Modules.tsx`** — show `term_price_kobo` in NGN, allow super admin to edit it. (Keep monthly_price_cents in sync via DB trigger so other consumers don't break.)
+### Teacher
+- `src/pages/teacher/Grading.tsx`: add a third tab **"Term Results"** with class + term + session selectors. Lists every student × subject from the class with computed CA / Assignment / Exam / Report / Total / Grade cells. Buttons: **Recompute** (calls `recompute_term_results_for_class`), **Publish all** / **Unpublish** (calls `publish_results`). Inline edit of report-rubric score per row.
+- `src/pages/teacher/Reports.tsx`: link the existing AI report-comment dialog to also save an optional 0–100 rubric score into the matching `results` row.
 
-**Public pricing/landing copy** — out of scope for this turn; will come in a follow-up so the schema rolls out first.
+### Admin
+- `src/pages/admin/Settings.tsx`: new **"Grading weights"** card editing `term_grade_weights` (CA / Assignment / Exam / Report sliders) with live "must total 100" validation.
+- `src/pages/admin/Reports.tsx`: surface aggregate term-result coverage (% of students with a computed term result this term).
 
-### Migration order
-1. Schema migration: add columns to `schools` and `modules`/`school_modules`; create `plan_pricing` table with seed pricing; add a trigger that keeps `modules.monthly_price_cents = round(term_price_kobo / 100)` so legacy reads stay valid.
-2. Backfill: set `schools.included_students` and `extra_student_kobo` from `plan_pricing` based on current `plan`. Set `currency='NGN'`, `billing_cycle='termly'`.
-3. Insert/update add-on `modules` rows with new NGN prices (via the insert tool).
-4. Ship the pricing lib + Subscriptions page rewrite + SchoolDetail editor + Modules editor.
+### Student & Parent
+- `src/pages/student/Results.tsx` and `src/pages/parent/Results.tsx`: when a row has `breakdown`, render a small four-bar component (CA / Assignment / Exam / Report) under each subject row showing the contribution to the final score.
 
-### Out of scope (separate turns, by request)
-- Public pricing page on the landing site.
-- Actually collecting recurring billing (Paystack subscription integration).
-- Per-student metered usage on JAMB Mock add-on (flat for v1).
-- Module gating enforcement in app sidebar — already lives in `useModules.ts` and doesn't need changes.
+### Helper
+- New `src/lib/termResult.ts` with TypeScript types for `TermBreakdown` and a `formatBreakdown()` helper used by all three views.
 
-Approve and I'll execute.
+## Out of scope (for this part)
+- AI-generated report comments stay where they are; only the optional rubric number feeds into results.
+- Mock JAMB/NECO sessions (`mock_sessions`) remain practice-only and do **not** roll into the term result.
+- No changes to invoicing or payments.
+
+## Files
+
+**Created**
+- `supabase/migrations/<ts>_term_results_rollup.sql`
+- `src/lib/termResult.ts`
+
+**Edited**
+- `src/pages/teacher/Grading.tsx` (new Term Results tab)
+- `src/pages/teacher/Reports.tsx` (rubric score field)
+- `src/pages/admin/Settings.tsx` (weights card)
+- `src/pages/admin/Reports.tsx` (coverage stat)
+- `src/pages/student/Results.tsx` (breakdown bars)
+- `src/pages/parent/Results.tsx` (breakdown bars)
+- `src/integrations/supabase/types.ts` (regenerated after migration)
+
+## Open question
+Default weights above are CA 30 / Assignment 10 / Exam 60 / Report 0 — please confirm or supply your school's preferred split before I implement.
