@@ -16,6 +16,7 @@ type ModuleRow = {
   global_default: boolean;
   pricing_model: string;
   monthly_price_cents: number;
+  term_price_kobo: number;
   version: string;
   default_config: Record<string, unknown>;
 };
@@ -28,7 +29,7 @@ export default function SuperModules() {
     setRows(null);
     const { data, error } = await supabase
       .from("modules")
-      .select("id, slug, name, category, status, global_default, pricing_model, monthly_price_cents, version, default_config")
+      .select("id, slug, name, category, status, global_default, pricing_model, monthly_price_cents, term_price_kobo, version, default_config")
       .order("category")
       .order("name");
     if (error) toast.error(error.message);
@@ -101,7 +102,7 @@ export default function SuperModules() {
                     <StatusBadge status={r.status} />
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    v{r.version} · {r.pricing_model}{r.monthly_price_cents ? ` · $${(r.monthly_price_cents/100).toFixed(2)}/mo` : ""}
+                    v{r.version} · {r.pricing_model}{r.term_price_kobo ? ` · ₦${Math.round(r.term_price_kobo/100).toLocaleString("en-NG")}/term` : ""}
                   </p>
                 </div>
                 <Button variant={r.global_default ? "default" : "outline"} size="sm" onClick={() => toggleDefault(r)}>

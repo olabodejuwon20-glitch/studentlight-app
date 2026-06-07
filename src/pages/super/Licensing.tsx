@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { KeyRound, Search, Download } from "lucide-react";
 
 type School = { id: string; name: string; slug: string; plan: string; status: string };
-type Module = { id: string; slug: string; name: string; category: string; monthly_price_cents: number; pricing_model: string };
+type Module = { id: string; slug: string; name: string; category: string; monthly_price_cents: number; term_price_kobo: number; pricing_model: string };
 type SM = { id: string; school_id: string; module_id: string; enabled: boolean; expires_at: string | null; beta: boolean };
 
 export default function SuperLicensing() {
@@ -25,7 +25,7 @@ export default function SuperLicensing() {
     (async () => {
       const [s, m, sm] = await Promise.all([
         supabase.from("schools").select("id, name, slug, plan, status").order("name"),
-        supabase.from("modules").select("id, slug, name, category, monthly_price_cents, pricing_model").order("category").order("name"),
+        supabase.from("modules").select("id, slug, name, category, monthly_price_cents, term_price_kobo, pricing_model").order("category").order("name"),
         supabase.from("school_modules").select("id, school_id, module_id, enabled, expires_at, beta"),
       ]);
       setSchools((s.data as School[]) ?? []);
@@ -135,8 +135,8 @@ export default function SuperLicensing() {
                   {modules.map(m => (
                     <th key={m.id} className="px-2 py-2 text-[11px] font-medium text-foreground whitespace-nowrap border-l border-border/40">
                       {m.name}
-                      {m.monthly_price_cents > 0 && (
-                        <div className="text-[10px] text-muted-foreground font-normal">${(m.monthly_price_cents/100).toFixed(0)}/mo</div>
+                      {m.term_price_kobo > 0 && (
+                        <div className="text-[10px] text-muted-foreground font-normal">₦{Math.round(m.term_price_kobo/100).toLocaleString("en-NG")}/term</div>
                       )}
                     </th>
                   ))}

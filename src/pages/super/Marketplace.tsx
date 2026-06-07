@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Loader2, ShoppingBag, Inbox } from "lucide-react";
 
 type School = { id: string; name: string; slug: string; plan: string };
-type Module = { id: string; slug: string; name: string; category: string; pricing_model: string; monthly_price_cents: number };
+type Module = { id: string; slug: string; name: string; category: string; pricing_model: string; monthly_price_cents: number; term_price_kobo: number };
 type SchoolModule = { id: string; school_id: string; module_id: string; enabled: boolean };
 type Request = { id: string; school_id: string; title: string; description: string | null; status: string; created_at: string; module_id: string | null };
 
@@ -27,7 +27,7 @@ export default function SuperMarketplace() {
     (async () => {
       const [s, m, r] = await Promise.all([
         supabase.from("schools").select("id, name, slug, plan").order("name"),
-        supabase.from("modules").select("id, slug, name, category, pricing_model, monthly_price_cents").order("name"),
+        supabase.from("modules").select("id, slug, name, category, pricing_model, monthly_price_cents, term_price_kobo").order("name"),
         supabase.from("module_requests").select("*").order("created_at", { ascending: false }),
       ]);
       setSchools((s.data as School[]) ?? []);
@@ -122,7 +122,7 @@ export default function SuperMarketplace() {
                           )}
                         </div>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {m.monthly_price_cents ? `$${(m.monthly_price_cents/100).toFixed(2)}/mo` : "Included"}
+                          {m.term_price_kobo ? `₦${Math.round(m.term_price_kobo/100).toLocaleString("en-NG")}/term` : "Included"}
                         </p>
                       </div>
                       {busyId === m.id ? <Loader2 className="size-4 animate-spin text-muted-foreground" />
