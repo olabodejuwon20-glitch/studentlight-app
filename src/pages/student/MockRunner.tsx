@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useExamLockdown } from "@/lib/examLockdown";
+import { ShieldCheck, AlertTriangle } from "lucide-react";
 
 type Subject = { id: string; code: string; name: string; color: string; sort: number };
 type Question = { id: string; subject_id: string; position: number; prompt: string; options: any };
@@ -182,6 +184,8 @@ export default function MockRunner() {
       modeLabel={modeLabel}
       ModeIcon={ModeIcon}
       preferFullscreen={!!(session as any)?.fullscreen}
+      lockdown={!!(session as any)?.lockdown}
+      sessionId={sessionId}
       subjects={subjects}
       activeSubject={activeSubject}
       setActiveSubject={(id) => { setActiveSubject(id); setActiveIdx(0); }}
@@ -197,6 +201,7 @@ export default function MockRunner() {
       isSubmitted={isSubmitted}
       submitting={submitting}
       onSubmit={() => submit(false)}
+      onForceSubmit={() => submit(true)}
       currentQ={currentQ}
       onSelect={(oi) => currentQ && setAnswer(currentQ.id, currentQ.subject_id, { selected_index: oi })}
       onToggleMark={(v) => currentQ && setAnswer(currentQ.id, currentQ.subject_id, { marked: v })}
@@ -212,9 +217,9 @@ export default function MockRunner() {
 
 function ExamShell(props: any) {
   const {
-    modeLabel, ModeIcon, preferFullscreen, subjects, activeSubject, setActiveSubject, activeSubjectMeta,
+    modeLabel, ModeIcon, preferFullscreen, lockdown, sessionId, subjects, activeSubject, setActiveSubject, activeSubjectMeta,
     subjectQuestions, answers, activeIdx, setActiveIdx, answeredInSubject,
-    totalAnswered, totalQuestions, secondsLeft, isSubmitted, submitting, onSubmit,
+    totalAnswered, totalQuestions, secondsLeft, isSubmitted, submitting, onSubmit, onForceSubmit,
     currentQ, onSelect, onToggleMark, onNextSubject,
   } = props;
   const shellRef = useRef<HTMLDivElement>(null);
@@ -223,12 +228,24 @@ function ExamShell(props: any) {
   useEffect(() => {
     const sync = () => setIsFs(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", sync);
-    // Only auto-enter fullscreen if the student opted in.
-    if (preferFullscreen) shellRef.current?.requestFullscreen?.().catch(() => {});
+    // Auto-enter fullscreen when in lockdown or the student opted in.
+    if (preferFullscreen || lockdown) shellRef.current?.requestFullscreen?.().catch(() => {});
     return () => document.removeEventListener("fullscreenchange", sync);
-  }, [preferFullscreen]);
+  }, [preferFullscreen, lockdown]);
+
+  const { violationCount, remaining, lastWarning } = useExamLockdown({
+    enabled: !!lockdown && !isSubmitted,
+    sessionId,
+    shellRef,
+    isSubmitted,
+    onForceSubmit,
+  });
 
   function toggleFs() {
+    if (lockdown && document.fullscreenElement) {
+      toast.warning("Full-screen is required during proctored mode.");
+      return;
+    }
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     else shellRef.current?.requestFullscreen?.().catch(() => {});
   }
@@ -238,7 +255,7 @@ function ExamShell(props: any) {
   return (
     <div ref={shellRef} className={cn(
       "bg-background flex flex-col",
-      preferFullscreen || isFs
+      preferFullscreen || lockdown || isFs
         ? "fixed inset-0 z-50"
         : "-mx-4 sm:-mx-6 -my-4 sm:-my-6 min-h-[calc(100vh-4rem)]",
     )}>
@@ -253,6 +270,11 @@ function ExamShell(props: any) {
               <div className="font-semibold text-sm truncate">{activeSubjectMeta?.name ?? modeLabel}</div>
               <div className="text-[10px] text-muted-foreground truncate">{totalAnswered}/{totalQuestions} answered</div>
             </div>
+            {lockdown && !isSubmitted && (
+              <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success border border-success/30">
+                <ShieldCheck className="size-3" /> Proctored
+              </span>
+            )}
           </div>
 
           <div className="ml-auto flex items-center gap-2">
@@ -301,6 +323,13 @@ function ExamShell(props: any) {
             </Button>
           </div>
         </div>
+        {lockdown && lastWarning && !isSubmitted && (
+          <div className="px-4 sm:px-6 py-1.5 text-[11px] flex items-center gap-1.5 bg-warning/10 text-warning border-t border-warning/30">
+            <AlertTriangle className="size-3.5" />
+            <span className="truncate">{lastWarning}</span>
+            <span className="ml-auto font-semibold tabular-nums">{remaining} warning{remaining === 1 ? "" : "s"} left</span>
+          </div>
+        )}
       </header>
 
       {/* Centered, distraction-free question */}
