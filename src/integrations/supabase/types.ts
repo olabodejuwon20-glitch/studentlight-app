@@ -2472,6 +2472,9 @@ export type Database = {
           duration_minutes: number
           fullscreen: boolean
           id: string
+          integrity_events: Json
+          integrity_score: number
+          lockdown: boolean
           mode: string
           questions_per_subject: number
           school_id: string
@@ -2487,6 +2490,9 @@ export type Database = {
           duration_minutes?: number
           fullscreen?: boolean
           id?: string
+          integrity_events?: Json
+          integrity_score?: number
+          lockdown?: boolean
           mode: string
           questions_per_subject?: number
           school_id: string
@@ -2502,6 +2508,9 @@ export type Database = {
           duration_minutes?: number
           fullscreen?: boolean
           id?: string
+          integrity_events?: Json
+          integrity_score?: number
+          lockdown?: boolean
           mode?: string
           questions_per_subject?: number
           school_id?: string
@@ -4513,6 +4522,10 @@ export type Database = {
       issue_invoices_for_audience: {
         Args: { _payment_type_id: string; _student_ids?: string[] }
         Returns: number
+      }
+      log_mock_integrity_event: {
+        Args: { _detail?: Json; _kind: string; _session_id: string }
+        Returns: undefined
       }
       match_knowledge_chunks: {
         Args: {
