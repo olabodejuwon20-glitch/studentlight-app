@@ -16,6 +16,8 @@ import { Maximize2, ShieldCheck } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getRetakePolicy, formatRetakeCountdown, MAX_STRIKES } from "@/lib/examRetake";
+import { Lock, Clock } from "lucide-react";
 
 type Mode = "neco_sim" | "jamb_sim";
 const RULES: Record<Mode, { label: string; pick: number; minutes: number; icon: any; locked?: string }> = {
@@ -63,7 +65,7 @@ export default function MockPicker() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("mock_sessions")
-        .select("id, mode, started_at, submitted_at, total_score, total_questions, status")
+        .select("id, mode, started_at, submitted_at, total_score, total_questions, status, lockdown, integrity_events")
         .eq("school_id", school!.id)
         .eq("student_id", user!.id)
         .order("started_at", { ascending: false })
@@ -72,6 +74,16 @@ export default function MockPicker() {
       return data ?? [];
     },
   });
+
+  // Retake gate: look at the most recent submitted lockdown session in this mode
+  const retakeGate = useMemo(() => {
+    const last = (sessions ?? [])
+      .filter((s: any) => s.mode === mode && s.status !== "in_progress" && s.lockdown && s.submitted_at)
+      .sort((a: any, b: any) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())[0];
+    if (!last) return null;
+    const strikes = Array.isArray((last as any).integrity_events) ? (last as any).integrity_events.length : 0;
+    return getRetakePolicy({ strikes, submittedAt: (last as any).submitted_at, lockdown: true });
+  }, [sessions, mode]);
 
   const filtered = useMemo(() => {
     if (!subjects) return [];
@@ -107,6 +119,10 @@ export default function MockPicker() {
 
   async function start() {
     if (!school || !user) return;
+    if (lockdown && retakeGate && !retakeGate.canRetakeNow) {
+      toast.error(retakeGate.headline + " — retake unlocks " + formatRetakeCountdown(retakeGate.retakeAt));
+      return;
+    }
     if (chosenCount !== rule.pick) {
       toast.error(`Pick exactly ${rule.pick} subjects to begin.`);
       return;
@@ -179,13 +195,29 @@ export default function MockPicker() {
                   <span className="hidden sm:inline">Real past questions</span>
                   <Switch checked={useReal} onCheckedChange={setUseReal} />
                 </label>
-                <Button onClick={start} disabled={starting || chosenCount !== rule.pick}>
+                <Button onClick={start} disabled={starting || chosenCount !== rule.pick || (lockdown && !!retakeGate && !retakeGate.canRetakeNow)}>
                   {starting ? <Loader2 className="size-3.5 mr-1.5 animate-spin" /> : <Play className="size-3.5 mr-1.5" />}
                   Start ({chosenCount}/{rule.pick})
                 </Button>
               </div>
             }
           >
+            {lockdown && retakeGate && !retakeGate.canRetakeNow && (
+              <div className={cn(
+                "mb-4 rounded-xl border p-3 flex items-start gap-3",
+                retakeGate.status === "locked" ? "border-destructive/30 bg-destructive/5" : "border-warning/30 bg-warning/5",
+              )}>
+                {retakeGate.status === "locked"
+                  ? <Lock className="size-4 mt-0.5 text-destructive shrink-0" />
+                  : <Clock className="size-4 mt-0.5 text-warning shrink-0" />}
+                <div className="text-xs">
+                  <div className="font-semibold">{retakeGate.headline}</div>
+                  <div className="text-muted-foreground mt-0.5">{retakeGate.message}</div>
+                  <div className="text-muted-foreground mt-1">Next attempt {formatRetakeCountdown(retakeGate.retakeAt)} ({retakeGate.strikes}/{MAX_STRIKES} warnings used).</div>
+                </div>
+              </div>
+            )}
+
             {/* Exam controls */}
             <div className="mb-4 grid sm:grid-cols-2 gap-4 rounded-xl border border-border bg-muted/30 p-4">
               <div>
