@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, ShieldCheck } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,13 @@ export default function MockPicker() {
   const [useReal, setUseReal] = useState(true);
   const [perSubject, setPerSubject] = useState<number>(20);
   const [fullscreen, setFullscreen] = useState<boolean>(false);
+  const [lockdown, setLockdown] = useState<boolean>(false);
+
+  // JAMB defaults to proctored lockdown; NECO defaults off
+  useEffect(() => {
+    setLockdown(mode === "jamb_sim");
+    setFullscreen(mode === "jamb_sim");
+  }, [mode]);
 
   const { data: subjects, isLoading } = useQuery({
     queryKey: ["mock-subjects", school?.id],
@@ -128,7 +135,8 @@ export default function MockPicker() {
           duration_minutes: rule.minutes,
           total_questions: chosenCount * perSubject,
           questions_per_subject: perSubject,
-          fullscreen,
+          fullscreen: fullscreen || lockdown,
+          lockdown,
         })
         .select("id")
         .single();
@@ -188,14 +196,27 @@ export default function MockPicker() {
                 <Slider value={[perSubject]} min={5} max={20} step={5} onValueChange={(v) => setPerSubject(v[0] ?? 20)} />
                 <p className="text-[11px] text-muted-foreground mt-1.5">Total: {chosenCount * perSubject || rule.pick * perSubject} questions across {rule.pick} subjects.</p>
               </div>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Maximize2 className="size-3.5" /> Start in full‑screen
-                  </label>
-                  <p className="text-[11px] text-muted-foreground mt-1.5">Off by default — you decide when to go distraction‑free.</p>
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <ShieldCheck className="size-3.5" /> Proctored lockdown
+                    </label>
+                    <p className="text-[11px] text-muted-foreground mt-1.5">
+                      JAMB-style: full-screen enforced, copy/paste & right-click blocked, tab-switches logged. 4 warnings → auto-submit.
+                    </p>
+                  </div>
+                  <Switch checked={lockdown} onCheckedChange={setLockdown} />
                 </div>
-                <Switch checked={fullscreen} onCheckedChange={setFullscreen} />
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Maximize2 className="size-3.5" /> Start in full‑screen
+                    </label>
+                    <p className="text-[11px] text-muted-foreground mt-1.5">{lockdown ? "Always on in proctored mode." : "You decide when to go distraction‑free."}</p>
+                  </div>
+                  <Switch checked={fullscreen || lockdown} disabled={lockdown} onCheckedChange={setFullscreen} />
+                </div>
               </div>
             </div>
 
