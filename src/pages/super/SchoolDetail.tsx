@@ -203,11 +203,17 @@ function BillingTab({ school, onChange }: { school: any; onChange: () => void })
                 <div><Label>Plan</Label>
                   <Select value={plan} onValueChange={setPlan}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{["trial","starter","pro","enterprise","custom"].map(p => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}</SelectContent>
+                    <SelectContent>
+                      <SelectItem value="trial">Trial</SelectItem>
+                      <SelectItem value="basic">Starter</SelectItem>
+                      <SelectItem value="standard">Growth</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="enterprise">Enterprise</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
                 <div><Label>Expires (optional)</Label><Input type="date" value={expires} onChange={e => setExpires(e.target.value)} /></div>
-                <div><Label>Monthly amount (NGN)</Label><Input type="number" value={amount} onChange={e => setAmount(e.target.value)} /></div>
+                <div><Label>Per-term amount (₦)</Label><Input type="number" value={amount} onChange={e => setAmount(e.target.value)} /><p className="text-[11px] text-muted-foreground mt-1">Billed in NGN every term (3× per year).</p></div>
               </div>
               <DialogFooter><Button onClick={changePlan} disabled={busy}>{busy && <Loader2 className="size-4 mr-2 animate-spin" />}Apply</Button></DialogFooter>
             </DialogContent>
