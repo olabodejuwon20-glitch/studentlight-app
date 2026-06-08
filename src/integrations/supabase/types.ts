@@ -1825,31 +1825,64 @@ export type Database = {
       invoices: {
         Row: {
           amount_cents: number
+          amount_kobo: number | null
+          currency: string
+          due_at: string | null
           id: string
           issued_at: string
+          kind: string
           line_items: Json
+          metadata: Json
           number: string
           paid_at: string | null
+          paid_method: string | null
+          paystack_authorization_url: string | null
+          paystack_reference: string | null
+          period_end: string | null
+          period_start: string | null
+          plan: string | null
           school_id: string
           status: string
         }
         Insert: {
           amount_cents: number
+          amount_kobo?: number | null
+          currency?: string
+          due_at?: string | null
           id?: string
           issued_at?: string
+          kind?: string
           line_items?: Json
+          metadata?: Json
           number: string
           paid_at?: string | null
+          paid_method?: string | null
+          paystack_authorization_url?: string | null
+          paystack_reference?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan?: string | null
           school_id: string
           status?: string
         }
         Update: {
           amount_cents?: number
+          amount_kobo?: number | null
+          currency?: string
+          due_at?: string | null
           id?: string
           issued_at?: string
+          kind?: string
           line_items?: Json
+          metadata?: Json
           number?: string
           paid_at?: string | null
+          paid_method?: string | null
+          paystack_authorization_url?: string | null
+          paystack_reference?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan?: string | null
           school_id?: string
           status?: string
         }
@@ -4100,7 +4133,10 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           id: string
+          last_invoice_id: string | null
           monthly_amount_cents: number
+          paystack_reference: string | null
+          period_start: string | null
           plan: Database["public"]["Enums"]["school_plan"]
           school_id: string
           started_at: string
@@ -4110,7 +4146,10 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
+          last_invoice_id?: string | null
           monthly_amount_cents?: number
+          paystack_reference?: string | null
+          period_start?: string | null
           plan: Database["public"]["Enums"]["school_plan"]
           school_id: string
           started_at?: string
@@ -4120,7 +4159,10 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
+          last_invoice_id?: string | null
           monthly_amount_cents?: number
+          paystack_reference?: string | null
+          period_start?: string | null
           plan?: Database["public"]["Enums"]["school_plan"]
           school_id?: string
           started_at?: string
@@ -4468,6 +4510,10 @@ export type Database = {
         }[]
       }
       apply_payment: { Args: { _payment_id: string }; Returns: undefined }
+      apply_subscription_payment: {
+        Args: { _invoice_id: string; _method?: string; _reference: string }
+        Returns: Json
+      }
       bump_ai_quota: {
         Args: { _cost: number; _school_id: string; _tokens: number }
         Returns: undefined
@@ -4475,6 +4521,10 @@ export type Database = {
       bump_ai_quota_savings: {
         Args: { _cost: number; _school_id: string; _tokens: number }
         Returns: undefined
+      }
+      create_subscription_invoice: {
+        Args: { _cycle?: string; _plan: string; _school_id: string }
+        Returns: string
       }
       get_assessment_questions_for_attempt: {
         Args: { _attempt_id: string }

@@ -22,7 +22,7 @@ import {
 import { NotificationBell } from "@/components/comms/NotificationBell";
 import { RealtimeNotifier } from "@/components/comms/RealtimeNotifier";
 import { OnboardingGate } from "@/components/admin/OnboardingGate";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, CreditCard } from "lucide-react";
 
 // Group every sidebar destination into a labelled section.
 // Keys are the `to` field used by NAV / module manifests.
@@ -95,6 +95,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Question Bank", to: "question-bank", icon: BookOpenCheck },
     { label: "Lesson Notes", to: "lesson-notes", icon: NotebookPen },
     { label: "Fees & Payments", to: "fees", icon: Wallet },
+    { label: "Subscription", to: "subscription", icon: CreditCard },
     { label: "Hostel",    to: "hostel",    icon: Building2 },
     { label: "Transport", to: "transport", icon: Bus },
     { label: "Announcements", to: "announcements", icon: Megaphone },

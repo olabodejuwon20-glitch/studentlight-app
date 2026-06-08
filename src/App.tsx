@@ -48,6 +48,8 @@ import AdminAIActivity from "./pages/admin/AIActivity";
 import AdminAISettings from "./pages/admin/AISettings";
 import AdminCopilot from "./pages/admin/Copilot";
 import AdminKnowledge from "./pages/admin/Knowledge";
+import AdminSubscription from "./pages/admin/Subscription";
+import SubscriptionCallback from "./pages/SubscriptionCallback";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
 import Inbox from "./pages/shared/Inbox";
@@ -147,6 +149,7 @@ const App = () => (
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/refer" element={<Refer />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/subscription/callback" element={<SubscriptionCallback />} />
 
           {/* Super Admin OS */}
           <Route path="/super/claim" element={<SuperClaim />} />
@@ -205,6 +208,7 @@ const App = () => (
               <Route path="admin/ai-settings" element={<RoleGate allow="admin"><AdminAISettings /></RoleGate>} />
               <Route path="admin/copilot" element={<RoleGate allow="admin"><AdminCopilot /></RoleGate>} />
               <Route path="admin/knowledge" element={<RoleGate allow="admin"><AdminKnowledge /></RoleGate>} />
+              <Route path="admin/subscription" element={<RoleGate allow="admin"><AdminSubscription /></RoleGate>} />
               <Route path="help" element={<HelpPage />} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
