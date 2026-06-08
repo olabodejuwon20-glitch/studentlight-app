@@ -439,7 +439,7 @@ function SidebarSection({
   });
 
   // Single-item or Overview groups never collapse — render flat.
-  const isCollapsible = items.length > 1 && section !== "Overview";
+  const isCollapsible = false;
   const storageKey = `sidebar:open:${activeRole}:${section}`;
 
   const [open, setOpen] = useState<boolean>(() => {
