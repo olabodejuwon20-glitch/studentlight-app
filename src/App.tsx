@@ -136,9 +136,9 @@ function AppRoot() {
 /** If a user lands on /app/... without a school slug, send them through the
  *  current school (when known) or the landing page. */
 function SluglessAppRedirect() {
-  const { school, memberships } = useSchool();
+  const { school } = useSchool();
   const location = useLocation();
-  const slug = school?.slug || memberships?.[0]?.school_slug;
+  const slug = school?.slug;
   if (slug) {
     return <Navigate to={`/${slug}${location.pathname}${location.search}`} replace />;
   }
