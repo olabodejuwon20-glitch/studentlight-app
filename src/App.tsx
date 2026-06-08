@@ -49,6 +49,7 @@ import AdminAISettings from "./pages/admin/AISettings";
 import AdminCopilot from "./pages/admin/Copilot";
 import AdminKnowledge from "./pages/admin/Knowledge";
 import AdminSubscription from "./pages/admin/Subscription";
+import AdminParents from "./pages/admin/Parents";
 import SubscriptionCallback from "./pages/SubscriptionCallback";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
@@ -200,6 +201,7 @@ const App = () => (
               <Route path="admin" element={<RoleGate allow="admin"><AdminDashboard /></RoleGate>} />
               <Route path="admin/students" element={<RoleGate allow="admin"><AdminStudents /></RoleGate>} />
               <Route path="admin/teachers" element={<RoleGate allow="admin"><AdminTeachers /></RoleGate>} />
+              <Route path="admin/parents" element={<RoleGate allow="admin"><AdminParents /></RoleGate>} />
               <Route path="admin/classes" element={<RoleGate allow="admin"><AdminClasses /></RoleGate>} />
               <Route path="admin/enrollments" element={<RoleGate allow="admin"><AdminEnrollments /></RoleGate>} />
               <Route path="admin/reports" element={<RoleGate allow="admin"><AdminReports /></RoleGate>} />

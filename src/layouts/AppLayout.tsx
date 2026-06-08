@@ -30,7 +30,7 @@ const SECTION_OF: Record<string, string> = {
   "": "Overview",
   // People
   "students": "People", "teachers": "People", "children": "People",
-  "invites": "People", "bulk": "People", "enrollments": "People",
+  "parents": "People", "invites": "People", "bulk": "People", "enrollments": "People",
   // Academics
   "classes": "Academics", "timetable": "Academics", "calendar": "Academics",
   "attendance": "Academics", "assignments": "Academics", "gradebook": "Academics",
@@ -89,6 +89,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Dashboard", to: "",          icon: LayoutDashboard },
     { label: "Students",  to: "students",  icon: Users },
     { label: "Teachers",  to: "teachers",  icon: GraduationCap },
+    { label: "Parents",   to: "parents",   icon: UserSquare2 },
     { label: "Classes",   to: "classes",   icon: BookOpen },
     { label: "Timetable", to: "timetable", icon: Calendar },
     { label: "Library",   to: "library",   icon: Library },
@@ -175,6 +176,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "":           { title: "Dashboard",          sub: "Overview" },
   "students":   { title: "Students",           sub: "Manage all enrolled students" },
   "teachers":   { title: "Teachers",           sub: "Manage staff and assignments" },
+  "parents":    { title: "Parents",            sub: "Manage parents and link them to their children" },
   "classes":    { title: "Classes",            sub: "All active classes" },
   "timetable":  { title: "Timetable",          sub: "Weekly schedule" },
   "hostel":     { title: "Hostel",             sub: "Accommodation" },
