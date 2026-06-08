@@ -88,7 +88,7 @@ export default function AdminSubscription() {
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-      <PageHeader title="Subscription & Billing" description="Manage your school's plan, students-on-roll pricing and pay invoices online." icon={CreditCard} />
+      <PageHeader title="Subscription & Billing" description="Manage your school's plan, students-on-roll pricing and pay invoices online." />
 
       <Card className={`p-5 border ${toneClasses}`}>
         <div className="flex flex-wrap items-start gap-4 justify-between">
