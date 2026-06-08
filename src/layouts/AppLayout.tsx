@@ -176,6 +176,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "":           { title: "Dashboard",          sub: "Overview" },
   "students":   { title: "Students",           sub: "Manage all enrolled students" },
   "teachers":   { title: "Teachers",           sub: "Manage staff and assignments" },
+  "parents":    { title: "Parents",            sub: "Manage parents and link them to their children" },
   "classes":    { title: "Classes",            sub: "All active classes" },
   "timetable":  { title: "Timetable",          sub: "Weekly schedule" },
   "hostel":     { title: "Hostel",             sub: "Accommodation" },
