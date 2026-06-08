@@ -95,6 +95,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Question Bank", to: "question-bank", icon: BookOpenCheck },
     { label: "Lesson Notes", to: "lesson-notes", icon: NotebookPen },
     { label: "Fees & Payments", to: "fees", icon: Wallet },
+    { label: "Subscription", to: "subscription", icon: CreditCard },
     { label: "Hostel",    to: "hostel",    icon: Building2 },
     { label: "Transport", to: "transport", icon: Bus },
     { label: "Announcements", to: "announcements", icon: Megaphone },
