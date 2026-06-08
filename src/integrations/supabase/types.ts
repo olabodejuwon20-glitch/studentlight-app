@@ -4697,6 +4697,14 @@ export type Database = {
       }
       redeem_invite: { Args: { _code: string }; Returns: string }
       seed_mock_bank: { Args: { _school: string }; Returns: undefined }
+      set_subscription_status: {
+        Args: { _action: string; _school_id: string }
+        Returns: {
+          current_period_end: string
+          plan: string
+          status: string
+        }[]
+      }
       start_assessment: { Args: { _assessment_id: string }; Returns: string }
       submit_assessment: { Args: { _attempt_id: string }; Returns: Json }
       super_ai_cache_stats: { Args: never; Returns: Json }

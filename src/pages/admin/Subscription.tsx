@@ -7,7 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, CheckCircle2, Clock, AlertCircle, Receipt, ArrowUpRight, CreditCard } from "lucide-react";
+import { Sparkles, CheckCircle2, Clock, AlertCircle, Receipt, ArrowUpRight, CreditCard, CalendarClock, XCircle, RefreshCw } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   formatNaira, daysUntil, planStatusTone,
@@ -22,9 +26,16 @@ type SchoolRow = {
   billing_cycle: string; currency: string;
 };
 
+type SubRow = {
+  id: string; plan: string; status: string;
+  started_at: string; period_start: string | null; current_period_end: string | null;
+  monthly_amount_cents: number;
+};
+
 export default function AdminSubscription() {
   const { school } = useSchool();
   const [row, setRow] = useState<SchoolRow | null>(null);
+  const [sub, setSub] = useState<SubRow | null>(null);
   const [plans, setPlans] = useState<PlanTier[]>([]);
   const [invoices, setInvoices] = useState<SubInvoice[]>([]);
   const [cycle, setCycle] = useState<"termly" | "annual">("termly");
@@ -32,14 +43,16 @@ export default function AdminSubscription() {
 
   async function load() {
     if (!school) return;
-    const [s, p, i] = await Promise.all([
+    const [s, p, i, sb] = await Promise.all([
       supabase.from("schools").select("id,name,plan,status,plan_started_at,plan_expires_at,term_ends_at,student_count,included_students,extra_student_kobo,billing_cycle,currency").eq("id", school.id).maybeSingle(),
       supabase.from("plan_pricing").select("*").order("sort_order"),
       supabase.from("invoices").select("id,school_id,number,amount_kobo,amount_cents,currency,status,kind,plan,period_start,period_end,issued_at,paid_at,paystack_reference,paystack_authorization_url").eq("school_id", school.id).eq("kind", "subscription").order("issued_at", { ascending: false }),
+      supabase.from("subscriptions").select("id,plan,status,started_at,period_start,current_period_end,monthly_amount_cents").eq("school_id", school.id).order("started_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
     setRow((s.data as SchoolRow) ?? null);
     setPlans((p.data as PlanTier[]) ?? []);
     setInvoices((i.data as SubInvoice[]) ?? []);
+    setSub((sb.data as SubRow) ?? null);
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [school?.id]);
 
@@ -78,6 +91,19 @@ export default function AdminSubscription() {
     } finally { setBusy(null); }
   }
 
+  async function changeStatus(action: "cancel" | "resume") {
+    if (!school) return;
+    setBusy(action);
+    try {
+      const { error } = await supabase.rpc("set_subscription_status" as any, { _school_id: school.id, _action: action });
+      if (error) throw error;
+      toast.success(action === "cancel" ? "Subscription cancelled" : "Subscription resumed");
+      await load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Action failed");
+    } finally { setBusy(null); }
+  }
+
   if (!row) return <div className="p-6"><div className="h-32 rounded-xl bg-muted animate-pulse" /></div>;
 
   const toneClasses = tone === "bad"
@@ -85,6 +111,9 @@ export default function AdminSubscription() {
     : tone === "warn" ? "border-warning/40 bg-warning/5"
     : "border-success/30 bg-success/5";
   const StatusIcon = tone === "bad" ? AlertCircle : tone === "warn" ? Clock : CheckCircle2;
+  const nextBillingISO = sub?.current_period_end ?? row.plan_expires_at ?? row.term_ends_at ?? null;
+  const nextBilling = nextBillingISO ? new Date(nextBillingISO) : null;
+  const isCancelled = (sub?.status ?? row.status) === "cancelled";
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
@@ -96,7 +125,7 @@ export default function AdminSubscription() {
             <div className="flex items-center gap-2">
               <StatusIcon className="size-5" />
               <h2 className="text-lg font-semibold">{currentTier?.label ?? row.plan} plan</h2>
-              <Badge variant={tone === "bad" ? "destructive" : "secondary"} className="capitalize">{row.status}</Badge>
+              <Badge variant={tone === "bad" ? "destructive" : "secondary"} className="capitalize">{sub?.status ?? row.status}</Badge>
             </div>
             <p className="text-sm text-muted-foreground">
               {row.student_count} students on roll · billed {row.billing_cycle ?? "termly"} in {row.currency || "NGN"}
@@ -109,6 +138,64 @@ export default function AdminSubscription() {
           <div className="text-right">
             <div className="text-2xl font-bold tabular-nums">{currentTier ? formatNaira(priceFor(currentTier)) : "—"}</div>
             <div className="text-xs text-muted-foreground">{cycle === "annual" ? "per year" : "per term"}</div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <div className="flex flex-wrap items-start gap-4 justify-between">
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold flex items-center gap-2"><CreditCard className="size-4" /> Manage subscription</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div>
+                <div className="text-xs text-muted-foreground">Current cycle</div>
+                <div className="font-medium capitalize">{row.billing_cycle ?? "termly"}</div>
+                {sub?.period_start && (
+                  <div className="text-xs text-muted-foreground">since {new Date(sub.period_start).toLocaleDateString()}</div>
+                )}
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1"><CalendarClock className="size-3" /> Next billing date</div>
+                <div className="font-medium">{nextBilling ? nextBilling.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "—"}</div>
+                {daysLeft != null && <div className="text-xs text-muted-foreground">{daysLeft < 0 ? `${Math.abs(daysLeft)} day(s) overdue` : `in ${daysLeft} day(s)`}</div>}
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Status</div>
+                <Badge variant={isCancelled ? "destructive" : "secondary"} className="capitalize">{sub?.status ?? row.status}</Badge>
+                {isCancelled && nextBilling && <div className="text-xs text-muted-foreground mt-1">Access continues until {nextBilling.toLocaleDateString()}</div>}
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 self-start">
+            {isCancelled ? (
+              <Button onClick={() => changeStatus("resume")} disabled={busy === "resume"}>
+                <RefreshCw className="size-4 mr-1" /> {busy === "resume" ? "Resuming…" : "Resume subscription"}
+              </Button>
+            ) : (
+              <>
+                <Button variant="default" onClick={() => currentTier && choose(currentTier.plan)} disabled={!currentTier || busy === currentTier?.plan}>
+                  <RefreshCw className="size-4 mr-1" /> Renew now
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" disabled={busy === "cancel"}><XCircle className="size-4 mr-1" /> Cancel</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Cancel subscription?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Your access will remain active until {nextBilling ? nextBilling.toLocaleDateString() : "the end of the current period"}.
+                        No further invoices will be issued. You can resume any time.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep subscription</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => changeStatus("cancel")}>Confirm cancel</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
           </div>
         </div>
       </Card>
