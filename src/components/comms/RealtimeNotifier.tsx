@@ -24,14 +24,22 @@ export function RealtimeNotifier() {
     if (!user || !school) return;
     let cancelled = false;
     let retry: number | null = null;
+    let currentCh: ReturnType<typeof supabase.channel> | null = null;
 
     const subscribe = () => {
+      // Tear down any previous channel before creating a new one to avoid
+      // "cannot add postgres_changes callbacks ... after subscribe()" when
+      // the topic is reused (e.g. React strict-mode double-invoke or retry).
+      if (currentCh) {
+        try { supabase.removeChannel(currentCh); } catch { /* noop */ }
+        currentCh = null;
+      }
       const nonce = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
         ? (crypto as any).randomUUID().slice(0, 8)
         : Math.random().toString(36).slice(2, 10);
-      const ch = supabase
-        .channel(`notifier:${user.id}:${school.id}:${nonce}`)
-        .on(
+      const ch = supabase.channel(`notifier:${user.id}:${school.id}:${nonce}:${Date.now()}`);
+      currentCh = ch;
+      ch.on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${user.id}` },
           async (payload: any) => {
@@ -68,7 +76,6 @@ export function RealtimeNotifier() {
             if (retry) window.clearTimeout(retry);
             retry = window.setTimeout(() => {
               if (cancelled) return;
-              supabase.removeChannel(ch);
               subscribe();
             }, 2000);
           } else {
@@ -78,11 +85,14 @@ export function RealtimeNotifier() {
       return ch;
     };
 
-    const ch = subscribe();
+    subscribe();
     return () => {
       cancelled = true;
       if (retry) window.clearTimeout(retry);
-      supabase.removeChannel(ch);
+      if (currentCh) {
+        try { supabase.removeChannel(currentCh); } catch { /* noop */ }
+        currentCh = null;
+      }
     };
   }, [user?.id, school?.id, activeRole, navigate]);
 
