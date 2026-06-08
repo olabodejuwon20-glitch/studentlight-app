@@ -49,6 +49,7 @@ import AdminAISettings from "./pages/admin/AISettings";
 import AdminCopilot from "./pages/admin/Copilot";
 import AdminKnowledge from "./pages/admin/Knowledge";
 import AdminSubscription from "./pages/admin/Subscription";
+import AdminParents from "./pages/admin/Parents";
 import SubscriptionCallback from "./pages/SubscriptionCallback";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
