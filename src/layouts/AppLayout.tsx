@@ -30,7 +30,7 @@ const SECTION_OF: Record<string, string> = {
   "": "Overview",
   // People
   "students": "People", "teachers": "People", "children": "People",
-  "invites": "People", "bulk": "People", "enrollments": "People",
+  "parents": "People", "invites": "People", "bulk": "People", "enrollments": "People",
   // Academics
   "classes": "Academics", "timetable": "Academics", "calendar": "Academics",
   "attendance": "Academics", "assignments": "Academics", "gradebook": "Academics",
