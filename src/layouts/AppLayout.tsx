@@ -22,7 +22,7 @@ import {
 import { NotificationBell } from "@/components/comms/NotificationBell";
 import { RealtimeNotifier } from "@/components/comms/RealtimeNotifier";
 import { OnboardingGate } from "@/components/admin/OnboardingGate";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, CreditCard } from "lucide-react";
 
 // Group every sidebar destination into a labelled section.
 // Keys are the `to` field used by NAV / module manifests.
