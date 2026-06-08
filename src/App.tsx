@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -133,6 +133,18 @@ function AppRoot() {
   return <Navigate to={schoolPath(school?.slug, `/app/${activeRole}`)} replace />;
 }
 
+/** If a user lands on /app/... without a school slug, send them through the
+ *  current school (when known) or the landing page. */
+function SluglessAppRedirect() {
+  const { school } = useSchool();
+  const location = useLocation();
+  const slug = school?.slug;
+  if (slug) {
+    return <Navigate to={`/${slug}${location.pathname}${location.search}`} replace />;
+  }
+  return <Navigate to="/" replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -150,6 +162,9 @@ const App = () => (
             <Route path="/refer" element={<Refer />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/subscription/callback" element={<SubscriptionCallback />} />
+
+            {/* Helpful redirect: slug-less /app/* → tenant /:slug/app/* using last known school */}
+            <Route path="/app/*" element={<SluglessAppRedirect />} />
 
           {/* Super Admin OS */}
           <Route path="/super/claim" element={<SuperClaim />} />
