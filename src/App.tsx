@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -131,6 +131,18 @@ const queryClient = new QueryClient();
 function AppRoot() {
   const { activeRole, school } = useSchool();
   return <Navigate to={schoolPath(school?.slug, `/app/${activeRole}`)} replace />;
+}
+
+/** If a user lands on /app/... without a school slug, send them through the
+ *  current school (when known) or the landing page. */
+function SluglessAppRedirect() {
+  const { school, memberships } = useSchool();
+  const location = useLocation();
+  const slug = school?.slug || memberships?.[0]?.school_slug;
+  if (slug) {
+    return <Navigate to={`/${slug}${location.pathname}${location.search}`} replace />;
+  }
+  return <Navigate to="/" replace />;
 }
 
 const App = () => (
