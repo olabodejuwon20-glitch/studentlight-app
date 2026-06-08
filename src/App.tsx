@@ -151,6 +151,9 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/subscription/callback" element={<SubscriptionCallback />} />
 
+            {/* Helpful redirect: slug-less /app/* → tenant /:slug/app/* using last known school */}
+            <Route path="/app/*" element={<SluglessAppRedirect />} />
+
           {/* Super Admin OS */}
           <Route path="/super/claim" element={<SuperClaim />} />
           <Route path="/super" element={<SuperLayout />}>
