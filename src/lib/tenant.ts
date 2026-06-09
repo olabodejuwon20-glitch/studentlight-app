@@ -10,6 +10,27 @@ export function getCurrentSchoolSlug(): string | null {
   return first;
 }
 
+export function getStoredSchoolSlug(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = window.localStorage.getItem("legacyskool:last-school-slug")?.trim().toLowerCase();
+    return stored || null;
+  } catch {
+    return null;
+  }
+}
+
+export function getResolvedSchoolSlug(): string | null {
+  return getCurrentSchoolSlug() ?? getStoredSchoolSlug();
+}
+
+export function storeSchoolSlug(slug: string | null | undefined) {
+  if (typeof window === "undefined" || !slug) return;
+  try {
+    window.localStorage.setItem("legacyskool:last-school-slug", slug.toLowerCase());
+  } catch {}
+}
+
 /** Path under a school: schoolPath("greenfield-xy", "/app") -> "/greenfield-xy/app" */
 export function schoolPath(slug: string | null | undefined, path = "/signin") {
   if (!slug) return path;
@@ -34,6 +55,6 @@ export function buildRootUrl(path = "/") {
  * fall back to the platform root.
  */
 export function tenantHomePath(): string {
-  const slug = getCurrentSchoolSlug();
+  const slug = getResolvedSchoolSlug();
   return slug ? `/${slug}` : "/";
 }
