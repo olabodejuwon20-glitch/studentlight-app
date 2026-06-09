@@ -146,6 +146,16 @@ function SluglessAppRedirect() {
   return <Navigate to="/" replace />;
 }
 
+function SluglessAdminRedirect() {
+  const { school } = useSchool();
+  const location = useLocation();
+  const slug = school?.slug;
+  if (slug) {
+    return <Navigate to={`/${slug}/app${location.pathname}${location.search}`} replace />;
+  }
+  return <Navigate to="/" replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -166,6 +176,7 @@ const App = () => (
 
             {/* Helpful redirect: slug-less /app/* → tenant /:slug/app/* using last known school */}
             <Route path="/app/*" element={<SluglessAppRedirect />} />
+            <Route path="/admin/*" element={<SluglessAdminRedirect />} />
 
           {/* Super Admin OS */}
           <Route path="/super/claim" element={<SuperClaim />} />
