@@ -67,6 +67,30 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  useEffect(() => {
+    if (loading || school || memberships.length === 0 || detectSlug()) return;
+
+    let cancelled = false;
+    setSchoolLoading(true);
+
+    supabase
+      .from("schools")
+      .select("id,name,slug,logo_url")
+      .eq("id", memberships[0].school_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const row = data as School | null;
+        setSchool(row ?? null);
+        if (row?.slug) storeSchoolSlug(row.slug);
+        setSchoolLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, memberships, school]);
+
   const loadMemberships = useCallback(async (uid: string) => {
     const { data } = await supabase.from("memberships").select("school_id,role,bio_completed,must_change_pin").eq("user_id", uid).eq("status", "active");
     setMemberships((data ?? []) as Membership[]);

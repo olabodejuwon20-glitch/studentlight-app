@@ -137,9 +137,12 @@ function AppRoot() {
 /** If a user lands on /app/... without a school slug, send them through the
  *  current school (when known) or the landing page. */
 function SluglessAppRedirect() {
-  const { school } = useSchool();
+  const { school, loading, schoolLoading, memberships } = useSchool();
   const location = useLocation();
   const slug = school?.slug;
+  if (loading || schoolLoading || (!slug && memberships.length > 0)) {
+    return <div className="min-h-screen grid place-items-center text-sm text-muted-foreground">Loading…</div>;
+  }
   if (slug) {
     return <Navigate to={`/${slug}${location.pathname}${location.search}`} replace />;
   }
@@ -147,9 +150,12 @@ function SluglessAppRedirect() {
 }
 
 function SluglessAdminRedirect() {
-  const { school } = useSchool();
+  const { school, loading, schoolLoading, memberships } = useSchool();
   const location = useLocation();
   const slug = school?.slug;
+  if (loading || schoolLoading || (!slug && memberships.length > 0)) {
+    return <div className="min-h-screen grid place-items-center text-sm text-muted-foreground">Loading…</div>;
+  }
   if (slug) {
     return <Navigate to={`/${slug}/app${location.pathname}${location.search}`} replace />;
   }
