@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
-import { getCurrentSchoolSlug } from "@/lib/tenant";
+import { getResolvedSchoolSlug, storeSchoolSlug } from "@/lib/tenant";
 import { trackAuthEvent } from "@/lib/analytics";
 
 export type Role = "admin" | "teacher" | "student" | "parent";
@@ -35,7 +35,7 @@ interface Ctx {
 }
 const SchoolContext = createContext<Ctx | null>(null);
 
-const detectSlug = getCurrentSchoolSlug;
+const detectSlug = getResolvedSchoolSlug;
 
 export function SchoolProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem("edusmart-theme") as any) || "light");
@@ -62,9 +62,34 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       .then(({ data }) => {
         const row = Array.isArray(data) ? data[0] : null;
         setSchool(row ?? null);
+        if (row?.slug) storeSchoolSlug(row.slug);
         setSchoolLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (loading || school || memberships.length === 0 || detectSlug()) return;
+
+    let cancelled = false;
+    setSchoolLoading(true);
+
+    supabase
+      .from("schools")
+      .select("id,name,slug,logo_url")
+      .eq("id", memberships[0].school_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const row = data as School | null;
+        setSchool(row ?? null);
+        if (row?.slug) storeSchoolSlug(row.slug);
+        setSchoolLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, memberships, school]);
 
   const loadMemberships = useCallback(async (uid: string) => {
     const { data } = await supabase.from("memberships").select("school_id,role,bio_completed,must_change_pin").eq("user_id", uid).eq("status", "active");

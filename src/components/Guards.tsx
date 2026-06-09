@@ -2,19 +2,19 @@ import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useSchool, Role } from "@/contexts/SchoolContext";
-import { schoolPath, getCurrentSchoolSlug } from "@/lib/tenant";
+import { schoolPath, getResolvedSchoolSlug } from "@/lib/tenant";
 
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useSchool();
   if (loading) return <FullLoader />;
-  if (!user) return <Navigate to={schoolPath(getCurrentSchoolSlug(), "/signin")} replace />;
+  if (!user) return <Navigate to={schoolPath(getResolvedSchoolSlug(), "/signin")} replace />;
   return <>{children}</>;
 }
 
 export function RequireSchool({ children }: { children: ReactNode }) {
   const { school, schoolLoading, loading, activeRole, user, memberships } = useSchool();
   if (loading || schoolLoading) return <FullLoader />;
-  if (!user) return <Navigate to={schoolPath(getCurrentSchoolSlug(), "/signin")} replace />;
+  if (!user) return <Navigate to={schoolPath(getResolvedSchoolSlug(), "/signin")} replace />;
   if (!school) return <Navigate to="/" replace />;
   if (!activeRole) return <Navigate to={schoolPath(school.slug, "")} replace />;
   const m = memberships.find(x => x.school_id === school.id && x.role === activeRole);

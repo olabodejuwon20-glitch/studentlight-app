@@ -137,11 +137,27 @@ function AppRoot() {
 /** If a user lands on /app/... without a school slug, send them through the
  *  current school (when known) or the landing page. */
 function SluglessAppRedirect() {
-  const { school } = useSchool();
+  const { school, loading, schoolLoading, memberships } = useSchool();
   const location = useLocation();
   const slug = school?.slug;
+  if (loading || schoolLoading || (!slug && memberships.length > 0)) {
+    return <div className="min-h-screen grid place-items-center text-sm text-muted-foreground">Loading…</div>;
+  }
   if (slug) {
     return <Navigate to={`/${slug}${location.pathname}${location.search}`} replace />;
+  }
+  return <Navigate to="/" replace />;
+}
+
+function SluglessAdminRedirect() {
+  const { school, loading, schoolLoading, memberships } = useSchool();
+  const location = useLocation();
+  const slug = school?.slug;
+  if (loading || schoolLoading || (!slug && memberships.length > 0)) {
+    return <div className="min-h-screen grid place-items-center text-sm text-muted-foreground">Loading…</div>;
+  }
+  if (slug) {
+    return <Navigate to={`/${slug}/app${location.pathname}${location.search}`} replace />;
   }
   return <Navigate to="/" replace />;
 }
@@ -166,6 +182,7 @@ const App = () => (
 
             {/* Helpful redirect: slug-less /app/* → tenant /:slug/app/* using last known school */}
             <Route path="/app/*" element={<SluglessAppRedirect />} />
+            <Route path="/admin/*" element={<SluglessAdminRedirect />} />
 
           {/* Super Admin OS */}
           <Route path="/super/claim" element={<SuperClaim />} />
