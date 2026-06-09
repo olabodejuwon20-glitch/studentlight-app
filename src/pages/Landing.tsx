@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 import {
   GraduationCap, ShieldCheck, Users, BookOpen, Sparkles, ArrowRight, Building2,
   LogIn, UserPlus, Globe2, ClipboardCheck, Wallet, MessagesSquare, BarChart3,
@@ -7,17 +8,53 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { useSchool } from "@/contexts/SchoolContext";
 import { schoolPath, getCurrentSchoolSlug } from "@/lib/tenant";
 import SEO from "@/components/SEO";
 import PortalDemo from "@/components/landing/PortalDemo";
 import WhatsAppFab from "@/components/landing/WhatsAppFab";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, SUPPORT_SLA, mailtoOnboard, mailtoDemo, waLink } from "@/lib/contact";
+import { formatNaira, kobo, revenueForSchool, type PlanPricing } from "@/lib/pricing";
 
 export default function Landing() {
   const navigate = useNavigate();
   const { user, school } = useSchool();
   const slug = school?.slug ?? getCurrentSchoolSlug();
+  const [studentCount, setStudentCount] = useState(250);
+
+  const planPricing: PlanPricing[] = [
+    { plan: "starter", label: "Starter", term_price_kobo: 2500000, included_students: 150, extra_student_kobo: 5000, sort_order: 1 },
+    { plan: "standard", label: "Standard", term_price_kobo: 4500000, included_students: 400, extra_student_kobo: 4500, sort_order: 2 },
+    { plan: "premium", label: "Premium", term_price_kobo: 8000000, included_students: 800, extra_student_kobo: 4000, sort_order: 3 },
+  ];
+
+  const calculatorRows = useMemo(() => {
+    return planPricing.map((plan) => ({
+      ...plan,
+      revenue: revenueForSchool({
+        plan: plan.plan,
+        studentCount,
+        addons: [],
+        planPricing,
+      }),
+    }));
+  }, [studentCount]);
+
+  const bestFit = calculatorRows.reduce((best, current) => {
+    if (!best) return current;
+    return current.revenue.termKobo < best.revenue.termKobo ? current : best;
+  }, calculatorRows[0]);
+
+  const setStudentCountValue = (value: string) => {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed)) {
+      setStudentCount(0);
+      return;
+    }
+    setStudentCount(Math.min(5000, Math.max(0, parsed)));
+  };
 
   // The 5 core pillars, in priority order.
   const pillars = [
@@ -91,16 +128,16 @@ export default function Landing() {
             <p className="text-base sm:text-lg text-muted-foreground mt-5 sm:mt-6 max-w-lg">
               CBT and JAMB/NECO simulation, attendance, digital result cards, online payments and AI tools for teachers and students — all in one secure portal.
             </p>
-            <div className="mt-7 sm:mt-8 flex flex-wrap gap-3">
+             <div className="mt-7 sm:mt-8 flex flex-wrap gap-3">
               <Button size="lg" asChild>
-                <a href={mailtoOnboard()}>Request school onboarding <ArrowRight className="size-4 ml-1.5" /></a>
+                 <a href={mailtoOnboard()}>Request Onboarding <ArrowRight className="size-4 ml-1.5" /></a>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <a href={mailtoDemo()}><Mail className="size-4 mr-1.5" /> Book a demo</a>
+               <Button size="lg" variant="outline" onClick={() => navigate("/register")}>
+                 Register
               </Button>
-              <Button size="lg" variant="ghost" className="opacity-95 shadow-lg rounded-lg border-solid border border-slate-400" onClick={() => navigate("/register")}>
-                &nbsp;sign-up
-              </Button>
+               <Button size="lg" variant="ghost" asChild>
+                 <Link to="/refer">Refer a School</Link>
+               </Button>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="size-3.5 text-success" /> Pilot pricing available</span>
@@ -162,6 +199,94 @@ export default function Landing() {
 
       {/* Interactive portal demo */}
       <PortalDemo />
+
+      <section id="pricing" className="border-b border-border/60 bg-muted/30">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-20">
+          <div className="grid lg:grid-cols-[1.05fr_1.3fr] gap-8 lg:gap-12 items-start">
+            <div>
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Pricing calculator</div>
+              <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-3">Estimate your termly and annual school cost.</h2>
+              <p className="text-muted-foreground mt-3 max-w-xl">Adjust your student count to compare plans instantly. The calculator includes each plan's student allowance and extra-student pricing.</p>
+
+              <div className="mt-8 rounded-xl border border-border bg-background p-5 sm:p-6 space-y-5">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-medium">Students on roll</div>
+                    <div className="text-xs text-muted-foreground mt-1">Use the slider or type the number directly.</div>
+                  </div>
+                  <div className="w-full sm:w-40">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={5000}
+                      value={studentCount}
+                      onChange={(e) => setStudentCountValue(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <Slider
+                  min={0}
+                  max={5000}
+                  step={10}
+                  value={[studentCount]}
+                  onValueChange={([value]) => setStudentCount(value ?? 0)}
+                />
+
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="rounded-lg border border-border bg-card px-3 py-3">
+                    <div className="text-xs text-muted-foreground">Best fit</div>
+                    <div className="font-semibold mt-1">{bestFit.label}</div>
+                  </div>
+                  <div className="rounded-lg border border-border bg-card px-3 py-3">
+                    <div className="text-xs text-muted-foreground">Termly</div>
+                    <div className="font-semibold mt-1">{formatNaira(bestFit.revenue.termKobo)}</div>
+                  </div>
+                  <div className="rounded-lg border border-border bg-card px-3 py-3">
+                    <div className="text-xs text-muted-foreground">Annual</div>
+                    <div className="font-semibold mt-1">{formatNaira(bestFit.revenue.annualKobo)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              {calculatorRows.map((plan) => (
+                <Card key={plan.plan} className={`p-5 sm:p-6 ${plan.plan === bestFit.plan ? "border-primary ring-2 ring-primary/15" : ""}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">{plan.label}</h3>
+                        {plan.plan === bestFit.plan && <span className="text-xs font-medium rounded-full border border-primary/30 bg-primary/10 px-2 py-1 text-primary">Recommended</span>}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">Includes {plan.included_students.toLocaleString()} students, then {formatNaira(plan.extra_student_kobo)} per extra student each term.</p>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <div className="text-2xl font-bold">{formatNaira(plan.revenue.termKobo)}</div>
+                      <div className="text-xs text-muted-foreground">per term</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid sm:grid-cols-3 gap-3 text-sm">
+                    <div className="rounded-lg bg-muted/50 px-3 py-3">
+                      <div className="text-xs text-muted-foreground">Base plan</div>
+                      <div className="font-medium mt-1">{formatNaira(plan.revenue.basePlanKobo)}</div>
+                    </div>
+                    <div className="rounded-lg bg-muted/50 px-3 py-3">
+                      <div className="text-xs text-muted-foreground">Extra students</div>
+                      <div className="font-medium mt-1">{plan.revenue.extraStudents.toLocaleString()} · {formatNaira(plan.revenue.extraStudentKobo)}</div>
+                    </div>
+                    <div className="rounded-lg bg-muted/50 px-3 py-3">
+                      <div className="text-xs text-muted-foreground">Annual prepay</div>
+                      <div className="font-medium mt-1">{formatNaira(plan.revenue.annualKobo)}</div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* How it works */}
       <section id="how" className="border-b border-border/60 bg-muted/30">
@@ -290,7 +415,7 @@ export default function Landing() {
             <h3 className="font-display text-2xl font-bold mt-2">Early-school pricing available</h3>
             <p className="text-sm text-muted-foreground mt-2">Pilot schools get hands-on onboarding, training for staff and a discount for the first session.</p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Button asChild><a href={mailtoOnboard()}>Request onboarding <ArrowRight className="size-4 ml-1.5" /></a></Button>
+              <Button asChild><a href={mailtoOnboard()}>Request Onboarding <ArrowRight className="size-4 ml-1.5" /></a></Button>
               <Button variant="outline" asChild><Link to="/refer">Refer a school</Link></Button>
             </div>
           </Card>
@@ -303,8 +428,9 @@ export default function Landing() {
           <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Ready to run your school the modern way?</h2>
           <p className="mt-3 text-white/90 max-w-xl mx-auto">Pilot pricing is open. Talk to our team or sign up and start exploring today.</p>
           <div className="mt-7 flex flex-wrap gap-3 justify-center">
-            <Button size="lg" variant="secondary" asChild><a href={mailtoOnboard()}>Request onboarding <ArrowRight className="size-4 ml-1.5" /></a></Button>
-            <Button size="lg" variant="outline" className="bg-transparent text-white border-white/40 hover:bg-white/10 hover:text-white text-sm text-center border border-solid opacity-95 shadow-xl rounded-xl" onClick={() => navigate("/register")}>&nbsp;sign-up</Button>
+            <Button size="lg" variant="secondary" asChild><a href={mailtoOnboard()}>Request Onboarding <ArrowRight className="size-4 ml-1.5" /></a></Button>
+            <Button size="lg" variant="outline" className="bg-transparent text-white border-white/40 hover:bg-white/10 hover:text-white" onClick={() => navigate("/register")}>Register</Button>
+            <Button size="lg" variant="ghost" className="text-white hover:bg-white/10 hover:text-white" asChild><Link to="/refer">Refer a School</Link></Button>
           </div>
         </div>
       </section>
