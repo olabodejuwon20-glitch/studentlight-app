@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import {
-  GraduationCap, ShieldCheck, Users, BookOpen, Sparkles, ArrowRight, Building2,
-  LogIn, UserPlus, Globe2, ClipboardCheck, Wallet, MessagesSquare, BarChart3,
-  Star, Quote, CheckCircle2, Mail, MessageCircle, Lock, Database, KeyRound,
+  GraduationCap, Users, Sparkles, ArrowRight, Building2,
+  LogIn, UserPlus, ClipboardCheck, Wallet,
+  Star, Quote, CheckCircle2, Mail, MessageCircle,
   Award, ListChecks, Phone, Library,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,8 @@ import { schoolPath, getCurrentSchoolSlug } from "@/lib/tenant";
 import SEO from "@/components/SEO";
 import PortalDemo from "@/components/landing/PortalDemo";
 import WhatsAppFab from "@/components/landing/WhatsAppFab";
-import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, SUPPORT_SLA, mailtoOnboard, mailtoDemo, waLink } from "@/lib/contact";
-import { formatNaira, kobo, revenueForSchool, type PlanPricing } from "@/lib/pricing";
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, SUPPORT_SLA, mailtoOnboard, waLink } from "@/lib/contact";
+import { formatNaira, revenueForSchool, type PlanPricing } from "@/lib/pricing";
 
 export default function Landing() {
   const navigate = useNavigate();
