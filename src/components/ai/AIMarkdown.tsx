@@ -2,6 +2,7 @@ import { useState, memo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Copy, Check } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -74,10 +75,14 @@ const components: Components = {
   ),
   // Code blocks: copy button + horizontal scroll
   pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
-  // Smart links
-  a: ({ node, href, children, ...props }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>
-  ),
+  // Smart links — internal /paths use the SPA router, externals open in a new tab
+  a: ({ node, href, children, ...props }) => {
+    const isInternal = typeof href === "string" && href.startsWith("/");
+    if (isInternal) {
+      return <Link to={href!} {...(props as any)}>{children}</Link>;
+    }
+    return <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>;
+  },
   // Tighter list spacing
   ul: ({ node, ...props }) => <ul className="list-disc pl-5" {...props} />,
   ol: ({ node, ...props }) => <ol className="list-decimal pl-5" {...props} />,
