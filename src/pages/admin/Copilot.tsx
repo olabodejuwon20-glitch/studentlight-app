@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Sparkles, Send, Loader2, Wrench } from "lucide-react";
+import { Sparkles, Send, Loader2, Wrench, Compass } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -11,20 +11,50 @@ import { AIMarkdown } from "@/components/ai/AIMarkdown";
 
 type Msg = { role: "user" | "assistant"; content: string; trace?: any[] };
 
-const SUGGESTIONS = [
-  "Which students are at risk this term?",
-  "What's our fee collection rate this term?",
-  "Show me the weakest 5 topics across all classes",
-  "Which teachers haven't published results in the last 30 days?",
-  "Compare class averages",
-];
+const SUGGESTIONS_BY_ROLE: Record<string, string[]> = {
+  admin: [
+    "Which students are at risk this term?",
+    "What's our fee collection rate this term?",
+    "Where do I invite new teachers?",
+    "How do I link a parent to their child?",
+    "Show me the weakest 5 topics across all classes",
+  ],
+  teacher: [
+    "Where do I take attendance?",
+    "How do I create a test in the Test Builder?",
+    "Where can I see my class gradebook?",
+    "How do I message a parent?",
+    "How do I publish a lesson note?",
+  ],
+  student: [
+    "Where do I see my upcoming exams?",
+    "How do I use the AI Tutor?",
+    "How do I pay school fees?",
+    "Where do I register my subjects?",
+    "How do I review my last exam?",
+  ],
+  parent: [
+    "Where do I see my child's results?",
+    "How do I pay school fees for my child?",
+    "Where do I message a teacher?",
+    "How do I check attendance and behavior?",
+    "Where is the academic calendar?",
+  ],
+};
 
 export default function Copilot() {
-  const { school } = useSchool();
+  const { school, activeRole } = useSchool();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const role = activeRole ?? "admin";
+  const suggestions = SUGGESTIONS_BY_ROLE[role] ?? SUGGESTIONS_BY_ROLE.admin;
+  const title = role === "admin" ? "Principal Copilot" : "Portal Copilot";
+  const description =
+    role === "admin"
+      ? "Ask anything about your school — attendance, fees, results, weak topics, approvals. I can also help you find any feature."
+      : "Ask me where to find any feature on your portal, how to use it, and I'll send you straight there.";
 
   async function send(text?: string) {
     const content = (text ?? input).trim();
@@ -37,6 +67,8 @@ export default function Copilot() {
       const { data, error } = await supabase.functions.invoke("principal-copilot", {
         body: {
           school_id: school.id,
+          school_slug: school.slug,
+          role,
           message: content,
           history: messages.map(m => ({ role: m.role, content: m.content })),
         },
@@ -55,16 +87,16 @@ export default function Copilot() {
 
   return (
     <SectionCard
-      title="Principal Copilot"
-      description="Ask anything about your school — attendance, fees, results, weak topics, approvals."
-      action={<Badge variant="secondary" className="gap-1"><Sparkles className="size-3" /> Run as Principal</Badge>}
+      title={title}
+      description={description}
+      action={<Badge variant="secondary" className="gap-1"><Compass className="size-3" /> {role[0].toUpperCase() + role.slice(1)} portal</Badge>}
     >
       <div ref={scrollRef} className="h-[60vh] sm:h-[55vh] overflow-y-auto rounded-lg border border-border bg-muted/20 p-3 sm:p-4 space-y-4">
         {messages.length === 0 && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Try one of these:</p>
             <div className="flex flex-wrap gap-2">
-              {SUGGESTIONS.map(s => (
+              {suggestions.map(s => (
                 <button
                   key={s}
                   onClick={() => send(s)}

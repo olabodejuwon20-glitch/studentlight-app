@@ -137,7 +137,12 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
   },
   {
     slug: "principal-copilot", name: "Principal Copilot", category: "intelligence", icon: Brain, core: true,
-    sidebar: [{ label: "Copilot", to: "copilot", icon: Brain, roles: ["admin"] }],
+    sidebar: [
+      { label: "Copilot", to: "copilot", icon: Brain, roles: ["admin"] },
+      { label: "Help & Copilot", to: "copilot", icon: Brain, roles: ["teacher"] },
+      { label: "Help & Copilot", to: "copilot", icon: Brain, roles: ["student"] },
+      { label: "Help & Copilot", to: "copilot", icon: Brain, roles: ["parent"] },
+    ],
   },
   {
     slug: "knowledge-base", name: "Knowledge Base", category: "intelligence", icon: BookMarked, core: true,

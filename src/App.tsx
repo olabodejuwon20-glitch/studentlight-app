@@ -266,6 +266,7 @@ const App = () => (
               <Route path="teacher/inbox" element={<RoleGate allow="teacher"><Inbox /></RoleGate>} />
               <Route path="teacher/ai-tutor" element={<RoleGate allow="teacher"><TeacherAITutor /></RoleGate>} />
               <Route path="teacher/ai-marking" element={<RoleGate allow="teacher"><TeacherAIMarking /></RoleGate>} />
+              <Route path="teacher/copilot" element={<RoleGate allow="teacher"><AdminCopilot /></RoleGate>} />
 
               <Route path="student" element={<RoleGate allow="student"><StudentDashboard /></RoleGate>} />
               <Route path="student/classes" element={<RoleGate allow="student"><StudentClasses /></RoleGate>} />
@@ -288,6 +289,7 @@ const App = () => (
               <Route path="student/fees" element={<RoleGate allow="student"><StudentFees /></RoleGate>} />
               <Route path="student/messages" element={<RoleGate allow="student"><StudentMessages /></RoleGate>} />
               <Route path="student/inbox" element={<RoleGate allow="student"><Inbox /></RoleGate>} />
+              <Route path="student/copilot" element={<RoleGate allow="student"><AdminCopilot /></RoleGate>} />
 
               <Route path="parent" element={<RoleGate allow="parent"><ParentDashboard /></RoleGate>} />
               <Route path="parent/children" element={<RoleGate allow="parent"><ParentChildren /></RoleGate>} />
@@ -300,6 +302,7 @@ const App = () => (
               <Route path="parent/behavior" element={<RoleGate allow="parent"><ParentBehavior /></RoleGate>} />
               <Route path="parent/teacher-comms" element={<RoleGate allow="parent"><ParentTeacherComms /></RoleGate>} />
               <Route path="parent/inbox" element={<RoleGate allow="parent"><Inbox /></RoleGate>} />
+              <Route path="parent/copilot" element={<RoleGate allow="parent"><AdminCopilot /></RoleGate>} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

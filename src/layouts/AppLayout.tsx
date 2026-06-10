@@ -385,10 +385,10 @@ export default function AppLayout() {
         </main>
       </div>
 
-      {activeRole === "admin" && (
+      {activeRole && (
         <NavLink
-          to={schoolPath(school.slug, `/app/admin/copilot`)}
-          title="Ask Principal Copilot"
+          to={schoolPath(school.slug, `/app/${activeRole}/copilot`)}
+          title={activeRole === "admin" ? "Ask Principal Copilot" : "Ask Portal Copilot"}
           className="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full pl-4 pr-5 py-3 shadow-lg bg-primary text-primary-foreground hover:opacity-90 transition-all hover:scale-105"
         >
           <Brain className="size-5" />
