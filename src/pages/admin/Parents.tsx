@@ -53,9 +53,12 @@ export default function AdminParents() {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Member | null>(null);
   const [linkDialog, setLinkDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadAll = useCallback(async () => {
     if (!school) return;
+    setIsLoading(true);
+    try {
     const [pRes, sRes, lRes] = await Promise.all([
       supabase.rpc("admin_list_memberships_with_profile", { _school: school.id, _role: "parent" as any }),
       supabase.rpc("admin_list_memberships_with_profile", { _school: school.id, _role: "student" as any }),
@@ -75,6 +78,9 @@ export default function AdminParents() {
     setParents(await merge(pRes.data));
     setStudents(await merge(sRes.data));
     setLinks((lRes.data || []) as Link[]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [school]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
@@ -111,9 +117,22 @@ export default function AdminParents() {
   return (
     <SectionCard
       title="Parents"
-      description={`${parents.length} registered · ${links.length} child link${links.length === 1 ? "" : "s"}`}
+      description={isLoading ? "Loading…" : `${parents.length} registered · ${links.length} child link${links.length === 1 ? "" : "s"}`}
     >
-      {parents.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-border bg-card p-4 flex items-start gap-3">
+              <div className="size-11 rounded-full animate-pulse bg-muted shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-3/4 animate-pulse bg-muted rounded" />
+                <div className="h-3 w-1/2 animate-pulse bg-muted rounded" />
+                <div className="h-3 w-1/3 animate-pulse bg-muted rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : parents.length === 0 ? (
         <EmptyState
           icon={UserSquare2}
           title="No parents yet"

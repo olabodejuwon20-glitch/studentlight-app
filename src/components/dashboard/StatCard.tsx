@@ -1,9 +1,10 @@
 import { LucideIcon } from "lucide-react";
+import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface Props {
   label: string;
-  value: string;
+  value: ReactNode;
   trend?: string;
   sub?: string;
   icon: LucideIcon;
