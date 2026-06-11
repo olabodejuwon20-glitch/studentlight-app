@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { cacheGet, cacheSet } from "@/lib/dataCache";
 
 type Member = {
   user_id: string;
@@ -47,17 +48,21 @@ const RELATIONSHIPS = ["mother", "father", "guardian", "sponsor", "other"] as co
 
 export default function AdminParents() {
   const { school } = useSchool();
-  const [parents, setParents] = useState<Member[]>([]);
-  const [students, setStudents] = useState<Member[]>([]);
-  const [links, setLinks] = useState<Link[]>([]);
+  const cachedParents  = school ? cacheGet<Member[]>(`members:${school.id}:parent`)  : null;
+  const cachedStudents = school ? cacheGet<Member[]>(`members:${school.id}:student`) : null;
+  const cachedLinks    = school ? cacheGet<Link[]>(`parent_links:${school.id}`)      : null;
+  const hasCache = !!(cachedParents && cachedStudents && cachedLinks);
+  const [parents, setParents] = useState<Member[]>(cachedParents ?? []);
+  const [students, setStudents] = useState<Member[]>(cachedStudents ?? []);
+  const [links, setLinks] = useState<Link[]>(cachedLinks ?? []);
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Member | null>(null);
   const [linkDialog, setLinkDialog] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!hasCache);
 
   const loadAll = useCallback(async () => {
     if (!school) return;
-    setIsLoading(true);
+    if (!cacheGet(`members:${school.id}:parent`)) setIsLoading(true);
     try {
     const [pRes, sRes, lRes] = await Promise.all([
       supabase.rpc("admin_list_memberships_with_profile", { _school: school.id, _role: "parent" as any }),
@@ -75,9 +80,15 @@ export default function AdminParents() {
       return rows.map((x) => ({ ...x, ...(byId[x.user_id] || {}) }));
     };
 
-    setParents(await merge(pRes.data));
-    setStudents(await merge(sRes.data));
-    setLinks((lRes.data || []) as Link[]);
+    const mParents = await merge(pRes.data);
+    const mStudents = await merge(sRes.data);
+    const mLinks = (lRes.data || []) as Link[];
+    setParents(mParents);
+    setStudents(mStudents);
+    setLinks(mLinks);
+    cacheSet(`members:${school.id}:parent`, mParents);
+    cacheSet(`members:${school.id}:student`, mStudents);
+    cacheSet(`parent_links:${school.id}`, mLinks);
     } finally {
       setIsLoading(false);
     }

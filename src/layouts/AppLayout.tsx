@@ -23,6 +23,7 @@ import { NotificationBell } from "@/components/comms/NotificationBell";
 import { RealtimeNotifier } from "@/components/comms/RealtimeNotifier";
 import { OnboardingGate } from "@/components/admin/OnboardingGate";
 import { HelpCircle, CreditCard } from "lucide-react";
+import { warmSchoolCache } from "@/lib/dataCache";
 
 // Group every sidebar destination into a labelled section.
 // Keys are the `to` field used by NAV / module manifests.
@@ -225,6 +226,10 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: enabledModules } = useEnabledModules(school?.id);
+
+  useEffect(() => {
+    if (school?.id) warmSchoolCache(school.id, activeRole);
+  }, [school?.id, activeRole]);
 
   if (!school || !activeRole) return <Navigate to={schoolPath(school?.slug, "/signin")} replace />;
 

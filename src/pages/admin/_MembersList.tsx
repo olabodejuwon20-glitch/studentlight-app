@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { downloadCSV, printToPDF, tableHTML, safeHtml } from "@/lib/exporters";
+import { cacheGet, cacheSet } from "@/lib/dataCache";
 
 type Role = "student" | "teacher";
 type Tone = "student" | "teacher";
@@ -17,29 +18,36 @@ type Tone = "student" | "teacher";
 export default function MembersList({ role, tone }: { role: Role; tone: Tone }) {
   const avatarClass = tone === "student" ? "bg-student/15 text-student" : "bg-teacher/15 text-teacher";
   const { school } = useSchool();
-  const [rows, setRows] = useState<any[]>([]);
+  const cacheKey = school ? `members:${school.id}:${role}` : "";
+  const cached = cacheKey ? cacheGet<any[]>(cacheKey) : null;
+  const [rows, setRows] = useState<any[]>(cached ?? []);
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!cached);
 
   useEffect(() => {
     if (!school) return;
+    const key = `members:${school.id}:${role}`;
+    const c = cacheGet<any[]>(key);
+    if (c) { setRows(c); setIsLoading(false); }
+    else setIsLoading(true);
     (async () => {
-      setIsLoading(true);
       try {
-      const { data: m } = await supabase.rpc("admin_list_memberships_with_profile", {
-        _school: school.id,
-        _role: role as any,
-      });
-      if (!m?.length) return setRows([]);
-      const ids = m.map(x => x.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id,full_name,email,phone,dob,gender,address,photo_url")
-        .in("id", ids);
-      const byId: Record<string, any> = {};
-      profiles?.forEach(p => (byId[p.id] = p));
-      setRows(m.map(x => ({ ...x, ...(byId[x.user_id] || { id: x.user_id }) })));
+        const { data: m } = await supabase.rpc("admin_list_memberships_with_profile", {
+          _school: school.id,
+          _role: role as any,
+        });
+        if (!m?.length) { setRows([]); cacheSet(key, []); return; }
+        const ids = m.map((x: any) => x.user_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id,full_name,email,phone,dob,gender,address,photo_url")
+          .in("id", ids);
+        const byId: Record<string, any> = {};
+        profiles?.forEach(p => (byId[p.id] = p));
+        const merged = m.map((x: any) => ({ ...x, ...(byId[x.user_id] || { id: x.user_id }) }));
+        setRows(merged);
+        cacheSet(key, merged);
       } finally {
         setIsLoading(false);
       }
