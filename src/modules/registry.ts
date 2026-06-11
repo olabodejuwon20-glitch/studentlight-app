@@ -27,6 +27,7 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
     slug: "school-directory", name: "School Directory", category: "operations", icon: Users, core: true,
     sidebar: [
       { label: "Students",  to: "students",  icon: Users,         roles: ["admin"] },
+      { label: "Parents",   to: "parents",   icon: UserSquare2,   roles: ["admin"] },
       { label: "Teachers",  to: "teachers",  icon: GraduationCap, roles: ["admin"] },
       { label: "Classes",   to: "classes",   icon: BookOpen,      roles: ["admin"] },
       { label: "Enrollments", to: "enrollments", icon: ClipboardCheck, roles: ["admin"] },
@@ -185,6 +186,7 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
     sidebar: [
       { label: "My Classes",  to: "classes",   icon: BookOpen,     roles: ["teacher"] },
       { label: "Students",    to: "students",  icon: Users,        roles: ["teacher"] },
+      { label: "Parents",     to: "parents",   icon: UserSquare2,  roles: ["teacher"] },
       { label: "Resources",   to: "resources", icon: FolderOpen,   roles: ["teacher"] },
       { label: "Reports",     to: "reports",   icon: FileBarChart, roles: ["teacher"] },
     ],
