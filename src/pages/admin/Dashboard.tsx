@@ -20,10 +20,13 @@ export default function AdminDashboard() {
   const [classPerf, setClassPerf] = useState<any[]>([]);
   const [attendanceSummary, setAttendanceSummary] = useState<{ present: number; absent: number; late: number }>({ present: 0, absent: 0, late: 0 });
   const [topStudents, setTopStudents] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!school) return;
     (async () => {
+      setIsLoading(true);
+      try {
       const sid = school.id;
       const [stu, tea, cls, fees, recent, ann, att, results, classes] = await Promise.all([
         supabase.from("memberships").select("id,user_id,created_at", { count: "exact" }).eq("school_id", sid).eq("role", "student").order("created_at", { ascending: false }),
@@ -83,6 +86,9 @@ export default function AdminDashboard() {
         absent: a.filter(x => x.status === "absent").length,
         late: a.filter(x => x.status === "late").length,
       });
+      } finally {
+        setIsLoading(false);
+      }
     })();
   }, [school]);
 
@@ -115,10 +121,10 @@ export default function AdminDashboard() {
       </Link>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Total Students" value={counts.students.toLocaleString()} icon={Users} tone="admin" trend="12.5%" />
-        <StatCard label="Total Teachers" value={counts.teachers.toLocaleString()} icon={GraduationCap} tone="success" trend="8.4%" />
-        <StatCard label="Active Classes" value={counts.classes.toLocaleString()} icon={BookOpen} tone="student" trend="6.2%" />
-        <StatCard label="Total Revenue" value={`₦${counts.revenue.toLocaleString()}`} icon={DollarSign} tone="warning" trend="15.3%" />
+        <StatCard label="Total Students" value={isLoading ? <span className="inline-block h-7 w-16 animate-pulse bg-muted rounded align-middle" /> : counts.students.toLocaleString()} icon={Users} tone="admin" trend={isLoading ? undefined : "12.5%"} />
+        <StatCard label="Total Teachers" value={isLoading ? <span className="inline-block h-7 w-16 animate-pulse bg-muted rounded align-middle" /> : counts.teachers.toLocaleString()} icon={GraduationCap} tone="success" trend={isLoading ? undefined : "8.4%"} />
+        <StatCard label="Active Classes" value={isLoading ? <span className="inline-block h-7 w-16 animate-pulse bg-muted rounded align-middle" /> : counts.classes.toLocaleString()} icon={BookOpen} tone="student" trend={isLoading ? undefined : "6.2%"} />
+        <StatCard label="Total Revenue" value={isLoading ? <span className="inline-block h-7 w-24 animate-pulse bg-muted rounded align-middle" /> : `₦${counts.revenue.toLocaleString()}`} icon={DollarSign} tone="warning" trend={isLoading ? undefined : "15.3%"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -20,10 +20,13 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!school) return;
     (async () => {
+      setIsLoading(true);
+      try {
       const { data: m } = await supabase.rpc("admin_list_memberships_with_profile", {
         _school: school.id,
         _role: role as any,
@@ -37,6 +40,9 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
       const byId: Record<string, any> = {};
       profiles?.forEach(p => (byId[p.id] = p));
       setRows(m.map(x => ({ ...x, ...(byId[x.user_id] || { id: x.user_id }) })));
+      } finally {
+        setIsLoading(false);
+      }
     })();
   }, [school, role]);
 
@@ -83,7 +89,7 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
   return (
     <SectionCard
       title={title}
-      description={`${rows.length} ${role === "student" ? "enrolled" : "active"}`}
+      description={isLoading ? "Loading…" : `${rows.length} ${role === "student" ? "enrolled" : "active"}`}
       action={
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={exportCSV} disabled={!filtered.length}>
@@ -95,7 +101,19 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
         </div>
       }
     >
-      {rows.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+              <div className="size-11 rounded-full animate-pulse bg-muted shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-3/4 animate-pulse bg-muted rounded" />
+                <div className="h-3 w-1/2 animate-pulse bg-muted rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
         <EmptyState icon={Icon} title={`No ${role}s yet`} desc={`Generate a ${role} invite code to onboard members.`} />
       ) : (
         <>
