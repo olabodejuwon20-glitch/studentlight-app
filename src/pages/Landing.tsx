@@ -371,7 +371,7 @@ export default function Landing() {
               Legacyskool was started by educators and engineers who watched schools drown in paper registers, leaked exam papers, missing report cards and uncollected fees. We replace all of that with one secure portal that any school — from 50 students to 5,000 — can run on day one.
             </p>
             <p>
- Every module we ship is built with a real school co-piloting the design, so what you see is shaped by the people who actually use it — not a template borrowed from another market.
+               Every module we ship is built with a real school co-piloting the design, so what you see is shaped by the people who actually use it — not a template borrowed from another market.
             </p>
             <p>
               We believe African schools deserve software that respects their bandwidth, their budgets and their workflows. That's why Legacyskool works on low-end Android phones, gracefully handles patchy networks, and offers pilot pricing so even small schools can go digital from term one.
