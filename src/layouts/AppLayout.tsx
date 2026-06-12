@@ -36,7 +36,7 @@ const SECTION_OF: Record<string, string> = {
   "classes": "Academics", "timetable": "Academics", "calendar": "Academics",
   "attendance": "Academics", "assignments": "Academics", "gradebook": "Academics",
   "behavior": "Academics", "library": "Academics", "lesson-notes": "Academics",
-  "lesson-plan": "Academics", "question-bank": "Academics", "resources": "Academics",
+  "question-bank": "Academics", "resources": "Academics",
   "register-subjects": "Academics",
   // Assessments
   "tests": "Assessments", "assessments": "Assessments", "grading": "Assessments",
