@@ -36,15 +36,16 @@ const SECTION_OF: Record<string, string> = {
   "classes": "Academics", "timetable": "Academics", "calendar": "Academics",
   "attendance": "Academics", "assignments": "Academics", "gradebook": "Academics",
   "behavior": "Academics", "library": "Academics", "lesson-notes": "Academics",
-  "lesson-plan": "Academics", "question-bank": "Academics", "resources": "Academics",
+  "question-bank": "Academics", "resources": "Academics",
   "register-subjects": "Academics",
   // Assessments
   "tests": "Assessments", "assessments": "Assessments", "grading": "Assessments",
   "exams": "Assessments", "results": "Assessments", "mock": "Assessments",
   "practice": "Assessments", "proctoring": "Assessments",
-  // AI
-  "ai-tutor": "AI", "ai-marking": "AI", "parent-alerts": "AI",
-  "copilot": "AI", "knowledge": "AI", "ai-activity": "AI", "ai-settings": "AI",
+  // Copilot (all AI features grouped here)
+  "ai-tutor": "Copilot", "ai-marking": "Copilot", "parent-alerts": "Copilot",
+  "copilot": "Copilot", "knowledge": "Copilot", "ai-activity": "Copilot",
+  "ai-settings": "Copilot", "lesson-plan": "Copilot",
   // Communication
   "messages": "Communication", "inbox": "Communication",
   "announcements": "Communication", "parent-comms": "Communication",
@@ -61,7 +62,7 @@ const SECTION_OF: Record<string, string> = {
 
 const SECTION_ORDER = [
   "Overview", "People", "Academics", "Assessments",
-  "AI", "Communication", "Finance", "Operations", "Reports", "System",
+  "Copilot", "Communication", "Finance", "Operations", "Reports", "System",
 ];
 
 function sectionFor(to: string) {
@@ -259,7 +260,7 @@ export default function AppLayout() {
   });
   // Apply deterministic ordering inside the AI section so every portal lists
   // AI tools in the same sequence.
-  if (grouped.has("AI")) grouped.set("AI", sortAI(grouped.get("AI") as any) as any);
+  if (grouped.has("Copilot")) grouped.set("Copilot", sortAI(grouped.get("Copilot") as any) as any);
   const orderedSections = [
     ...SECTION_ORDER.filter(s => grouped.has(s)),
     ...Array.from(grouped.keys()).filter(s => !SECTION_ORDER.includes(s)),
@@ -383,7 +384,7 @@ export default function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 px-3 sm:px-4 lg:px-8 py-4 sm:py-6 pb-20 lg:pb-6 animate-fade-in">
+        <main className="flex-1 min-w-0 overflow-x-hidden px-3 sm:px-4 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-6 animate-fade-in">
           <OnboardingGate>
             <Outlet />
           </OnboardingGate>
