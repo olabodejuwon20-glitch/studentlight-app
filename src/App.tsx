@@ -50,6 +50,7 @@ import AdminCopilot from "./pages/admin/Copilot";
 import AdminKnowledge from "./pages/admin/Knowledge";
 import AdminSubscription from "./pages/admin/Subscription";
 import AdminParents from "./pages/admin/Parents";
+import AdminAttendance from "./pages/admin/Attendance";
 import SubscriptionCallback from "./pages/SubscriptionCallback";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
@@ -95,6 +96,7 @@ import MockResult from "./pages/student/MockResult";
 import Practice from "./pages/student/Practice";
 import StudentRegisterSubjects from "./pages/student/RegisterSubjects";
 import StudentMyAssessments from "./pages/student/MyAssessments";
+import StudentAttendance from "./pages/student/Attendance";
 
 import ParentDashboard from "./pages/parent/Dashboard";
 import ParentChildren from "./pages/parent/Children";
@@ -219,6 +221,7 @@ const App = () => (
               <Route path="admin/students" element={<RoleGate allow="admin"><AdminStudents /></RoleGate>} />
               <Route path="admin/teachers" element={<RoleGate allow="admin"><AdminTeachers /></RoleGate>} />
               <Route path="admin/parents" element={<RoleGate allow="admin"><AdminParents /></RoleGate>} />
+              <Route path="admin/attendance" element={<RoleGate allow="admin"><AdminAttendance /></RoleGate>} />
               <Route path="admin/classes" element={<RoleGate allow="admin"><AdminClasses /></RoleGate>} />
               <Route path="admin/enrollments" element={<RoleGate allow="admin"><AdminEnrollments /></RoleGate>} />
               <Route path="admin/reports" element={<RoleGate allow="admin"><AdminReports /></RoleGate>} />
@@ -289,6 +292,7 @@ const App = () => (
               <Route path="student/behavior" element={<RoleGate allow="student"><StudentBehavior /></RoleGate>} />
               <Route path="student/fees" element={<RoleGate allow="student"><StudentFees /></RoleGate>} />
               <Route path="student/messages" element={<RoleGate allow="student"><StudentMessages /></RoleGate>} />
+              <Route path="student/attendance" element={<RoleGate allow="student"><StudentAttendance /></RoleGate>} />
               <Route path="student/inbox" element={<RoleGate allow="student"><Inbox /></RoleGate>} />
               <Route path="student/copilot" element={<RoleGate allow="student"><AdminCopilot /></RoleGate>} />
 
