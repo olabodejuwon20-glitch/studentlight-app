@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardCheck, AlertTriangle } from "lucide-react";
+import { ClipboardCheck, AlertTriangle, Check, X, Clock, ShieldCheck, Percent } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
@@ -113,11 +113,11 @@ export default function AdminAttendance() {
         }
       >
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard label="Overall rate" value={`${rate}%`} hint={`${totals.present + totals.late}/${totals.total} attended`} />
-          <StatCard label="Present" value={totals.present} />
-          <StatCard label="Absent"  value={totals.absent} />
-          <StatCard label="Late"    value={totals.late} />
-          <StatCard label="Excused" value={totals.excused} />
+          <StatCard label="Overall rate" value={`${rate}%`} icon={Percent} tone="info"     sub={`${totals.present + totals.late}/${totals.total} attended`} />
+          <StatCard label="Present"      value={totals.present} icon={Check}       tone="success" />
+          <StatCard label="Absent"       value={totals.absent}  icon={X}           tone="warning" />
+          <StatCard label="Late"         value={totals.late}    icon={Clock}       tone="warning" />
+          <StatCard label="Excused"      value={totals.excused} icon={ShieldCheck} tone="info" />
         </div>
       </SectionCard>
 
