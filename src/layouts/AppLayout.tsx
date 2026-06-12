@@ -31,13 +31,17 @@ const SECTION_OF: Record<string, string> = {
   "": "Overview",
   // People
   "students": "People", "teachers": "People", "children": "People",
-  "parents": "People", "invites": "People", "bulk": "People", "enrollments": "People",
+  "parents": "People",
+  // Admission (formerly Enrollments) — invites + bulk upload live here too
+  "enrollments": "Admission", "invites": "Admission", "bulk": "Admission",
   // Academics
   "classes": "Academics", "timetable": "Academics", "calendar": "Academics",
   "attendance": "Academics", "assignments": "Academics", "gradebook": "Academics",
-  "behavior": "Academics", "library": "Academics", "lesson-notes": "Academics",
-  "question-bank": "Academics", "resources": "Academics",
+  "behavior": "Academics",
   "register-subjects": "Academics",
+  // Library (groups all reading / lesson-note / question-bank tools)
+  "library": "Library", "lesson-notes": "Library",
+  "question-bank": "Library", "resources": "Library",
   // Assessments
   "tests": "Assessments", "assessments": "Assessments", "grading": "Assessments",
   "exams": "Assessments", "results": "Assessments", "mock": "Assessments",
@@ -61,7 +65,7 @@ const SECTION_OF: Record<string, string> = {
 };
 
 const SECTION_ORDER = [
-  "Overview", "People", "Academics", "Assessments",
+  "Overview", "People", "Admission", "Academics", "Library", "Assessments",
   "Copilot", "Communication", "Finance", "Operations", "Reports", "System",
 ];
 
