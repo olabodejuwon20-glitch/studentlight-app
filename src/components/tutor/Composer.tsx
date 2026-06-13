@@ -21,11 +21,13 @@ interface Props {
   transcribeVoice?: boolean;
   /** Notifies the parent when the user is composing — used for typing indicators. */
   onTextChange?: (text: string) => void;
+  /** School scope for credit accounting & access control on server endpoints. */
+  schoolId?: string;
 }
 
 export function Composer({
   bucket, userId, prefix, disabled, busy, placeholder = "Message…",
-  onSubmit, onStop, accept = "image/*,application/pdf,.txt,.md,.docx", transcribeVoice = true, onTextChange,
+  onSubmit, onStop, accept = "image/*,application/pdf,.txt,.md,.docx", transcribeVoice = true, onTextChange, schoolId,
 }: Props) {
   const [text, setText] = useState("");
   const [pending, setPending] = useState<Attachment[]>([]);
@@ -73,7 +75,7 @@ export function Composer({
             try {
               const base64 = await blobToBase64(blob);
               const { data } = await supabase.functions.invoke("transcribe-audio", {
-                body: { audio_base64: base64, mime_type: "audio/webm" },
+                body: { audio_base64: base64, mime_type: "audio/webm", school_id: schoolId },
               });
               if (data?.transcript) att.transcript = data.transcript;
             } catch (e) { console.warn("transcribe failed", e); }
