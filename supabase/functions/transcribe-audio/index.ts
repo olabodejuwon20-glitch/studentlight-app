@@ -32,10 +32,12 @@ Deno.serve(async (req) => {
       });
     }
     const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+    // Require active membership in the given school (any role) so transcription
+    // credits are scoped to school members only.
     const { data: mem } = await admin.from("memberships")
       .select("role").eq("school_id", school_id).eq("user_id", userRes.user.id)
       .eq("status", "active").maybeSingle();
-    if (!mem || !["teacher", "admin"].includes(mem.role)) {
+    if (!mem) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
