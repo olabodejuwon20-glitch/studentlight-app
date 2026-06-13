@@ -56,7 +56,7 @@ export default function TeacherLessonNotes() {
     }
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-lesson-note", { body: form });
+      const { data, error } = await supabase.functions.invoke("generate-lesson-note", { body: { ...form, school_id: school?.id } });
       if (error) throw new Error(await friendlyInvokeError(error, "We couldn't generate the lesson note. Please try again."));
       if (data?.error) throw new Error(data.error);
       setForm((f: any) => ({ ...f, content: data.content, title: f.title || `${f.subject} — ${f.topic}` }));

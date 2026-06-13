@@ -346,6 +346,7 @@ export function TutorChat({ portalRole }: { portalRole: "student" | "teacher" })
             onStop={stop}
             placeholder={portalRole === "teacher" ? "Ask your co-teacher anything…" : "Ask anything — I'll help you learn"}
             onSubmit={send}
+            schoolId={school.id}
           />
           </>
         )}
