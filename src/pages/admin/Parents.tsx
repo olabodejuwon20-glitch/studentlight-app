@@ -114,7 +114,7 @@ export default function AdminParents() {
     const s = q.toLowerCase();
     return parents.filter((r) =>
       (r.full_name || "").toLowerCase().includes(s) ||
-      (r.email || "").toLowerCase().includes(s) ||
+      publicEmailForSearch(r.email).toLowerCase().includes(s) ||
       (r.phone || "").toLowerCase().includes(s)
     );
   }, [parents, q]);
@@ -159,8 +159,8 @@ export default function AdminParents() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {filtered.map((p) => {
-              const name = p.full_name || p.email?.split("@")[0] || "Unnamed";
-              const initials = (p.full_name || p.email || "?").split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join("");
+              const name = p.full_name || "Unnamed parent";
+              const initials = publicInitials(p);
               const kids = linksByParent[p.user_id] || [];
               return (
                 <button
@@ -174,7 +174,7 @@ export default function AdminParents() {
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">{name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{p.email || p.phone || "—"}</div>
+                    <div className="text-xs text-muted-foreground truncate">{publicContact(p) || "—"}</div>
                     <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
                       <Badge variant="secondary" className="text-[10px]">
                         {kids.length} child{kids.length === 1 ? "" : "ren"}
@@ -199,14 +199,14 @@ export default function AdminParents() {
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selected?.full_name || selected?.email || "Parent"}</DialogTitle>
+            <DialogTitle>{selected?.full_name || "Parent"}</DialogTitle>
             <DialogDescription>Manage linked children for this parent.</DialogDescription>
           </DialogHeader>
           {selected && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-2 text-sm">
-                {selected.email && (
-                  <div className="flex items-center gap-2 text-muted-foreground"><Mail className="size-3.5" /> {selected.email}</div>
+                {publicEmail(selected.email) && (
+                  <div className="flex items-center gap-2 text-muted-foreground"><Mail className="size-3.5" /> {publicEmail(selected.email)}</div>
                 )}
                 {selected.phone && (
                   <div className="flex items-center gap-2 text-muted-foreground"><Phone className="size-3.5" /> {selected.phone}</div>
@@ -226,7 +226,7 @@ export default function AdminParents() {
                   )}
                   {(linksByParent[selected.user_id] || []).map((l) => {
                     const child = studentsById[l.student_user_id];
-                    const name = child?.full_name || child?.email || "Unknown student";
+                    const name = child?.full_name || "Unknown student";
                     return (
                       <div key={l.id} className="flex items-center gap-3 p-3">
                         <Avatar className="size-9">
