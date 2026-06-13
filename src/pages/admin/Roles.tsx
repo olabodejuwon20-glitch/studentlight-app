@@ -94,7 +94,7 @@ export default function AdminRoles() {
     <div className="space-y-5">
       <PageHeader
         title="Custom admin roles"
-        subtitle="Create up to 3 sub-admin roles. Name each role and pick exactly what they can access. Generate an invite from the Invites page to assign someone."
+        description="Create up to 3 sub-admin roles. Name each role and pick exactly what they can access. Generate an invite from the Invites page to assign someone."
       />
       {loading ? (
         <div className="grid place-items-center py-12 text-muted-foreground"><Loader2 className="size-5 animate-spin" /></div>
