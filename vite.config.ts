@@ -67,6 +67,34 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
+            // Supabase REST/RPC GETs — serve from cache when offline, refresh in background.
+            urlPattern: ({ url, request }) =>
+              request.method === "GET" &&
+              /\.supabase\.co$/.test(url.hostname) &&
+              (url.pathname.startsWith("/rest/") || url.pathname.startsWith("/storage/v1/object/public/")),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "supabase-api",
+              networkTimeoutSeconds: 4,
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 7,
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Hashed built assets — fast repeat loads.
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && /\/assets\/.+\.(js|css|woff2?)$/i.test(url.pathname),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "static-assets",
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: "CacheFirst",
             options: {
