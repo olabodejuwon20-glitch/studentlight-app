@@ -307,7 +307,7 @@ function LinkChildDialog({
     const s = q.toLowerCase();
     return students
       .filter((st) => !existingChildIds.has(st.user_id))
-      .filter((st) => !s || (st.full_name || "").toLowerCase().includes(s) || (st.email || "").toLowerCase().includes(s));
+      .filter((st) => !s || (st.full_name || "").toLowerCase().includes(s) || publicEmailForSearch(st.email).toLowerCase().includes(s));
   }, [students, existingChildIds, q]);
 
   async function save() {
