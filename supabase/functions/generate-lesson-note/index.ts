@@ -17,10 +17,32 @@ Deno.serve(async (req) => {
     if (claimsErr || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const { title, subject, grade_level, topic, duration_min, objectives, notes } = await req.json();
+    const body = await req.json();
+    const { title, subject, grade_level, topic, duration_min, objectives, notes, school_id } = body;
     if (!subject || !topic) {
       return new Response(JSON.stringify({ error: "subject and topic are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Authorization: must be active teacher/admin of the provided school
+    const userId = claimsData.claims.sub as string;
+    if (!school_id || typeof school_id !== "string") {
+      return new Response(JSON.stringify({ error: "school_id is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { persistSession: false } },
+    );
+    const { data: mem } = await admin.from("memberships")
+      .select("role").eq("school_id", school_id).eq("user_id", userId)
+      .eq("status", "active").maybeSingle();
+    if (!mem || !["teacher", "admin"].includes(mem.role)) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
