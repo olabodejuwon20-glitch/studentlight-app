@@ -14,6 +14,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_role_slots: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          name: string
+          permissions: Json
+          school_id: string
+          slot: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+          permissions?: Json
+          school_id: string
+          slot: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+          permissions?: Json
+          school_id?: string
+          slot?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_role_slots_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_role_slots_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_role_slots_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_approvals: {
         Row: {
           ai_job_id: string | null
@@ -1742,6 +1797,7 @@ export type Database = {
       }
       invite_codes: {
         Row: {
+          admin_slot: number | null
           code: string
           created_at: string
           created_by: string
@@ -1753,6 +1809,7 @@ export type Database = {
           uses: number
         }
         Insert: {
+          admin_slot?: number | null
           code: string
           created_at?: string
           created_by: string
@@ -1764,6 +1821,7 @@ export type Database = {
           uses?: number
         }
         Update: {
+          admin_slot?: number | null
           code?: string
           created_at?: string
           created_by?: string
@@ -2264,6 +2322,7 @@ export type Database = {
       }
       memberships: {
         Row: {
+          admin_slot: number | null
           bio_completed: boolean
           created_at: string
           id: string
@@ -2275,6 +2334,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_slot?: number | null
           bio_completed?: boolean
           created_at?: string
           id?: string
@@ -2286,6 +2346,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_slot?: number | null
           bio_completed?: boolean
           created_at?: string
           id?: string

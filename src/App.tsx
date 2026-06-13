@@ -51,6 +51,7 @@ import AdminKnowledge from "./pages/admin/Knowledge";
 import AdminSubscription from "./pages/admin/Subscription";
 import AdminParents from "./pages/admin/Parents";
 import AdminAttendance from "./pages/admin/Attendance";
+import AdminRoles from "./pages/admin/Roles";
 import SubscriptionCallback from "./pages/SubscriptionCallback";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
@@ -247,6 +248,7 @@ const App = () => (
               <Route path="admin/copilot" element={<RoleGate allow="admin"><AdminCopilot /></RoleGate>} />
               <Route path="admin/knowledge" element={<RoleGate allow="admin"><AdminKnowledge /></RoleGate>} />
               <Route path="admin/subscription" element={<RoleGate allow="admin"><AdminSubscription /></RoleGate>} />
+              <Route path="admin/roles" element={<RoleGate allow="admin"><AdminRoles /></RoleGate>} />
               <Route path="help" element={<HelpPage />} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />

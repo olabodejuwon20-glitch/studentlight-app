@@ -14,7 +14,7 @@ export const ROLE_META: Record<Role, { name: string; subtitle: string; color: st
 };
 
 export interface School { id: string; name: string; slug: string; logo_url: string | null }
-export interface Membership { school_id: string; role: Role; bio_completed?: boolean; must_change_pin?: boolean }
+export interface Membership { school_id: string; role: Role; bio_completed?: boolean; must_change_pin?: boolean; admin_slot?: number | null }
 
 interface Ctx {
   user: User | null;
@@ -92,7 +92,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   }, [loading, memberships, school]);
 
   const loadMemberships = useCallback(async (uid: string) => {
-    const { data } = await supabase.from("memberships").select("school_id,role,bio_completed,must_change_pin").eq("user_id", uid).eq("status", "active");
+    const { data } = await supabase.from("memberships").select("school_id,role,bio_completed,must_change_pin,admin_slot").eq("user_id", uid).eq("status", "active");
     setMemberships((data ?? []) as Membership[]);
   }, []);
 
