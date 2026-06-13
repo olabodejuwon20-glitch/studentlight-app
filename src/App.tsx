@@ -62,6 +62,7 @@ import TeacherAttendance from "./pages/teacher/Attendance";
 import TestBuilder from "./pages/teacher/TestBuilder";
 import Grading from "./pages/teacher/Grading";
 import TeacherStudents from "./pages/teacher/Students";
+import TeacherParents from "./pages/teacher/Parents";
 import TeacherCalendar from "./pages/teacher/Calendar";
 import TeacherMessages from "./pages/teacher/Messages";
 import TeacherResources from "./pages/teacher/Resources";
