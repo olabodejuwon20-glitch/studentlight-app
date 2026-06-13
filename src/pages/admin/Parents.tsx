@@ -338,7 +338,7 @@ function LinkChildDialog({
         <DialogHeader>
           <DialogTitle>Link a child</DialogTitle>
           <DialogDescription>
-            Link {parent.full_name || parent.email} to a student. The parent will gain access to that child's records.
+            Link {parent.full_name || "this parent"} to a student. The parent will gain access to that child's records.
           </DialogDescription>
         </DialogHeader>
 
@@ -356,8 +356,8 @@ function LinkChildDialog({
                 <div className="text-center text-xs text-muted-foreground py-4">No students available.</div>
               )}
               {available.map((st) => {
-                const name = st.full_name || st.email || "Unnamed";
-                const initials = name.split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join("");
+                const name = st.full_name || "Unnamed";
+                const initials = publicInitials(st);
                 const active = studentId === st.user_id;
                 return (
                   <button
@@ -371,7 +371,7 @@ function LinkChildDialog({
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-medium truncate">{name}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">{st.profile_data?.grade_level || st.email || "—"}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">{st.profile_data?.grade_level || publicEmail(st.email) || st.phone || "—"}</div>
                     </div>
                   </button>
                 );
