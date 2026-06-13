@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { publicEmail, publicInitials } from "@/lib/identity";
 
 export default function ProfilePage() {
   const { user, photoUrl, displayName, email, refreshProfile } = useSchool();
@@ -59,7 +60,8 @@ export default function ProfilePage() {
     toast.success("Profile saved");
   }
 
-  const initials = (displayName || email || "U").split(/[\s@]/).filter(Boolean).map(s => s[0]).slice(0, 2).join("").toUpperCase();
+  const initials = publicInitials({ full_name: displayName, email });
+  const cleanEmail = publicEmail(email);
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -78,7 +80,7 @@ export default function ProfilePage() {
           </div>
           <div className="text-sm text-muted-foreground text-center sm:text-left">
             <div className="font-semibold text-foreground">{displayName || "Your name"}</div>
-            <div>{email}</div>
+            {cleanEmail ? <div>{cleanEmail}</div> : form.phone ? <div>{form.phone}</div> : null}
             <p className="mt-2 text-xs">JPG or PNG, up to 5 MB. Click the camera icon to change.</p>
           </div>
         </div>
