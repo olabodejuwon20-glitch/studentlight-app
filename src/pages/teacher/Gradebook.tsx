@@ -88,7 +88,7 @@ export default function TeacherGradebook() {
                 <div><Label>Student</Label>
                   <Select value={form.student_id} onValueChange={(v) => setForm({ ...form, student_id: v })}>
                     <SelectTrigger><SelectValue placeholder="Pick a student" /></SelectTrigger>
-                    <SelectContent>{students.map(s => <SelectItem key={s.id} value={s.id}>{s.full_name || s.email}</SelectItem>)}</SelectContent>
+                    <SelectContent>{students.map(s => <SelectItem key={s.id} value={s.id}>{s.full_name || "Student"}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -129,7 +129,7 @@ export default function TeacherGradebook() {
                 const pct = max ? Math.round((sum / max) * 100) : 0;
                 return (
                   <tr key={s.id} className="border-b border-border last:border-0 align-top">
-                    <td className="py-3 font-medium">{s.full_name || s.email}</td>
+                    <td className="py-3 font-medium">{s.full_name || "Student"}</td>
                     <td className="py-3">
                       {list.length === 0 ? <span className="text-muted-foreground text-xs">—</span> :
                         <ul className="space-y-1">

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { publicContact, publicEmailForSearch, publicInitials } from "@/lib/identity";
 
 export default function TeacherStudents() {
   const { school, user } = useSchool();
@@ -41,7 +42,7 @@ export default function TeacherStudents() {
     return rows.filter(r => {
       if (allowed && !allowed.has(r.id)) return false;
       if (!s) return true;
-      return `${r.full_name ?? ""} ${r.email ?? ""}`.toLowerCase().includes(s);
+      return `${r.full_name ?? ""} ${publicEmailForSearch(r.email)} ${r.phone ?? ""}`.toLowerCase().includes(s);
     });
   }, [rows, q, classId, byClass]);
 
@@ -68,10 +69,10 @@ export default function TeacherStudents() {
             const inClasses = classes.filter(c => byClass[c.id]?.includes(s.id));
             return (
               <li key={s.id} className="py-3 flex items-center gap-3">
-                <Avatar className="size-9"><AvatarImage src={s.photo_url ?? undefined} /><AvatarFallback>{(s.full_name || s.email || "?").slice(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                <Avatar className="size-9"><AvatarImage src={s.photo_url ?? undefined} /><AvatarFallback>{publicInitials(s)}</AvatarFallback></Avatar>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{s.full_name || s.email}</div>
-                  <div className="text-xs text-muted-foreground truncate">{s.email}{s.phone ? ` · ${s.phone}` : ""}</div>
+                  <div className="font-medium truncate">{s.full_name || "Unnamed student"}</div>
+                  <div className="text-xs text-muted-foreground truncate">{publicContact(s) || "—"}</div>
                 </div>
                 <div className="hidden sm:flex gap-1 flex-wrap justify-end max-w-[40%]">
                   {inClasses.slice(0,3).map(c => <Badge key={c.id} variant="secondary" className="text-[10px]">{c.code}</Badge>)}

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { downloadCSV, printToPDF, tableHTML, safeHtml } from "@/lib/exporters";
 import { cacheGet, cacheSet } from "@/lib/dataCache";
+import { publicEmail, publicEmailForSearch, publicInitials, publicContact } from "@/lib/identity";
 
 type Role = "student" | "teacher";
 type Tone = "student" | "teacher";
@@ -59,7 +60,7 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
     const s = q.toLowerCase();
     return rows.filter(r =>
       (r.full_name || "").toLowerCase().includes(s) ||
-      (r.email || "").toLowerCase().includes(s) ||
+      publicEmailForSearch(r.email).toLowerCase().includes(s) ||
       (r.profile_data?.grade_level || "").toLowerCase?.().includes(s)
     );
   }, [rows, q]);
@@ -70,7 +71,7 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
   function exportCSV() {
     const data = filtered.map(r => ({
       Name: r.full_name || "",
-      Email: r.email || "",
+      Email: publicEmail(r.email) || "",
       Phone: r.phone || "",
       Gender: r.gender || "",
       DOB: r.dob || "",
@@ -87,8 +88,8 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
       ? ["Name", "Email", "Class", "Phone", "Joined"]
       : ["Name", "Email", "Subjects", "Phone", "Joined"];
     const tableRows = filtered.map(r => role === "student"
-      ? [r.full_name || "—", r.email || "—", r.profile_data?.grade_level || "—", r.phone || "—", new Date(r.created_at).toLocaleDateString()]
-      : [r.full_name || "—", r.email || "—", (r.profile_data?.subjects || []).join(", ") || "—", r.phone || "—", new Date(r.created_at).toLocaleDateString()]
+      ? [r.full_name || "—", publicEmail(r.email) || "—", r.profile_data?.grade_level || "—", r.phone || "—", new Date(r.created_at).toLocaleDateString()]
+      : [r.full_name || "—", publicEmail(r.email) || "—", (r.profile_data?.subjects || []).join(", ") || "—", r.phone || "—", new Date(r.created_at).toLocaleDateString()]
     );
     const html = `<h1>${safeHtml(title)}</h1><div class="sub">${safeHtml(school?.name || "")} · ${filtered.length} ${role}${filtered.length === 1 ? "" : "s"}</div>${tableHTML(headers, tableRows)}`;
     printToPDF(`${title} – ${school?.name || ""}`, html);
@@ -132,8 +133,8 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {filtered.map(r => {
-              const name = r.full_name || r.email?.split("@")[0] || "Unnamed";
-              const initials = (r.full_name || r.email || "?").split(/\s+/).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("");
+              const name = r.full_name || "Unnamed";
+              const initials = publicInitials(r);
               return (
                 <button key={r.user_id} onClick={() => setSelected(r)}
                   className="text-left rounded-xl border border-border bg-card hover:bg-secondary/40 hover:border-primary/40 transition-colors p-4 flex items-center gap-3">
@@ -143,7 +144,7 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">{name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{r.email || "—"}</div>
+                    <div className="text-xs text-muted-foreground truncate">{publicContact(r) || "—"}</div>
                     <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                       {role === "student" && r.profile_data?.grade_level && (
                         <Badge variant="secondary" className="text-[10px]">{r.profile_data.grade_level}</Badge>
@@ -169,25 +170,25 @@ export default function MembersList({ role, tone }: { role: Role; tone: Tone }) 
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{selected?.full_name || selected?.email || "Member"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{selected?.full_name || "Member"}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar className="size-16">
                   {selected.photo_url && <AvatarImage src={selected.photo_url} />}
                   <AvatarFallback className={`${avatarClass} text-lg`}>
-                    {(selected.full_name || selected.email || "?").split(/\s+/).slice(0,2).map((p: string) => p[0]?.toUpperCase()).join("")}
+                    {publicInitials(selected)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="font-display font-semibold text-lg">{selected.full_name || "—"}</div>
-                  <div className="text-sm text-muted-foreground">{selected.email}</div>
+                  <div className="text-sm text-muted-foreground">{publicEmail(selected.email) || selected.phone || "—"}</div>
                   <Badge variant="outline" className="mt-1 capitalize">{selected.role}</Badge>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {selected.phone && <Row icon={Phone} label="Phone" value={selected.phone} />}
-                {selected.email && <Row icon={Mail} label="Email" value={selected.email} />}
+                {publicEmail(selected.email) && <Row icon={Mail} label="Email" value={publicEmail(selected.email)!} />}
                 {selected.dob && <Row icon={Cake} label="DOB" value={new Date(selected.dob).toLocaleDateString()} />}
                 {selected.gender && <Row label="Gender" value={selected.gender} />}
                 {selected.address && <Row icon={MapPin} label="Address" value={selected.address} />}

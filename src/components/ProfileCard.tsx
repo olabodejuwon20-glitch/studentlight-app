@@ -6,6 +6,7 @@ import { useSchool, ROLE_META } from "@/contexts/SchoolContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/EmptyState";
+import { publicEmail } from "@/lib/identity";
 
 export function ProfileCard() {
   const { user, school, activeRole, displayName, memberships } = useSchool();
@@ -49,6 +50,7 @@ export function ProfileCard() {
       ) : (
         <div className="mt-4 grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           {profile?.phone && <Row icon={Phone} label="Phone" value={profile.phone} />}
+          {publicEmail((user as any)?.email) && <Row label="Email" value={publicEmail((user as any).email)!} />}
           {profile?.dob && <Row icon={Cake} label="DOB" value={new Date(profile.dob).toLocaleDateString()} />}
           {profile?.address && <Row icon={MapPin} label="Address" value={profile.address} />}
           {profile?.gender && <Row label="Gender" value={profile.gender} />}
