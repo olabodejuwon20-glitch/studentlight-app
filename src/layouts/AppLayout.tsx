@@ -24,6 +24,8 @@ import { RealtimeNotifier } from "@/components/comms/RealtimeNotifier";
 import { OnboardingGate } from "@/components/admin/OnboardingGate";
 import { HelpCircle, CreditCard } from "lucide-react";
 import { warmSchoolCache } from "@/lib/dataCache";
+import { useAdminPermissions } from "@/lib/adminPermissions";
+import { ShieldCheck } from "lucide-react";
 
 // Group every sidebar destination into a labelled section.
 // Keys are the `to` field used by NAV / module manifests.
@@ -116,6 +118,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Knowledge", to: "knowledge", icon: BookMarked },
     { label: "AI Activity", to: "ai-activity", icon: Activity },
     { label: "AI Settings", to: "ai-settings", icon: Sparkles },
+    { label: "Custom Roles", to: "roles", icon: ShieldCheck },
     { label: "Settings",  to: "settings",  icon: Settings },
     { label: "Help",      to: "/app/help", icon: HelpCircle },
   ],
@@ -235,6 +238,7 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: enabledModules } = useEnabledModules(school?.id);
+  const { isFullAdmin, allowed } = useAdminPermissions();
 
   useEffect(() => {
     if (school?.id) warmSchoolCache(school.id, activeRole);
@@ -259,9 +263,13 @@ export default function AppLayout() {
         })
         .map(({ label, to, icon }) => ({ label, to, icon }))
     : NAV[activeRole];
+  // Restrict sidebar for slotted (sub-)admins. Dashboard ("") and absolute paths stay visible.
+  const filteredItems = activeRole === "admin" && !isFullAdmin
+    ? items.filter(it => it.to === "" || it.to.startsWith("/") || allowed.has(it.to))
+    : items;
   // Group items into sections preserving the role-defined order within each group.
   const grouped = new Map<string, typeof items>();
-  items.forEach((it) => {
+  filteredItems.forEach((it) => {
     const key = sectionFor(it.to);
     if (!grouped.has(key)) grouped.set(key, [] as any);
     (grouped.get(key) as any).push(it);
