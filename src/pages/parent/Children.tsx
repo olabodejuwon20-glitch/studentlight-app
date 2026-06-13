@@ -5,6 +5,7 @@ import { useSchool } from "@/contexts/SchoolContext";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { publicContact, publicInitials } from "@/lib/identity";
 
 export default function ParentChildren() {
   const { school, user } = useSchool();
@@ -38,8 +39,8 @@ export default function ParentChildren() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{kids.map(k => (
           <div key={k.id} className="rounded-xl border border-border p-5 bg-card">
             <div className="flex items-center gap-3">
-              <Avatar className="size-14">{k.photo_url && <AvatarImage src={k.photo_url} />}<AvatarFallback className="bg-parent text-white">{(k.full_name || k.email || "?")[0].toUpperCase()}</AvatarFallback></Avatar>
-              <div className="min-w-0"><div className="font-semibold truncate">{k.full_name || k.email}</div><div className="text-xs text-muted-foreground truncate">{k.phone || k.email}</div></div>
+              <Avatar className="size-14">{k.photo_url && <AvatarImage src={k.photo_url} />}<AvatarFallback className="bg-parent text-white">{publicInitials(k)}</AvatarFallback></Avatar>
+              <div className="min-w-0"><div className="font-semibold truncate">{k.full_name || "Your child"}</div><div className="text-xs text-muted-foreground truncate">{publicContact(k) || "—"}</div></div>
             </div>
             <div className="grid grid-cols-2 gap-3 mt-4 text-center">
               <div className="rounded-lg bg-muted/50 p-3"><div className="text-xs text-muted-foreground">Attendance</div><div className="font-bold">{k.attPct}%</div></div>

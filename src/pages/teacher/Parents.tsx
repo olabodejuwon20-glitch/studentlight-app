@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { publicContact, publicEmailForSearch, publicInitials } from "@/lib/identity";
 
 export default function TeacherParents() {
   const { school, user } = useSchool();
@@ -42,7 +43,7 @@ export default function TeacherParents() {
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return parents;
-    return parents.filter(p => `${p.full_name ?? ""} ${p.email ?? ""} ${p.phone ?? ""}`.toLowerCase().includes(s));
+    return parents.filter(p => `${p.full_name ?? ""} ${publicEmailForSearch(p.email)} ${p.phone ?? ""}`.toLowerCase().includes(s));
   }, [parents, q]);
 
   const childrenOf = (pid: string) =>
@@ -64,13 +65,13 @@ export default function TeacherParents() {
             const kids = childrenOf(p.id);
             return (
               <li key={p.id} className="py-3 flex items-center gap-3">
-                <Avatar className="size-9"><AvatarImage src={p.photo_url ?? undefined} /><AvatarFallback>{(p.full_name || p.email || "?").slice(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                <Avatar className="size-9"><AvatarImage src={p.photo_url ?? undefined} /><AvatarFallback>{publicInitials(p)}</AvatarFallback></Avatar>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{p.full_name || p.email}</div>
-                  <div className="text-xs text-muted-foreground truncate">{p.email}{p.phone ? ` · ${p.phone}` : ""}</div>
+                  <div className="font-medium truncate">{p.full_name || "Unnamed parent"}</div>
+                  <div className="text-xs text-muted-foreground truncate">{publicContact(p) || "—"}</div>
                 </div>
                 <div className="hidden sm:flex gap-1 flex-wrap justify-end max-w-[45%]">
-                  {kids.slice(0,3).map((k: any) => <Badge key={k.id} variant="secondary" className="text-[10px]">{k.full_name || k.email}</Badge>)}
+                  {kids.slice(0,3).map((k: any) => <Badge key={k.id} variant="secondary" className="text-[10px]">{k.full_name || "Student"}</Badge>)}
                   {kids.length > 3 && <Badge variant="outline" className="text-[10px]">+{kids.length - 3}</Badge>}
                 </div>
               </li>
