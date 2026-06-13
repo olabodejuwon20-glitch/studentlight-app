@@ -1,0 +1,1 @@
+CREATE POLICY "Teachers read school parent links" ON public.parent_links FOR SELECT USING (has_school_role(school_id, auth.uid(), 'teacher'::member_role));
