@@ -20,10 +20,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { audio_base64, mime_type = "audio/webm" } = await req.json();
+    const { audio_base64, mime_type = "audio/webm", school_id } = await req.json();
     if (!audio_base64 || typeof audio_base64 !== "string") {
       return new Response(JSON.stringify({ error: "audio_base64 required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!school_id || typeof school_id !== "string") {
+      return new Response(JSON.stringify({ error: "school_id is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+    const { data: mem } = await admin.from("memberships")
+      .select("role").eq("school_id", school_id).eq("user_id", userRes.user.id)
+      .eq("status", "active").maybeSingle();
+    if (!mem || !["teacher", "admin"].includes(mem.role)) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (audio_base64.length > 12_000_000) {
