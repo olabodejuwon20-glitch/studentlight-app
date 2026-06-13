@@ -62,6 +62,7 @@ import TeacherAttendance from "./pages/teacher/Attendance";
 import TestBuilder from "./pages/teacher/TestBuilder";
 import Grading from "./pages/teacher/Grading";
 import TeacherStudents from "./pages/teacher/Students";
+import TeacherParents from "./pages/teacher/Parents";
 import TeacherCalendar from "./pages/teacher/Calendar";
 import TeacherMessages from "./pages/teacher/Messages";
 import TeacherResources from "./pages/teacher/Resources";
@@ -255,6 +256,7 @@ const App = () => (
               <Route path="teacher/assessments" element={<RoleGate allow="teacher"><TeacherAssessments /></RoleGate>} />
               <Route path="teacher/grading" element={<RoleGate allow="teacher"><Grading /></RoleGate>} />
               <Route path="teacher/students" element={<RoleGate allow="teacher"><TeacherStudents /></RoleGate>} />
+              <Route path="teacher/parents" element={<RoleGate allow="teacher"><TeacherParents /></RoleGate>} />
               <Route path="teacher/calendar" element={<RoleGate allow="teacher"><TeacherCalendar /></RoleGate>} />
               <Route path="teacher/lesson-plan" element={<RoleGate allow="teacher"><TeacherLessonPlan /></RoleGate>} />
               <Route path="teacher/lesson-notes" element={<RoleGate allow="teacher"><TeacherLessonNotes /></RoleGate>} />

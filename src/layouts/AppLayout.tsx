@@ -123,6 +123,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Dashboard",   to: "",            icon: LayoutDashboard },
     { label: "My Classes",  to: "classes",     icon: BookOpen },
     { label: "Students",    to: "students",    icon: Users },
+    { label: "Parents",     to: "parents",     icon: UserSquare2 },
     { label: "Attendance",  to: "attendance",  icon: ClipboardCheck },
     { label: "Assignments", to: "assignments", icon: ClipboardList },
     { label: "Gradebook",   to: "gradebook",   icon: BarChart3 },
