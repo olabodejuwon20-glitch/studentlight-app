@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cacheGet, cacheSet } from "@/lib/dataCache";
+import { publicEmail, publicEmailForSearch, publicInitials, publicContact } from "@/lib/identity";
 
 type Member = {
   user_id: string;
