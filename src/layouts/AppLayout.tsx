@@ -47,7 +47,7 @@ const SECTION_OF: Record<string, string> = {
   // Assessments
   "tests": "Assessments", "assessments": "Assessments", "grading": "Assessments",
   "exams": "Assessments", "results": "Assessments", "mock": "Assessments",
-  "practice": "Assessments", "proctoring": "Assessments",
+  "practice": "Assessments", "proctoring": "Assessments", "trad-exams": "Assessments",
   // Copilot (all AI features grouped here)
   "ai-tutor": "Copilot", "ai-marking": "Copilot", "parent-alerts": "Copilot",
   "copilot": "Copilot", "knowledge": "Copilot", "ai-activity": "Copilot",
