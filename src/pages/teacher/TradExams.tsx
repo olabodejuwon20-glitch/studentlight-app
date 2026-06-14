@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ScrollText, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchool } from "@/contexts/SchoolContext";
 import { schoolPath } from "@/lib/tenant";
@@ -32,7 +32,6 @@ export default function TeacherTradExams() {
       <PageHeader
         title="Traditional Exam Papers"
         description="Papers assigned to you. Build questions manually or upload a document to extract with AI."
-        icon={ScrollText}
       />
       <SectionCard title="My papers" description="You only see papers where you are listed as the author.">
         {loading ? (
