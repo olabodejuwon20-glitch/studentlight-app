@@ -4,6 +4,7 @@ import {
   ClipboardCheck, ClipboardList, BarChart3, Award, Mail, FilePlus2, PencilRuler, MessagesSquare,
   FolderOpen, ListChecks, Sparkles, UserSquare2, Activity, Package,
   Bot, Brain, ShieldAlert, Gauge, BookMarked, PenLine,
+  ScrollText,
 } from "lucide-react";
 import { ModuleManifest } from "./types";
 
@@ -219,6 +220,13 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
   {
     slug: "proctoring", name: "Exam Proctoring", category: "academics", icon: ClipboardCheck,
     sidebar: [{ label: "Proctoring", to: "proctoring", icon: ClipboardCheck, roles: ["admin"] }],
+  },
+  {
+    slug: "traditional-exams", name: "Traditional Exams", category: "academics", icon: ScrollText, core: true,
+    sidebar: [
+      { label: "Traditional Exams", to: "trad-exams", icon: ScrollText, roles: ["admin"] },
+      { label: "Exam Papers", to: "trad-exams", icon: ScrollText, roles: ["teacher"] },
+    ],
   },
   {
     slug: "admin-settings", name: "School Settings", category: "operations", icon: Settings, core: true,

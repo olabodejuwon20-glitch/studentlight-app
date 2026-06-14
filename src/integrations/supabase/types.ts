@@ -4437,6 +4437,464 @@ export type Database = {
         }
         Relationships: []
       }
+      trad_exam_questions: {
+        Row: {
+          ai_generated: boolean
+          correct_index: number | null
+          created_at: string
+          exam_id: string
+          explanation: string | null
+          id: string
+          image_path: string | null
+          marks: number
+          model_answer: string | null
+          options: Json | null
+          position: number
+          prompt: string
+          school_id: string
+          section_id: string | null
+          type: Database["public"]["Enums"]["trad_question_type"]
+          updated_at: string
+        }
+        Insert: {
+          ai_generated?: boolean
+          correct_index?: number | null
+          created_at?: string
+          exam_id: string
+          explanation?: string | null
+          id?: string
+          image_path?: string | null
+          marks?: number
+          model_answer?: string | null
+          options?: Json | null
+          position?: number
+          prompt: string
+          school_id: string
+          section_id?: string | null
+          type: Database["public"]["Enums"]["trad_question_type"]
+          updated_at?: string
+        }
+        Update: {
+          ai_generated?: boolean
+          correct_index?: number | null
+          created_at?: string
+          exam_id?: string
+          explanation?: string | null
+          id?: string
+          image_path?: string | null
+          marks?: number
+          model_answer?: string | null
+          options?: Json | null
+          position?: number
+          prompt?: string
+          school_id?: string
+          section_id?: string | null
+          type?: Database["public"]["Enums"]["trad_question_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_questions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_questions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_questions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_questions_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exam_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_exam_sections: {
+        Row: {
+          created_at: string
+          exam_id: string
+          id: string
+          instructions: string | null
+          label: string
+          position: number
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exam_id: string
+          id?: string
+          instructions?: string | null
+          label: string
+          position?: number
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exam_id?: string
+          id?: string
+          instructions?: string | null
+          label?: string
+          position?: number
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_exam_sections_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_sections_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_sections_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_sections_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_exam_sessions: {
+        Row: {
+          academic_year: string | null
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          id: string
+          name: string
+          school_id: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["trad_session_status"]
+          term: string | null
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          school_id: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["trad_session_status"]
+          term?: string | null
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          school_id?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["trad_session_status"]
+          term?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_exam_sessions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_sessions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_sessions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_exam_timetable: {
+        Row: {
+          class_id: string
+          created_at: string
+          created_by: string | null
+          duration_minutes: number
+          exam_date: string
+          id: string
+          school_id: string
+          session_id: string
+          start_time: string
+          status: Database["public"]["Enums"]["trad_timetable_status"]
+          subject_id: string | null
+          subject_name: string | null
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number
+          exam_date: string
+          id?: string
+          school_id: string
+          session_id: string
+          start_time: string
+          status?: Database["public"]["Enums"]["trad_timetable_status"]
+          subject_id?: string | null
+          subject_name?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number
+          exam_date?: string
+          id?: string
+          school_id?: string
+          session_id?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["trad_timetable_status"]
+          subject_id?: string | null
+          subject_name?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_exam_timetable_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_timetable_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_timetable_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_timetable_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_timetable_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exam_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_timetable_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_exam_uploads: {
+        Row: {
+          created_at: string
+          error: string | null
+          exam_id: string
+          file_name: string | null
+          file_path: string
+          id: string
+          mime: string | null
+          parse_meta: Json
+          school_id: string
+          status: Database["public"]["Enums"]["trad_upload_status"]
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          exam_id: string
+          file_name?: string | null
+          file_path: string
+          id?: string
+          mime?: string | null
+          parse_meta?: Json
+          school_id: string
+          status?: Database["public"]["Enums"]["trad_upload_status"]
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          exam_id?: string
+          file_name?: string | null
+          file_path?: string
+          id?: string
+          mime?: string | null
+          parse_meta?: Json
+          school_id?: string
+          status?: Database["public"]["Enums"]["trad_upload_status"]
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_exam_uploads_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_uploads_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_uploads_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_uploads_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_exams: {
+        Row: {
+          author_id: string | null
+          created_at: string
+          draft_status: Database["public"]["Enums"]["trad_draft_status"]
+          exam_type: Database["public"]["Enums"]["trad_exam_type"]
+          id: string
+          instructions: string | null
+          school_id: string
+          timetable_id: string | null
+          title: string
+          total_marks: number
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string
+          draft_status?: Database["public"]["Enums"]["trad_draft_status"]
+          exam_type?: Database["public"]["Enums"]["trad_exam_type"]
+          id?: string
+          instructions?: string | null
+          school_id: string
+          timetable_id?: string | null
+          title: string
+          total_marks?: number
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string
+          draft_status?: Database["public"]["Enums"]["trad_draft_status"]
+          exam_type?: Database["public"]["Enums"]["trad_exam_type"]
+          id?: string
+          instructions?: string | null
+          school_id?: string
+          timetable_id?: string | null
+          title?: string
+          total_marks?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_exams_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exams_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exams_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exams_timetable_id_fkey"
+            columns: ["timetable_id"]
+            isOneToOne: true
+            referencedRelation: "trad_exam_timetable"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transport_routes: {
         Row: {
           capacity: number
@@ -4840,6 +5298,12 @@ export type Database = {
       question_type: "mcq" | "multi" | "short" | "essay" | "numeric"
       school_plan: "trial" | "basic" | "standard" | "premium" | "enterprise"
       school_status: "active" | "suspended" | "expired" | "trial"
+      trad_draft_status: "draft" | "submitted" | "approved" | "locked"
+      trad_exam_type: "mcq" | "theory" | "mixed"
+      trad_question_type: "mcq" | "theory"
+      trad_session_status: "planning" | "published" | "locked"
+      trad_timetable_status: "draft" | "pending" | "approved"
+      trad_upload_status: "pending" | "parsing" | "parsed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5020,6 +5484,12 @@ export const Constants = {
       question_type: ["mcq", "multi", "short", "essay", "numeric"],
       school_plan: ["trial", "basic", "standard", "premium", "enterprise"],
       school_status: ["active", "suspended", "expired", "trial"],
+      trad_draft_status: ["draft", "submitted", "approved", "locked"],
+      trad_exam_type: ["mcq", "theory", "mixed"],
+      trad_question_type: ["mcq", "theory"],
+      trad_session_status: ["planning", "published", "locked"],
+      trad_timetable_status: ["draft", "pending", "approved"],
+      trad_upload_status: ["pending", "parsing", "parsed", "failed"],
     },
   },
 } as const

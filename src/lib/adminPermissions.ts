@@ -43,6 +43,13 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     ],
   },
   {
+    label: "Examinations",
+    items: [
+      { key: "trad-exams", label: "Traditional Exams", description: "Plan exam sessions, build timetables, view papers" },
+      { key: "action:approve_trad_exam", label: "Action — approve exam papers" },
+    ],
+  },
+  {
     label: "Finance",
     items: [
       { key: "fees", label: "Fees & payments" },

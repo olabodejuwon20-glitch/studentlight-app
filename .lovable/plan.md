@@ -1,88 +1,92 @@
-## Goal
-Currently CA gradebook entries, assignment submissions, exam attempts, and the published `results` row all live in isolation. We will tie them together so that for every (student, subject, term) we compute **one weighted end-of-term result** that rolls up every component, plus the teacher's report comment.
+## Traditional Exam System — Phase 1
 
-## End-of-term formula
+A new module sitting alongside (not replacing) the existing CBT system. Phase 1 delivers the planning + authoring foundation only. Approvals, scheduling, student execution, and scratch cards land in later phases.
 
-Per (student, subject, term), the end-of-term score is a **weighted sum out of 100**:
+Namespace convention: `trad_*` tables, `/admin/trad-exams/*` and `/teacher/trad-exams/*` routes, `traditional-exams` module slug. Nothing in `exams`/`assessments`/`questions_v2` is touched.
 
-```text
-term_total =  CA_weight       × (sum CA scores / sum CA max)
-            + Assignment_w    × (avg of graded assignment %)
-            + Exam_w          × (latest counts_to_results exam %)
-            + Report_w        × (optional rubric score from teacher report)
-```
+### 1. Database (new migration)
 
-Defaults (configurable per school, must total 100):
-- CA / Quiz / Mid-term gradebook entries → **30%**
-- Assignments → **10%**
-- Exam (final, `counts_to_results=true`) → **60%**
-- Report rubric (teacher behaviour/effort score, optional) → **0%** by default
+New tables, all `school_id`-scoped with RLS + GRANTs:
 
-NECO grade (A1…F9) is derived from `term_total` using the existing `src/lib/neco.ts` helpers.
+- `trad_exam_sessions` — exam period container (e.g. "2026 First Term Exams"). Fields: name, term, year, start_date, end_date, status (`planning|published|locked`), created_by.
+- `trad_exam_timetable` — one row per scheduled paper. Fields: session_id, class_id, subject_id, exam_date, start_time, duration_minutes, venue, status (`draft|pending|approved`). DB-level conflict check via trigger (same class + overlapping time window).
+- `trad_exams` — the exam paper itself, linked 1:1 to a timetable row. Fields: timetable_id, title, instructions, total_marks, exam_type (`mcq|theory|mixed`), draft_status (`draft|submitted`), author_id.
+- `trad_exam_sections` — optional sections within a paper (Section A: MCQ, Section B: Theory). Fields: exam_id, label, instructions, position.
+- `trad_exam_questions` — question bank for this module. Fields: exam_id, section_id, position, type (`mcq|theory`), prompt, options (jsonb, MCQ only), correct_index (MCQ, kept private), marks, image_path (storage), explanation, ai_generated bool.
+- `trad_exam_uploads` — record of uploaded source documents. Fields: exam_id, file_path, mime, status (`pending|parsing|parsed|failed`), parse_meta jsonb, uploaded_by.
 
-## Database
+Storage:
+- New private bucket `trad-exam-assets` for source docs + extracted diagram images. RLS scoped to school staff.
 
-New migration:
+RLS summary (Teacher → Admin only, no HOD this phase):
+- Admins (full or slotted with new `trad-exams` permission) — full CRUD within their school.
+- Teachers — CRUD on their own draft exams + read on timetable rows for their assigned class/subject.
+- Students/parents — no access in Phase 1.
 
-1. `public.term_grade_weights` — one row per school with columns
-   `school_id`, `ca_pct`, `assignment_pct`, `exam_pct`, `report_pct`, `passing_pct` (default 50).
-   Trigger validates the four percentages sum to 100.
-   RLS: admins manage, teachers read.
+### 2. Permissions + module registration
 
-2. Extend `public.results` with:
-   - `class_id uuid` (so a result is anchored to a class for sectional reports),
-   - `session text` (e.g. "2025/2026"),
-   - `ca_score`, `assignment_score`, `exam_score`, `report_score` numeric (each out of 100, nullable),
-   - `breakdown jsonb` storing the full computation snapshot,
-   - unique index on `(school_id, student_id, subject, term, session)`.
+- Add `traditional-exams` to `src/modules/registry.ts` with sidebar entries for admin ("Traditional Exams") and teacher ("Exam Papers").
+- Add `trad-exams` and `action:approve_trad_exam` to `PERMISSION_GROUPS` in `src/lib/adminPermissions.ts` (new "Examinations" group) so the existing custom-role workspace can grant/revoke it.
 
-3. RPC `public.recompute_term_result(_school uuid, _student uuid, _subject text, _term text, _session text)`
-   - Security definer, teacher/admin only.
-   - Pulls gradebook CA entries, assignment_submissions joined to assignments (matching subject + term), and the latest submitted exam attempt where `exams.subject = _subject` and `exams.counts_to_results = true` in that term.
-   - Applies the school's weights, writes/updates the row in `public.results`, stores breakdown JSON, computes grade via SQL CASE matching the NECO scale.
+### 3. Routes (added to `src/App.tsx`)
 
-4. RPC `public.recompute_term_results_for_class(_class uuid, _term text, _session text)` — loops every enrolled student × every subject taught in the class and calls the per-student function. Returns count of rows written.
+Admin:
+- `/admin/trad-exams` — sessions list + create
+- `/admin/trad-exams/:sessionId` — timetable builder (drag-drop grid by class × day) with conflict detection
+- `/admin/trad-exams/:sessionId/calendar` — month/week calendar view
 
-5. Existing `publish_results(_ids, _publish)` continues to gate parent/student visibility.
+Teacher:
+- `/teacher/trad-exams` — list of papers assigned to me (by class/subject)
+- `/teacher/trad-exams/:examId` — paper editor (sections, questions, upload)
+- `/teacher/trad-exams/:examId/upload` — document upload + AI parse review
 
-## Edge function (optional, lightweight)
-No new edge function is required — the RPC runs in the DB. The existing `generate-result-slip` will automatically render the new breakdown fields once `results.breakdown` is populated.
+### 4. UI components (new, in `src/components/tradexam/`)
 
-## Frontend changes
+- `SessionCard`, `SessionForm`
+- `TimetableGrid` — drag-drop using existing libs (react-dnd already present? if not, use HTML5 DnD + state). Highlights conflicts in red.
+- `ConflictBadge`
+- `ExamCalendar` — reuses `MonthCalendar`.
+- `QuestionEditor` with two modes:
+  - **MCQ**: prompt (rich text), 4 options A–D, correct answer, marks, optional image upload.
+  - **Theory**: prompt, expected marks, optional image upload, model-answer field (private).
+- `SectionList` with reordering.
+- `DocumentUploadPanel` — drop PDF/DOCX, shows parse progress, then a review table where the teacher can edit/accept each extracted question before they hit `trad_exam_questions`.
 
-### Teacher
-- `src/pages/teacher/Grading.tsx`: add a third tab **"Term Results"** with class + term + session selectors. Lists every student × subject from the class with computed CA / Assignment / Exam / Report / Total / Grade cells. Buttons: **Recompute** (calls `recompute_term_results_for_class`), **Publish all** / **Unpublish** (calls `publish_results`). Inline edit of report-rubric score per row.
-- `src/pages/teacher/Reports.tsx`: link the existing AI report-comment dialog to also save an optional 0–100 rubric score into the matching `results` row.
+### 5. AI document parsing edge function
 
-### Admin
-- `src/pages/admin/Settings.tsx`: new **"Grading weights"** card editing `term_grade_weights` (CA / Assignment / Exam / Report sliders) with live "must total 100" validation.
-- `src/pages/admin/Reports.tsx`: surface aggregate term-result coverage (% of students with a computed term result this term).
+New function `supabase/functions/parse-trad-exam-doc/index.ts`:
 
-### Student & Parent
-- `src/pages/student/Results.tsx` and `src/pages/parent/Results.tsx`: when a row has `breakdown`, render a small four-bar component (CA / Assignment / Exam / Report) under each subject row showing the contribution to the final score.
+1. Auth: JWT required; verify caller is teacher/admin of the exam's school.
+2. Download file from `trad-exam-assets` (PDF or DOCX).
+3. Extract text:
+   - PDF: use `pdfjs-dist` via `npm:` import.
+   - DOCX: use `mammoth` via `npm:`.
+4. Extract embedded images and upload each to `trad-exam-assets/extracted/<exam_id>/img-N.png`, capturing their byte position so we can re-attach them.
+5. Send the text (+ image placeholders) to Lovable AI Gateway (`google/gemini-2.5-pro` for accuracy on mixed MCQ/theory) with a strict JSON schema: `{questions:[{type, prompt, options?, correct_index?, marks, image_ref?}]}`.
+6. Persist results to `trad_exam_questions` with `ai_generated=true` and `draft_status` so the teacher can review/edit before submitting. Update `trad_exam_uploads.status`.
 
-### Helper
-- New `src/lib/termResult.ts` with TypeScript types for `TermBreakdown` and a `formatBreakdown()` helper used by all three views.
+Surfaces 402/429 errors verbatim per the AI-gateway guidance.
 
-## Out of scope (for this part)
-- AI-generated report comments stay where they are; only the optional rubric number feeds into results.
-- Mock JAMB/NECO sessions (`mock_sessions`) remain practice-only and do **not** roll into the term result.
-- No changes to invoicing or payments.
+### 6. Offline / caching
 
-## Files
+Reuse the existing `dataCache.ts` pattern to cache session lists, timetable rows, and exam drafts per school — same approach as other admin pages.
 
-**Created**
-- `supabase/migrations/<ts>_term_results_rollup.sql`
-- `src/lib/termResult.ts`
+### 7. What this phase does NOT do (deferred)
 
-**Edited**
-- `src/pages/teacher/Grading.tsx` (new Term Results tab)
-- `src/pages/teacher/Reports.tsx` (rubric score field)
-- `src/pages/admin/Settings.tsx` (weights card)
-- `src/pages/admin/Reports.tsx` (coverage stat)
-- `src/pages/student/Results.tsx` (breakdown bars)
-- `src/pages/parent/Results.tsx` (breakdown bars)
-- `src/integrations/supabase/types.ts` (regenerated after migration)
+- Approval workflow (Teacher → Admin chain, version history, lock-after-approve)
+- Auto-publish at scheduled time + student exam listing
+- Student exam UI, auto-save, auto-submit
+- MCQ auto-marking, theory grading queue, admin validation
+- Scratch card PIN generation, Paystack purchase flow, result unlock
+- Student/parent result viewing
 
-## Open question
-Default weights above are CA 30 / Assignment 10 / Exam 60 / Report 0 — please confirm or supply your school's preferred split before I implement.
+These are scoped for Phase 2 and Phase 3 follow-ups so we don't ship a half-broken pipeline.
+
+### Risk + compatibility notes
+
+- All names prefixed `trad_` so no collision with `exams`, `exam_questions`, `assessments`, `questions_v2`.
+- No edits to `auth`, `memberships`, CBT tables, or `src/integrations/supabase/client.ts`.
+- New permission key plugs into the existing `useAdminPermissions` hook — full admins get it automatically; slotted admins must be granted via the Roles workspace.
+- Module is registered through `MODULE_MANIFESTS` so the existing super-admin module toggle controls per-school visibility.
+
+Approve this and I'll run the migration, then build the routes, components, and the AI parsing function.
