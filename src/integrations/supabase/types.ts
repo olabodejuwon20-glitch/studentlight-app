@@ -5107,6 +5107,288 @@ export type Database = {
           },
         ]
       }
+      trad_result_unlocks: {
+        Row: {
+          card_id: string
+          id: string
+          result_id: string
+          school_id: string
+          unlocked_at: string
+          unlocked_by: string
+        }
+        Insert: {
+          card_id: string
+          id?: string
+          result_id: string
+          school_id: string
+          unlocked_at?: string
+          unlocked_by: string
+        }
+        Update: {
+          card_id?: string
+          id?: string
+          result_id?: string
+          school_id?: string
+          unlocked_at?: string
+          unlocked_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_result_unlocks_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "trad_scratch_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_result_unlocks_result_id_fkey"
+            columns: ["result_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exam_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_result_unlocks_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_result_unlocks_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_result_unlocks_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_scratch_batches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          max_uses: number
+          name: string
+          price_kobo: number
+          quantity: number
+          school_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          name: string
+          price_kobo: number
+          quantity: number
+          school_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          name?: string
+          price_kobo?: number
+          quantity?: number
+          school_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_scratch_batches_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_scratch_batches_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_scratch_batches_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_scratch_cards: {
+        Row: {
+          batch_id: string
+          buyer_user_id: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          max_uses: number
+          pin_hash: string
+          school_id: string
+          serial: string
+          sold_at: string | null
+          status: string
+          updated_at: string
+          use_count: number
+        }
+        Insert: {
+          batch_id: string
+          buyer_user_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          pin_hash: string
+          school_id: string
+          serial: string
+          sold_at?: string | null
+          status?: string
+          updated_at?: string
+          use_count?: number
+        }
+        Update: {
+          batch_id?: string
+          buyer_user_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          pin_hash?: string
+          school_id?: string
+          serial?: string
+          sold_at?: string | null
+          status?: string
+          updated_at?: string
+          use_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_scratch_cards_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "trad_scratch_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_scratch_cards_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_scratch_cards_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_scratch_cards_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_scratch_purchases: {
+        Row: {
+          amount_kobo: number
+          batch_id: string
+          buyer_user_id: string
+          card_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          paystack_reference: string | null
+          school_id: string
+          status: string
+        }
+        Insert: {
+          amount_kobo: number
+          batch_id: string
+          buyer_user_id: string
+          card_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          paystack_reference?: string | null
+          school_id: string
+          status?: string
+        }
+        Update: {
+          amount_kobo?: number
+          batch_id?: string
+          buyer_user_id?: string
+          card_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          paystack_reference?: string | null
+          school_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_scratch_purchases_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "trad_scratch_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_scratch_purchases_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "trad_scratch_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_scratch_purchases_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_scratch_purchases_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_scratch_purchases_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transport_routes: {
         Row: {
           capacity: number
@@ -5475,6 +5757,14 @@ export type Database = {
         Args: { _answer_id: string; _feedback?: string; _marks: number }
         Returns: Json
       }
+      trad_hash_pin: {
+        Args: { _pin: string; _serial: string }
+        Returns: string
+      }
+      trad_is_result_unlocked: {
+        Args: { _result_id: string }
+        Returns: boolean
+      }
       trad_list_student_papers: {
         Args: { _school: string }
         Returns: {
@@ -5492,6 +5782,23 @@ export type Database = {
           total_marks: number
           venue: string
         }[]
+      }
+      trad_my_cards: {
+        Args: never
+        Returns: {
+          expires_at: string
+          id: string
+          max_uses: number
+          school_id: string
+          serial: string
+          sold_at: string
+          status: string
+          use_count: number
+        }[]
+      }
+      trad_redeem_card: {
+        Args: { _pin: string; _result_id: string; _serial: string }
+        Returns: Json
       }
       trad_review_paper: {
         Args: { _action: string; _exam_id: string; _reason?: string }
