@@ -225,7 +225,11 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
     slug: "traditional-exams", name: "Traditional Exams", category: "academics", icon: ScrollText, core: true,
     sidebar: [
       { label: "Traditional Exams", to: "trad-exams", icon: ScrollText, roles: ["admin"] },
+      { label: "Approvals",         to: "trad-exams-approvals", icon: ScrollText, roles: ["admin"] },
+      { label: "Exam Results",      to: "trad-exams-results",   icon: ScrollText, roles: ["admin"] },
       { label: "Exam Papers", to: "trad-exams", icon: ScrollText, roles: ["teacher"] },
+      { label: "Grading Queue", to: "trad-exams-grading", icon: ScrollText, roles: ["teacher"] },
+      { label: "Exams",       to: "trad-exams", icon: ScrollText, roles: ["student"] },
     ],
   },
   {
