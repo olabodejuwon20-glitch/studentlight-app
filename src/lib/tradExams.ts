@@ -105,3 +105,51 @@ export const DRAFT_STATUS_TONE: Record<TradDraftStatus, string> = {
   approved: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
   locked: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
 };
+
+export interface TradAttempt {
+  id: string;
+  school_id: string;
+  exam_id: string;
+  student_id: string;
+  started_at: string;
+  submitted_at: string | null;
+  status: "in_progress" | "submitted" | "graded" | "validated";
+  mcq_score: number;
+  theory_score: number;
+  total_score: number;
+  max_score: number;
+  percentage: number;
+}
+
+export interface TradResult {
+  id: string;
+  school_id: string;
+  exam_id: string;
+  student_id: string;
+  attempt_id: string;
+  mcq_score: number;
+  theory_score: number;
+  total_score: number;
+  max_score: number;
+  percentage: number;
+  grade: string | null;
+  status: "pending_validation" | "validated" | "rejected";
+  released_at: string | null;
+  validated_at: string | null;
+}
+
+export interface StudentPaperRow {
+  exam_id: string;
+  title: string;
+  instructions: string | null;
+  exam_type: string;
+  total_marks: number;
+  exam_date: string;
+  start_time: string;
+  duration_minutes: number;
+  venue: string | null;
+  status: "upcoming" | "open" | "closed";
+  attempt_id: string | null;
+  attempt_status: string | null;
+  result_released: boolean;
+}
