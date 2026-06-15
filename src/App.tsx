@@ -52,6 +52,9 @@ import AdminSubscription from "./pages/admin/Subscription";
 import AdminParents from "./pages/admin/Parents";
 import AdminAttendance from "./pages/admin/Attendance";
 import AdminRoles from "./pages/admin/Roles";
+import AdminTradExams from "./pages/admin/TradExams";
+import AdminTradExamSession from "./pages/admin/TradExamSession";
+import AdminTradExamPaper from "./pages/admin/TradExamPaper";
 import SubscriptionCallback from "./pages/SubscriptionCallback";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
@@ -75,6 +78,7 @@ import TeacherGradebook from "./pages/teacher/Gradebook";
 import TeacherBehavior from "./pages/teacher/Behavior";
 import TeacherParentComms from "./pages/teacher/ParentComms";
 import TeacherAssessments from "./pages/teacher/Assessments";
+import TeacherTradExams from "./pages/teacher/TradExams";
 
 import StudentDashboard from "./pages/student/Dashboard";
 import StudentClasses from "./pages/student/Classes";
@@ -249,6 +253,9 @@ const App = () => (
               <Route path="admin/knowledge" element={<RoleGate allow="admin"><AdminKnowledge /></RoleGate>} />
               <Route path="admin/subscription" element={<RoleGate allow="admin"><AdminSubscription /></RoleGate>} />
               <Route path="admin/roles" element={<RoleGate allow="admin"><AdminRoles /></RoleGate>} />
+              <Route path="admin/trad-exams" element={<RoleGate allow="admin"><AdminTradExams /></RoleGate>} />
+              <Route path="admin/trad-exams/paper/:examId" element={<RoleGate allow="admin"><AdminTradExamPaper /></RoleGate>} />
+              <Route path="admin/trad-exams/:sessionId" element={<RoleGate allow="admin"><AdminTradExamSession /></RoleGate>} />
               <Route path="help" element={<HelpPage />} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />
@@ -256,6 +263,8 @@ const App = () => (
               <Route path="teacher/attendance" element={<RoleGate allow="teacher"><TeacherAttendance /></RoleGate>} />
               <Route path="teacher/tests" element={<RoleGate allow="teacher"><TestBuilder /></RoleGate>} />
               <Route path="teacher/assessments" element={<RoleGate allow="teacher"><TeacherAssessments /></RoleGate>} />
+              <Route path="teacher/trad-exams" element={<RoleGate allow="teacher"><TeacherTradExams /></RoleGate>} />
+              <Route path="teacher/trad-exams/paper/:examId" element={<RoleGate allow="teacher"><AdminTradExamPaper /></RoleGate>} />
               <Route path="teacher/grading" element={<RoleGate allow="teacher"><Grading /></RoleGate>} />
               <Route path="teacher/students" element={<RoleGate allow="teacher"><TeacherStudents /></RoleGate>} />
               <Route path="teacher/parents" element={<RoleGate allow="teacher"><TeacherParents /></RoleGate>} />
