@@ -38,8 +38,10 @@ Deno.serve(async (req) => {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // Verify admin of this school
-    const { data: isAdmin } = await admin.rpc("is_school_admin", { _school: school_id, _user: u.id });
-    if (!isAdmin) return json({ error: "forbidden" }, 403);
+    const { data: mem } = await admin.from("memberships")
+      .select("id").eq("school_id", school_id).eq("user_id", u.id)
+      .eq("role", "admin").eq("status", "active").maybeSingle();
+    if (!mem) return json({ error: "forbidden" }, 403);
 
     const { data: batch, error: bErr } = await admin.from("trad_scratch_batches").insert({
       school_id, name, quantity, price_kobo, max_uses, expires_at, created_by: u.id,
