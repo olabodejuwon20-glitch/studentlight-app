@@ -57,6 +57,8 @@ import AdminTradExamSession from "./pages/admin/TradExamSession";
 import AdminTradExamPaper from "./pages/admin/TradExamPaper";
 import AdminTradExamApprovals from "./pages/admin/TradExamApprovals";
 import AdminTradExamResults from "./pages/admin/TradExamResults";
+import AdminTradScratchCards from "./pages/admin/TradScratchCards";
+import TradUnlockResult from "./pages/shared/TradUnlockResult";
 import SubscriptionCallback from "./pages/SubscriptionCallback";
 import HelpPage from "./pages/Help";
 import LibraryManager from "./pages/shared/LibraryManager";
@@ -264,6 +266,8 @@ const App = () => (
               <Route path="admin/trad-exams/:sessionId" element={<RoleGate allow="admin"><AdminTradExamSession /></RoleGate>} />
               <Route path="admin/trad-exams-approvals" element={<RoleGate allow="admin"><AdminTradExamApprovals /></RoleGate>} />
               <Route path="admin/trad-exams-results" element={<RoleGate allow="admin"><AdminTradExamResults /></RoleGate>} />
+              <Route path="admin/trad-cards" element={<RoleGate allow="admin"><AdminTradScratchCards /></RoleGate>} />
+              <Route path="trad-unlock/:resultId" element={<TradUnlockResult />} />
               <Route path="help" element={<HelpPage />} />
 
               <Route path="teacher" element={<RoleGate allow="teacher"><TeacherDashboard /></RoleGate>} />

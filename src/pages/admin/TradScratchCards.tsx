@@ -23,7 +23,7 @@ export default function TradScratchCards() {
 
   async function load() {
     if (!school) return;
-    const { data } = await supabase.from("trad_scratch_batches" as any)
+    const { data } = await (supabase as any).from("trad_scratch_batches")
       .select("*").eq("school_id", school.id).order("created_at", { ascending: false });
     setRows((data ?? []) as Batch[]);
   }
@@ -61,7 +61,7 @@ export default function TradScratchCards() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Scratch Cards" subtitle="Generate result-unlock cards for parents and students." />
+      <PageHeader title="Scratch Cards" description="Generate result-unlock cards for parents and students." />
       <SectionCard
         title="Card Batches"
         description={`${rows.length} batch${rows.length === 1 ? "" : "es"}`}

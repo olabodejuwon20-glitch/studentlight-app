@@ -230,6 +230,7 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
       { label: "Exam Papers", to: "trad-exams", icon: ScrollText, roles: ["teacher"] },
       { label: "Grading Queue", to: "trad-exams-grading", icon: ScrollText, roles: ["teacher"] },
       { label: "Exams",       to: "trad-exams", icon: ScrollText, roles: ["student"] },
+      { label: "Scratch Cards", to: "trad-cards", icon: ScrollText, roles: ["admin"] },
     ],
   },
   {

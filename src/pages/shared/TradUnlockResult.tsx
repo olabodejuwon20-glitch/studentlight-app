@@ -68,7 +68,7 @@ export default function TradUnlockResult() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Unlock Result" subtitle="Enter a scratch-card serial and PIN, or buy a new card." />
+      <PageHeader title="Unlock Result" description="Enter a scratch-card serial and PIN, or buy a new card." />
 
       {revealed && (
         <SectionCard title="Your new card" description="Save these credentials — they are shown only once.">
