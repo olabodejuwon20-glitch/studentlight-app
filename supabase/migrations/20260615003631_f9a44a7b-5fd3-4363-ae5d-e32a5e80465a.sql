@@ -1,0 +1,15 @@
+REVOKE EXECUTE ON FUNCTION public.trad_list_student_papers(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.trad_start_attempt(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.trad_get_attempt_questions(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.trad_submit_attempt(uuid, boolean) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.trad_finalize_result(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.trad_grade_theory(uuid, numeric, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.trad_validate_result(uuid, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.trad_review_paper(uuid, text, text) FROM anon, public;
+GRANT EXECUTE ON FUNCTION public.trad_list_student_papers(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.trad_start_attempt(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.trad_get_attempt_questions(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.trad_submit_attempt(uuid, boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.trad_grade_theory(uuid, numeric, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.trad_validate_result(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.trad_review_paper(uuid, text, text) TO authenticated;
