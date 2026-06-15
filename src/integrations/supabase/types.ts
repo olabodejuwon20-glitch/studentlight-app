@@ -4437,6 +4437,131 @@ export type Database = {
         }
         Relationships: []
       }
+      trad_exam_answers: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          feedback: string | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          is_correct: boolean | null
+          marks_awarded: number | null
+          question_id: string
+          school_id: string
+          selected_index: number | null
+          text_answer: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          feedback?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_correct?: boolean | null
+          marks_awarded?: number | null
+          question_id: string
+          school_id: string
+          selected_index?: number | null
+          text_answer?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          feedback?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_correct?: boolean | null
+          marks_awarded?: number | null
+          question_id?: string
+          school_id?: string
+          selected_index?: number | null
+          text_answer?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_exam_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exam_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exam_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_exam_attempts: {
+        Row: {
+          created_at: string
+          exam_id: string
+          id: string
+          integrity_events: Json
+          max_score: number | null
+          mcq_score: number | null
+          percentage: number | null
+          school_id: string
+          started_at: string
+          status: string
+          student_id: string
+          submitted_at: string | null
+          theory_score: number | null
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exam_id: string
+          id?: string
+          integrity_events?: Json
+          max_score?: number | null
+          mcq_score?: number | null
+          percentage?: number | null
+          school_id: string
+          started_at?: string
+          status?: string
+          student_id: string
+          submitted_at?: string | null
+          theory_score?: number | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exam_id?: string
+          id?: string
+          integrity_events?: Json
+          max_score?: number | null
+          mcq_score?: number | null
+          percentage?: number | null
+          school_id?: string
+          started_at?: string
+          status?: string
+          student_id?: string
+          submitted_at?: string | null
+          theory_score?: number | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_exam_attempts_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trad_exam_questions: {
         Row: {
           ai_generated: boolean
@@ -4526,6 +4651,81 @@ export type Database = {
             columns: ["section_id"]
             isOneToOne: false
             referencedRelation: "trad_exam_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trad_exam_results: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          exam_id: string
+          grade: string | null
+          id: string
+          max_score: number | null
+          mcq_score: number | null
+          percentage: number | null
+          released_at: string | null
+          school_id: string
+          status: string
+          student_id: string
+          theory_score: number | null
+          total_score: number | null
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          exam_id: string
+          grade?: string | null
+          id?: string
+          max_score?: number | null
+          mcq_score?: number | null
+          percentage?: number | null
+          released_at?: string | null
+          school_id: string
+          status?: string
+          student_id: string
+          theory_score?: number | null
+          total_score?: number | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          exam_id?: string
+          grade?: string | null
+          id?: string
+          max_score?: number | null
+          mcq_score?: number | null
+          percentage?: number | null
+          released_at?: string | null
+          school_id?: string
+          status?: string
+          student_id?: string
+          theory_score?: number | null
+          total_score?: number | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trad_exam_results_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: true
+            referencedRelation: "trad_exam_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trad_exam_results_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "trad_exams"
             referencedColumns: ["id"]
           },
         ]
@@ -4826,12 +5026,16 @@ export type Database = {
       }
       trad_exams: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           author_id: string | null
           created_at: string
           draft_status: Database["public"]["Enums"]["trad_draft_status"]
           exam_type: Database["public"]["Enums"]["trad_exam_type"]
           id: string
           instructions: string | null
+          published_at: string | null
+          rejection_reason: string | null
           school_id: string
           timetable_id: string | null
           title: string
@@ -4839,12 +5043,16 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           author_id?: string | null
           created_at?: string
           draft_status?: Database["public"]["Enums"]["trad_draft_status"]
           exam_type?: Database["public"]["Enums"]["trad_exam_type"]
           id?: string
           instructions?: string | null
+          published_at?: string | null
+          rejection_reason?: string | null
           school_id: string
           timetable_id?: string | null
           title: string
@@ -4852,12 +5060,16 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           author_id?: string | null
           created_at?: string
           draft_status?: Database["public"]["Enums"]["trad_draft_status"]
           exam_type?: Database["public"]["Enums"]["trad_exam_type"]
           id?: string
           instructions?: string | null
+          published_at?: string | null
+          rejection_reason?: string | null
           school_id?: string
           timetable_id?: string | null
           title?: string
@@ -5239,6 +5451,60 @@ export type Database = {
           session_id: string
           user_id: string
         }[]
+      }
+      trad_finalize_result: {
+        Args: { _attempt_id: string }
+        Returns: undefined
+      }
+      trad_get_attempt_questions: {
+        Args: { _attempt_id: string }
+        Returns: {
+          q_id: string
+          q_image_path: string
+          q_marks: number
+          q_options: Json
+          q_position: number
+          q_prompt: string
+          q_section_id: string
+          q_selected_index: number
+          q_text_answer: string
+          q_type: string
+        }[]
+      }
+      trad_grade_theory: {
+        Args: { _answer_id: string; _feedback?: string; _marks: number }
+        Returns: Json
+      }
+      trad_list_student_papers: {
+        Args: { _school: string }
+        Returns: {
+          attempt_id: string
+          attempt_status: string
+          duration_minutes: number
+          exam_date: string
+          exam_id: string
+          exam_type: string
+          instructions: string
+          result_released: boolean
+          start_time: string
+          status: string
+          title: string
+          total_marks: number
+          venue: string
+        }[]
+      }
+      trad_review_paper: {
+        Args: { _action: string; _exam_id: string; _reason?: string }
+        Returns: undefined
+      }
+      trad_start_attempt: { Args: { _exam_id: string }; Returns: string }
+      trad_submit_attempt: {
+        Args: { _attempt_id: string; _auto?: boolean }
+        Returns: Json
+      }
+      trad_validate_result: {
+        Args: { _action: string; _attempt_id: string }
+        Returns: undefined
       }
       verify_result_slip: {
         Args: { _id: string }
