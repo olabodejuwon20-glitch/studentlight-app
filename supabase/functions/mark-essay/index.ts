@@ -126,6 +126,7 @@ Return strict JSON only: {
       result: parsed,
     });
   } catch (e: any) {
-    return jsonResponse({ error: String(e?.message || e) }, e?.status ?? 500);
+    console.error("[mark-essay]", e);
+    return jsonResponse({ error: "An internal error occurred" }, e?.status ?? 500);
   }
 });

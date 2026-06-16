@@ -258,6 +258,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ ok: true, schools: schools.length, results });
   } catch (e) {
     console.error("[automation-runner] error:", e);
-    return jsonResponse({ error: String((e as Error).message || e) }, 500);
+    return jsonResponse({ error: "An internal error occurred" }, 500);
   }
 });

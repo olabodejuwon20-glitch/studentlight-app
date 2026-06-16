@@ -35,7 +35,10 @@ Deno.serve(async (req) => {
     const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
     const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableKey) return json({ error: "LOVABLE_API_KEY missing" }, 500);
+    if (!lovableKey) {
+      console.error("[parse-trad-exam-doc] LOVABLE_API_KEY missing");
+      return json({ error: "AI service not configured" }, 500);
+    }
 
     const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
     const { data: u } = await userClient.auth.getUser();
@@ -140,8 +143,9 @@ Deno.serve(async (req) => {
     if (rows.length > 0) {
       const { error: insErr } = await admin.from("trad_exam_questions").insert(rows);
       if (insErr) {
-        await admin.from("trad_exam_uploads").update({ status: "failed", error: insErr.message }).eq("id", upload_id);
-        return json({ error: insErr.message }, 500);
+        console.error("[parse-trad-exam-doc] insert error", insErr);
+        await admin.from("trad_exam_uploads").update({ status: "failed", error: "insert_failed" }).eq("id", upload_id);
+        return json({ error: "Failed to save parsed questions" }, 500);
       }
     }
 
@@ -153,6 +157,7 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, inserted: rows.length });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error("[parse-trad-exam-doc]", e);
+    return json({ error: "An internal error occurred" }, 500);
   }
 });

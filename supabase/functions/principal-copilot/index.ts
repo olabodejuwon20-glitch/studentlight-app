@@ -459,7 +459,10 @@ Deno.serve(async (req) => {
         try { args = JSON.parse(c.function?.arguments ?? "{}"); } catch (_) {}
         const allowed = isAdmin || c.function.name === "knowledge_search";
         const result = allowed
-          ? await execTool(c.function.name, args, school_id, user.id).catch((e: any) => ({ error: String(e?.message || e) }))
+          ? await execTool(c.function.name, args, school_id, user.id).catch((e: any) => {
+              console.error(`[principal-copilot] tool ${c.function.name} failed`, e);
+              return { error: "tool_execution_failed" };
+            })
           : { error: `tool ${c.function.name} is restricted to school admins` };
         trace.push({ tool: c.function.name, args, result_preview: JSON.stringify(result).slice(0, 600) });
         messages.push({
@@ -473,6 +476,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ reply: finalReply, tool_trace: trace });
   } catch (e: any) {
     console.error("principal-copilot error", e);
-    return jsonResponse({ error: String(e?.message || e) }, e?.status ?? 500);
+    return jsonResponse({ error: "An internal error occurred" }, e?.status ?? 500);
   }
 });

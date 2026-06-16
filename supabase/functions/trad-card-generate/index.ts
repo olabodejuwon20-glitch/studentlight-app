@@ -46,7 +46,10 @@ Deno.serve(async (req) => {
     const { data: batch, error: bErr } = await admin.from("trad_scratch_batches").insert({
       school_id, name, quantity, price_kobo, max_uses, expires_at, created_by: u.id,
     }).select("id").single();
-    if (bErr || !batch) return json({ error: "batch_create_failed", details: bErr?.message }, 500);
+    if (bErr || !batch) {
+      console.error("[trad-card-generate] batch_create_failed", bErr);
+      return json({ error: "batch_create_failed" }, 500);
+    }
 
     const ALPHA_SERIAL = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     const ALPHA_PIN = "0123456789";
@@ -68,7 +71,10 @@ Deno.serve(async (req) => {
     for (let i = 0; i < rows.length; i += 500) {
       const slice = rows.slice(i, i + 500);
       const { error: cErr } = await admin.from("trad_scratch_cards").insert(slice);
-      if (cErr) return json({ error: "card_insert_failed", details: cErr.message }, 500);
+      if (cErr) {
+        console.error("[trad-card-generate] card_insert_failed", cErr);
+        return json({ error: "card_insert_failed" }, 500);
+      }
     }
 
     return json({ batch_id: batch.id, count: quantity, csv: csv.join("\n") });

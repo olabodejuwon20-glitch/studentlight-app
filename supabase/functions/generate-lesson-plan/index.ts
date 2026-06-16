@@ -111,12 +111,12 @@ ${notes ? `Teacher notes: ${notes}` : ""}`;
 
     if (insErr) {
       console.error("[generate-lesson-plan] insert error", insErr);
-      return jsonResponse({ error: insErr.message, draft: result.reply }, 500);
+      return jsonResponse({ error: "Failed to save lesson plan", draft: result.reply }, 500);
     }
 
     return jsonResponse({ plan, usage: result.usage, cost_usd: result.costUsd });
   } catch (e: any) {
     console.error("[generate-lesson-plan]", e);
-    return jsonResponse({ error: e?.message || "Internal error" }, e?.status || 500);
+    return jsonResponse({ error: "An internal error occurred" }, e?.status || 500);
   }
 });
