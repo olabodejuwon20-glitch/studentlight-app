@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     return json({ ok: true, serial: card.serial, pin, max_uses: card.max_uses, expires_at: card.expires_at });
   } catch (e) {
     console.error("[trad-card-verify]", e);
-    return json({ error: "internal_error", message: String((e as Error).message || e) }, 500);
+    return json({ error: "internal_error" }, 500);
   }
 });
 
