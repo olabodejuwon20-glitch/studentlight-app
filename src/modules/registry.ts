@@ -140,10 +140,10 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
   {
     slug: "principal-copilot", name: "Principal Copilot", category: "intelligence", icon: Brain, core: true,
     sidebar: [
-      { label: "Copilot", to: "copilot", icon: Brain, roles: ["admin"] },
-      { label: "Help & Copilot", to: "copilot", icon: Brain, roles: ["teacher"] },
-      { label: "Help & Copilot", to: "copilot", icon: Brain, roles: ["student"] },
-      { label: "Help & Copilot", to: "copilot", icon: Brain, roles: ["parent"] },
+      { label: "AI OPERATION CENTER", to: "copilot", icon: Brain, roles: ["admin"] },
+      { label: "Help & AI OPERATION CENTER", to: "copilot", icon: Brain, roles: ["teacher"] },
+      { label: "Help & AI OPERATION CENTER", to: "copilot", icon: Brain, roles: ["student"] },
+      { label: "Help & AI OPERATION CENTER", to: "copilot", icon: Brain, roles: ["parent"] },
     ],
   },
   {
@@ -222,11 +222,11 @@ export const MODULE_MANIFESTS: ModuleManifest[] = [
     sidebar: [{ label: "Proctoring", to: "proctoring", icon: ClipboardCheck, roles: ["admin"] }],
   },
   {
-    slug: "traditional-exams", name: "Traditional Exams", category: "academics", icon: ScrollText, core: true,
+    slug: "traditional-exams", name: "Exams", category: "academics", icon: ScrollText, core: true,
     sidebar: [
-      { label: "Traditional Exams", to: "trad-exams", icon: ScrollText, roles: ["admin"] },
+      { label: "Exams", to: "trad-exams", icon: ScrollText, roles: ["admin"] },
       { label: "Approvals",         to: "trad-exams-approvals", icon: ScrollText, roles: ["admin"] },
-      { label: "Exam Results",      to: "trad-exams-results",   icon: ScrollText, roles: ["admin"] },
+      { label: "Results",      to: "trad-exams-results",   icon: ScrollText, roles: ["admin"] },
       { label: "Exam Papers", to: "trad-exams", icon: ScrollText, roles: ["teacher"] },
       { label: "Grading Queue", to: "trad-exams-grading", icon: ScrollText, roles: ["teacher"] },
       { label: "Exams",       to: "trad-exams", icon: ScrollText, roles: ["student"] },
