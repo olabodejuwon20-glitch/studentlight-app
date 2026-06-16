@@ -5666,6 +5666,10 @@ export type Database = {
         Args: { _detail?: Json; _kind: string; _session_id: string }
         Returns: undefined
       }
+      log_security_event: {
+        Args: { _detail?: Json; _kind: string; _school_id?: string }
+        Returns: undefined
+      }
       match_knowledge_chunks: {
         Args: {
           _class_id?: string
