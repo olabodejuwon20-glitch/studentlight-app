@@ -23,10 +23,13 @@ Deno.serve(async (req) => {
     if (v.status !== "success") return json({ ok: false, status: v.status });
 
     const { error: rpcErr } = await admin.rpc("apply_subscription_payment", { _invoice_id: inv.id, _reference: reference, _method: "paystack" });
-    if (rpcErr) return json({ error: "apply_failed", message: rpcErr.message }, 500);
+    if (rpcErr) {
+      console.error("[subscription-verify] apply_failed", rpcErr);
+      return json({ error: "apply_failed" }, 500);
+    }
     return json({ ok: true, status: "paid", invoice_id: inv.id });
   } catch (e) {
     console.error("[subscription-verify]", e);
-    return json({ error: "internal_error", message: String((e as Error).message ?? e) }, 500);
+    return json({ error: "internal_error" }, 500);
   }
 });
