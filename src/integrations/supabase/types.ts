@@ -365,6 +365,7 @@ export type Database = {
           body: string | null
           created_at: string
           created_by: string
+          deleted_at: string | null
           id: string
           school_id: string
           title: string
@@ -373,6 +374,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           id?: string
           school_id: string
           title: string
@@ -381,6 +383,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           id?: string
           school_id?: string
           title?: string
@@ -2718,6 +2721,7 @@ export type Database = {
           config_schema: Json
           created_at: string
           default_config: Json
+          deleted_at: string | null
           description: string | null
           global_default: boolean
           icon: string | null
@@ -2736,6 +2740,7 @@ export type Database = {
           config_schema?: Json
           created_at?: string
           default_config?: Json
+          deleted_at?: string | null
           description?: string | null
           global_default?: boolean
           icon?: string | null
@@ -2754,6 +2759,7 @@ export type Database = {
           config_schema?: Json
           created_at?: string
           default_config?: Json
+          deleted_at?: string | null
           description?: string | null
           global_default?: boolean
           icon?: string | null
@@ -3158,6 +3164,7 @@ export type Database = {
           body: string
           created_at: string
           created_by: string
+          deleted_at: string | null
           id: string
           priority: string
           scheduled_for: string | null
@@ -3169,6 +3176,7 @@ export type Database = {
           body: string
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           id?: string
           priority?: string
           scheduled_for?: string | null
@@ -3180,6 +3188,7 @@ export type Database = {
           body?: string
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           id?: string
           priority?: string
           scheduled_for?: string | null
@@ -3494,6 +3503,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rate_limits: {
+        Row: {
+          count: number
+          created_at: string
+          id: string
+          key: string
+          school_id: string | null
+          updated_at: string
+          user_id: string | null
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          id?: string
+          key: string
+          school_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          id?: string
+          key?: string
+          school_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+          window_start?: string
+        }
+        Relationships: []
       }
       result_verifications: {
         Row: {
@@ -3954,6 +3996,7 @@ export type Database = {
           currency: string
           current_session: string | null
           current_term: string | null
+          deleted_at: string | null
           email: string | null
           exams_violation_limit: number
           extra_student_kobo: number | null
@@ -3989,6 +4032,7 @@ export type Database = {
           currency?: string
           current_session?: string | null
           current_term?: string | null
+          deleted_at?: string | null
           email?: string | null
           exams_violation_limit?: number
           extra_student_kobo?: number | null
@@ -4024,6 +4068,7 @@ export type Database = {
           currency?: string
           current_session?: string | null
           current_term?: string | null
+          deleted_at?: string | null
           email?: string | null
           exams_violation_limit?: number
           extra_student_kobo?: number | null
@@ -5534,6 +5579,15 @@ export type Database = {
       bump_ai_quota_savings: {
         Args: { _cost: number; _school_id: string; _tokens: number }
         Returns: undefined
+      }
+      check_rate_limit: {
+        Args: {
+          _key: string
+          _max: number
+          _school_id?: string
+          _window_seconds: number
+        }
+        Returns: boolean
       }
       create_subscription_invoice: {
         Args: { _cycle?: string; _plan: string; _school_id: string }
