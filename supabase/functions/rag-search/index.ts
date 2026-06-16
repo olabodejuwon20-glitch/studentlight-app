@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ results: data ?? [] });
   } catch (e: any) {
     console.error("rag-search error", e);
-    return jsonResponse({ error: String(e?.message || e) }, 500);
+    console.error("[rag-search]", e);
+    return jsonResponse({ error: "An internal error occurred" }, 500);
   }
 });
