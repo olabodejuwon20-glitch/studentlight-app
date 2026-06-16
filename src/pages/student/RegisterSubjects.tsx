@@ -23,8 +23,8 @@ export default function StudentRegisterSubjects() {
     setClasses(cls ?? []);
     const tids = Array.from(new Set((cls ?? []).map(c => c.teacher_id).filter(Boolean)));
     if (tids.length) {
-      const { data: p } = await supabase.from("profiles").select("id,full_name,email").in("id", tids);
-      setTeachers(Object.fromEntries((p ?? []).map((x: any) => [x.id, x.full_name || x.email || "—"])));
+      const { data: p } = await supabase.rpc("get_public_profiles", { _ids: tids });
+      setTeachers(Object.fromEntries((p ?? []).map((x: any) => [x.id, x.full_name || "—"])));
     }
     const { data: enr } = await supabase.from("class_enrollments").select("class_id").eq("student_id", user.id);
     setEnrolled(new Set((enr ?? []).map((x: any) => x.class_id)));
