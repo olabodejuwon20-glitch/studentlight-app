@@ -22,11 +22,11 @@ export default function StudentClasses() {
       setRows(cls ?? []);
       const tids = Array.from(new Set((cls ?? []).map(c => c.teacher_id).filter(Boolean)));
       const [{ data: profs }, { data: allEnr }, { data: tt }] = await Promise.all([
-        tids.length ? supabase.from("profiles").select("id,full_name,email").in("id", tids) : Promise.resolve({ data: [] as any[] }),
+        tids.length ? supabase.rpc("get_public_profiles", { _ids: tids }) : Promise.resolve({ data: [] as any[] }),
         supabase.from("class_enrollments").select("class_id").in("class_id", ids),
         supabase.from("timetable").select("class_id").in("class_id", ids),
       ]);
-      setTeachers(Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.full_name || p.email || "—"])));
+      setTeachers(Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.full_name || "—"])));
       const cm: Record<string, number> = {}, pm: Record<string, number> = {};
       allEnr?.forEach(e => { cm[e.class_id] = (cm[e.class_id] ?? 0) + 1; });
       tt?.forEach(t => { pm[t.class_id] = (pm[t.class_id] ?? 0) + 1; });

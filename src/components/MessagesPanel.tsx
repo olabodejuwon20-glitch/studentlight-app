@@ -36,8 +36,7 @@ export function MessagesPanel() {
         .select("user_id,role").eq("school_id", school.id).eq("status", "active").neq("user_id", user.id);
       const ids = (ms ?? []).map(m => m.user_id);
       if (!ids.length) return setPeers([]);
-      const { data: profs } = await supabase.from("profiles")
-        .select("id,full_name,email,photo_url").in("id", ids);
+      const { data: profs } = await supabase.rpc("get_public_profiles", { _ids: ids });
       const map = new Map((profs ?? []).map(p => [p.id, p]));
       setPeers((ms ?? []).map(m => ({ ...m, profile: map.get(m.user_id) })));
     })();

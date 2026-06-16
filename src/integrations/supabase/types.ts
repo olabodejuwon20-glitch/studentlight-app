@@ -5620,6 +5620,14 @@ export type Database = {
         }[]
       }
       get_my_membership_profile: { Args: { _school: string }; Returns: Json }
+      get_public_profiles: {
+        Args: { _ids: string[] }
+        Returns: {
+          full_name: string
+          id: string
+          photo_url: string
+        }[]
+      }
       get_school_by_slug: {
         Args: { _slug: string }
         Returns: {
