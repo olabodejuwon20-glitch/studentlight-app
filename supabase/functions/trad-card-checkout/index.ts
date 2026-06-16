@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     return json({ authorization_url: init.authorization_url, reference, mode: init.mode });
   } catch (e) {
     console.error("[trad-card-checkout]", e);
-    return json({ error: "internal_error", message: String((e as Error).message || e) }, 500);
+    return json({ error: "internal_error" }, 500);
   }
 });
 
