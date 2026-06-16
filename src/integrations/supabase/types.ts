@@ -5445,6 +5445,24 @@ export type Database = {
       }
     }
     Views: {
+      public_profiles: {
+        Row: {
+          full_name: string | null
+          id: string | null
+          photo_url: string | null
+        }
+        Insert: {
+          full_name?: string | null
+          id?: string | null
+          photo_url?: string | null
+        }
+        Update: {
+          full_name?: string | null
+          id?: string | null
+          photo_url?: string | null
+        }
+        Relationships: []
+      }
       school_directory: {
         Row: {
           id: string | null
