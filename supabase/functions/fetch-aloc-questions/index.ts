@@ -135,6 +135,6 @@ Deno.serve(async (req) => {
     return json({ ok: true, inserted: totalInserted });
   } catch (e) {
     console.error("[fetch-aloc-questions]", e);
-    return json({ error: (e as Error).message ?? "Internal error" }, 500);
+    return json({ error: "An internal error occurred" }, 500);
   }
 });
