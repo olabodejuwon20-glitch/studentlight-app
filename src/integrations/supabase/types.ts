@@ -5580,6 +5580,12 @@ export type Database = {
         Args: { _cost: number; _school_id: string; _tokens: number }
         Returns: undefined
       }
+      can_read_platform_announcement: {
+        Args: {
+          _announcement: Database["public"]["Tables"]["platform_announcements"]["Row"]
+        }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           _key: string
@@ -5817,6 +5823,45 @@ export type Database = {
           q_selected_index: number
           q_text_answer: string
           q_type: string
+        }[]
+      }
+      trad_get_paper_questions: {
+        Args: { _exam_id: string }
+        Returns: {
+          q_ai_generated: boolean
+          q_correct_index: number
+          q_created_at: string
+          q_exam_id: string
+          q_explanation: string
+          q_id: string
+          q_image_path: string
+          q_marks: number
+          q_model_answer: string
+          q_options: Json
+          q_position: number
+          q_prompt: string
+          q_school_id: string
+          q_section_id: string
+          q_type: string
+          q_updated_at: string
+        }[]
+      }
+      trad_get_theory_grading_queue: {
+        Args: { _school_id: string }
+        Returns: {
+          answer_id: string
+          attempt_status: string
+          exam_id: string
+          feedback: string
+          graded_at: string
+          marks: number
+          marks_awarded: number
+          model_answer: string
+          prompt: string
+          question_id: string
+          student_id: string
+          submitted_at: string
+          text_answer: string
         }[]
       }
       trad_grade_theory: {
