@@ -34,7 +34,10 @@ Deno.serve(async (req) => {
       const { data: created, error: rpcErr } = await userClient.rpc("create_subscription_invoice", {
         _school_id: school_id, _plan: plan, _cycle: cycle ?? "termly",
       });
-      if (rpcErr) return json({ error: "create_invoice_failed", message: rpcErr.message }, 400);
+      if (rpcErr) {
+        console.error("[subscription-checkout] create_invoice_failed", rpcErr);
+        return json({ error: "create_invoice_failed" }, 400);
+      }
       invId = created as string;
     }
 
@@ -68,6 +71,6 @@ Deno.serve(async (req) => {
     return json({ ok: true, authorization_url: init.authorization_url, reference, invoice_id: inv.id, mode: init.mode });
   } catch (e) {
     console.error("[subscription-checkout]", e);
-    return json({ error: "internal_error", message: String((e as Error).message ?? e) }, 500);
+    return json({ error: "internal_error" }, 500);
   }
 });
