@@ -5445,24 +5445,6 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          full_name: string | null
-          id: string | null
-          photo_url: string | null
-        }
-        Insert: {
-          full_name?: string | null
-          id?: string | null
-          photo_url?: string | null
-        }
-        Update: {
-          full_name?: string | null
-          id?: string | null
-          photo_url?: string | null
-        }
-        Relationships: []
-      }
       school_directory: {
         Row: {
           id: string | null
@@ -5638,6 +5620,14 @@ export type Database = {
         }[]
       }
       get_my_membership_profile: { Args: { _school: string }; Returns: Json }
+      get_public_profiles: {
+        Args: { _ids: string[] }
+        Returns: {
+          full_name: string
+          id: string
+          photo_url: string
+        }[]
+      }
       get_school_by_slug: {
         Args: { _slug: string }
         Returns: {
