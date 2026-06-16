@@ -34,12 +34,29 @@ export default function AdminTradExamPaper() {
     const [e, s, q, u] = await Promise.all([
       supabase.from("trad_exams" as any).select("*").eq("id", examId).maybeSingle(),
       supabase.from("trad_exam_sections" as any).select("*").eq("exam_id", examId).order("position"),
-      supabase.from("trad_exam_questions" as any).select("*").eq("exam_id", examId).order("position"),
+      supabase.rpc("trad_get_paper_questions" as any, { _exam_id: examId }),
       supabase.from("trad_exam_uploads" as any).select("*").eq("exam_id", examId).order("created_at", { ascending: false }),
     ]);
     setExam((e.data as any) ?? null);
     setSections(((s.data as any) ?? []) as TradSection[]);
-    setQuestions(((q.data as any) ?? []) as TradQuestion[]);
+    setQuestions((((q.data as any) ?? []).map((row: any) => ({
+      id: row.q_id,
+      school_id: row.q_school_id,
+      exam_id: row.q_exam_id,
+      section_id: row.q_section_id,
+      position: row.q_position,
+      type: row.q_type,
+      prompt: row.q_prompt,
+      options: row.q_options,
+      correct_index: row.q_correct_index,
+      model_answer: row.q_model_answer,
+      marks: row.q_marks,
+      image_path: row.q_image_path,
+      explanation: row.q_explanation,
+      ai_generated: row.q_ai_generated,
+      created_at: row.q_created_at,
+      updated_at: row.q_updated_at,
+    })) as TradQuestion[]));
     setUploads(((u.data as any) ?? []) as TradUpload[]);
   }
   useEffect(() => { load(); }, [examId]);
