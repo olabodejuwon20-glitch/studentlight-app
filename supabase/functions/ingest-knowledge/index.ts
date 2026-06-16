@@ -132,6 +132,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ ok: true, document_id: doc.id, chunks: chunks.length });
   } catch (e: any) {
     console.error("ingest-knowledge error", e);
-    return jsonResponse({ error: String(e?.message || e) }, 500);
+    return jsonResponse({ error: "An internal error occurred" }, 500);
   }
 });
