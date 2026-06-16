@@ -46,9 +46,8 @@ export function RealtimeNotifier() {
             const m = payload.new;
             if (!m || m.school_id !== school.id) return;
             // Resolve sender name
-            const { data: prof } = await supabase
-              .from("profiles").select("full_name,email").eq("id", m.sender_id).maybeSingle();
-            const name = prof?.full_name || prof?.email || "Someone";
+            const { data: profs } = await supabase.rpc("get_public_profiles", { _ids: [m.sender_id] });
+            const name = profs?.[0]?.full_name || "Someone";
             toast(`New message from ${name}`, {
               description: (m.body || "(attachment)").slice(0, 140),
               action: activeRole

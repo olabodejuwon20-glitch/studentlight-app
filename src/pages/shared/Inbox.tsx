@@ -63,15 +63,15 @@ export default function Inbox() {
         .eq("status", "active");
       const uids = Array.from(new Set((mems ?? []).map((m: any) => m.user_id)));
       if (!uids.length) return;
-      const { data: profs } = await supabase.from("profiles").select("id, full_name, email").in("id", uids);
-      const profMap = new Map((profs ?? []).map((p: any) => [p.id, p.full_name || p.email || "Member"]));
+      const { data: profs } = await supabase.rpc("get_public_profiles", { _ids: uids });
+      const profMap = new Map((profs ?? []).map((p: any) => [p.id, p.full_name || "Member"]));
       setMembers(
         (mems ?? [])
           .filter((m: any) => m.user_id !== user?.id)
           .map((m: any) => ({ user_id: m.user_id, full_name: profMap.get(m.user_id) || "Member", role: m.role }))
       );
       const map: Record<string, string> = {};
-      (profs ?? []).forEach((p: any) => { map[p.id] = p.full_name || p.email || "Member"; });
+      (profs ?? []).forEach((p: any) => { map[p.id] = p.full_name || "Member"; });
       setParticipants((prev) => ({ ...prev, ...map }));
     })();
   }, [school?.id, user?.id]);
@@ -84,10 +84,10 @@ export default function Inbox() {
       setMessages(msgs);
       const missing = parts.map((p) => p.user_id).filter((id) => !participants[id]);
       if (missing.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name, email").in("id", missing);
+        const { data: profs } = await supabase.rpc("get_public_profiles", { _ids: missing });
         setParticipants((prev) => {
           const next = { ...prev };
-          (profs ?? []).forEach((p: any) => { next[p.id] = p.full_name || p.email || "Member"; });
+          (profs ?? []).forEach((p: any) => { next[p.id] = p.full_name || "Member"; });
           return next;
         });
       }
