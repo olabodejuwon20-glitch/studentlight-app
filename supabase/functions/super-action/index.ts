@@ -85,7 +85,11 @@ Deno.serve(async (req) => {
       case "delete_school": {
         const { school_id, confirm } = payload;
         if (confirm !== "DELETE") return json({ error: "confirm required" }, 400);
-        const { error } = await admin.from("schools").delete().eq("id", school_id);
+        // Soft delete: mark deleted_at + suspend so the row vanishes from active listings
+        // without losing audit history, billing trail, or child records.
+        const { error } = await admin.from("schools")
+          .update({ deleted_at: new Date().toISOString(), status: "suspended", suspended_reason: "deleted" })
+          .eq("id", school_id);
         if (error) throw error;
         await audit(school_id);
         return json({ ok: true });
@@ -225,7 +229,9 @@ Deno.serve(async (req) => {
       }
       case "delete_announcement": {
         const { id } = payload;
-        const { error } = await admin.from("platform_announcements").delete().eq("id", id);
+        const { error } = await admin.from("platform_announcements")
+          .update({ deleted_at: new Date().toISOString() })
+          .eq("id", id);
         if (error) throw error;
         await audit(null, { id });
         return json({ ok: true });
