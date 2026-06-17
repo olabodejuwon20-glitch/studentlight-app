@@ -56,16 +56,6 @@ export function RealtimeNotifier() {
             });
           }
         )
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "platform_announcements" },
-          (payload: any) => {
-            const a = payload.new;
-            if (!a) return;
-            const fn = a.priority === "critical" ? toast.error : a.priority === "high" ? toast.warning : toast;
-            fn(a.title, { description: (a.body || "").slice(0, 180) });
-          }
-        )
         .subscribe((status) => {
           if (cancelled) return;
           if (status === "SUBSCRIBED") setChannelStatus("open");
