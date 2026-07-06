@@ -15,6 +15,7 @@ import { schoolPath, getCurrentSchoolSlug } from "@/lib/tenant";
 import SEO from "@/components/SEO";
 import PortalDemo from "@/components/landing/PortalDemo";
 import WhatsAppFab from "@/components/landing/WhatsAppFab";
+import EducationNetwork from "@/components/landing/EducationNetwork";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, SUPPORT_SLA, mailtoOnboard, waLink } from "@/lib/contact";
 import { formatNaira, revenueForSchool, type PlanPricing } from "@/lib/pricing";
 
