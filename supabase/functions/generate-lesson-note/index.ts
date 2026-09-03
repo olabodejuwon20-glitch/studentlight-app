@@ -70,10 +70,10 @@ Deno.serve(async (req) => {
       ].filter(Boolean).join("\n"),
     };
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await fetch(Deno.env.get("AI_GATEWAY_URL") ?? "https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
+        Authorization: `Bearer ${Deno.env.get("AI_API_KEY")}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: [sys, user] }),

@@ -1,13 +1,16 @@
-// Shared embedding helper. Calls Lovable AI Gateway /embeddings.
-// Returns 1536-dim vectors via openai/text-embedding-3-small (matches knowledge_chunks column).
-const EMBED_URL = "https://ai.gateway.lovable.dev/v1/embeddings";
+// Shared embedding helper. Calls AI Gateway /embeddings.
+// Returns vectors via Google text-embedding-004 (matches knowledge_chunks column).
+const EMBED_URL = Deno.env.get("AI_EMBED_URL") ?? (
+  (Deno.env.get("AI_GATEWAY_URL") ?? "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions")
+    .replace("/chat/completions", "/embeddings")
+);
 
-export async function embedTexts(inputs: string[], model = "openai/text-embedding-3-small"): Promise<number[][]> {
+export async function embedTexts(inputs: string[], model = "text-embedding-004"): Promise<number[][]> {
   if (inputs.length === 0) return [];
   const r = await fetch(EMBED_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
+      Authorization: `Bearer ${Deno.env.get("AI_API_KEY")}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ model, input: inputs }),

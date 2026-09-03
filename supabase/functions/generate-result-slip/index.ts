@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
       .single();
     if (verErr) console.error("[generate-result-slip] verification insert failed", verErr);
 
-    const origin = req.headers.get("origin") || "https://legacy-skool.lovable.app";
+    const origin = req.headers.get("origin") || Deno.env.get("APP_URL") || "https://legacyskool.com";
     const verifyUrl = ver?.id ? `${origin}/verify/${ver.id}` : origin;
     let qrBytes: Uint8Array | null = null;
     try {

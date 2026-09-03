@@ -7,7 +7,7 @@ type Props = {
   type?: "website" | "article";
 };
 
-const SITE = "https://legacy-skool.lovable.app";
+const SITE = import.meta.env.VITE_SITE_URL ?? "https://legacyskool.com";
 
 export default function SEO({ title, description, path, type = "website" }: Props) {
   const url = `${SITE}${path}`;

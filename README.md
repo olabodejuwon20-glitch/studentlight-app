@@ -100,25 +100,32 @@ IMPORTANT:
 
 build exactly as in the image without missing any thing
 
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://studentlight-app.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/203feca5-8e54-476e-a26e-b088eb6a6f16).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+This project is built and maintained with Antigravity.
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
 npm i
 npm run dev
+```
+
+## Environment Variables
+
+Create a `.env` file with:
+
+```
+VITE_SUPABASE_URL=<your-supabase-url>
+VITE_SUPABASE_PUBLISHABLE_KEY=<your-supabase-anon-key>
+VITE_SITE_URL=https://legacyskool.com
+```
+
+For Supabase edge functions, set these secrets:
+
+```
+AI_API_KEY=<your-gemini-api-key>
+AI_GATEWAY_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
 ```

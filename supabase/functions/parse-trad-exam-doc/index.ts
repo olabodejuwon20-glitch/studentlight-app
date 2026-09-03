@@ -34,9 +34,9 @@ Deno.serve(async (req) => {
     const url = Deno.env.get("SUPABASE_URL")!;
     const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
     const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableKey) {
-      console.error("[parse-trad-exam-doc] LOVABLE_API_KEY missing");
+    const aiApiKey = Deno.env.get("AI_API_KEY");
+    if (!aiApiKey) {
+      console.error("[parse-trad-exam-doc] AI_API_KEY missing");
       return json({ error: "AI service not configured" }, 500);
     }
 
@@ -83,9 +83,9 @@ Deno.serve(async (req) => {
         ? { type: "file" as const, file: { filename: "paper.pdf", file_data: `data:application/pdf;base64,${b64}` } }
         : { type: "file" as const, file: { filename: "paper.docx", file_data: `data:${mime};base64,${b64}` } };
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await fetch(Deno.env.get("AI_GATEWAY_URL") ?? "https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${aiApiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-pro",
         response_format: { type: "json_object" },

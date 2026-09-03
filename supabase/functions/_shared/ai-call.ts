@@ -1,4 +1,4 @@
-// Shared Lovable AI Gateway helper used by every AI edge function.
+// Shared AI Gateway helper used by every AI edge function.
 // Handles: auth context, per-school quota check, model routing, retries,
 // 402/429 surfacing, and writes a row to public.ai_jobs with cost + tokens.
 import { createClient, SupabaseClient } from "jsr:@supabase/supabase-js@2";
@@ -9,7 +9,15 @@ export const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+// Configurable AI gateway — set AI_GATEWAY_URL in your Supabase secrets.
+// Defaults to Google Gemini's OpenAI-compatible endpoint.
+const GATEWAY = Deno.env.get("AI_GATEWAY_URL") ?? "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+
+// Strip provider prefix (e.g. "google/gemini-2.5-flash" → "gemini-2.5-flash")
+// so model names work directly with the Google AI API.
+function normalizeModel(m: string): string {
+  return m.includes("/") ? m.split("/").slice(1).join("/") : m;
+}
 
 // Rough per-1k-token pricing in USD (approximate, used only for budget tracking).
 const PRICING: Record<string, { in: number; out: number }> = {
@@ -194,7 +202,7 @@ export async function aiCall(opts: AiCallOptions): Promise<AiCallResult> {
 
   try {
     const body: any = {
-      model,
+      model: normalizeModel(model),
       messages: opts.messages,
       stream: false,
     };
@@ -206,7 +214,7 @@ export async function aiCall(opts: AiCallOptions): Promise<AiCallResult> {
     const r = await fetch(GATEWAY, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
+        Authorization: `Bearer ${Deno.env.get("AI_API_KEY")}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),

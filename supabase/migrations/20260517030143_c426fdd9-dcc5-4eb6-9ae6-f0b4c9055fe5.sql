@@ -206,7 +206,7 @@ INSERT INTO public.modules (slug,name,description,category,icon,global_default,p
 ('cbt_sim','CBT Simulation','NECO/WAEC-style computer-based testing with proctoring','academics','MonitorPlay',true,'included',0,
  '{"webcam":true,"ai_proctor":true,"negative_marking":false,"duration_min":60,"auto_submit":true,"retry_limit":1}',
  '[{"key":"webcam","label":"Webcam Monitoring","type":"toggle"},{"key":"ai_proctor","label":"AI Proctoring","type":"toggle"},{"key":"negative_marking","label":"Negative Marking","type":"toggle"},{"key":"duration_min","label":"Default Duration (min)","type":"slider","min":15,"max":180,"step":5},{"key":"auto_submit","label":"Auto Submit","type":"toggle"},{"key":"retry_limit","label":"Retry Limit","type":"slider","min":0,"max":5,"step":1}]'),
-('ai_tutor','AI Tutor','24/7 AI tutor powered by Lovable AI','ai','Bot',true,'included',0,
+('ai_tutor','AI Tutor','24/7 AI tutor powered by AI','ai','Bot',true,'included',0,
  '{"model":"google/gemini-2.5-flash","daily_message_limit":50}',
  '[{"key":"model","label":"AI Model","type":"select","options":["google/gemini-2.5-flash","google/gemini-2.5-pro","openai/gpt-5-mini"]},{"key":"daily_message_limit","label":"Daily Messages / Student","type":"slider","min":5,"max":500,"step":5}]'),
 ('virtual_lab','Virtual Science Lab','Interactive simulations for chemistry, physics, biology','academics','FlaskConical',false,'addon',1500000,

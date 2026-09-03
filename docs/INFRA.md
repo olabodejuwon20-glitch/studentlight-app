@@ -2,7 +2,7 @@
 
 ## Hosting
 - Frontend: Vite + React, deployed on a global CDN.
-- Backend: Lovable Cloud (managed Postgres + edge functions + storage).
+- Backend: Supabase (managed Postgres + edge functions + storage).
 
 ## Backups
 - **Automated daily backups** of the Postgres database, handled by the managed cloud provider.
@@ -21,7 +21,7 @@
 ## Monitoring
 - Auth events recorded in the `auth_events` table.
 - Page views recorded in `page_views` for product analytics.
-- Edge-function logs available via the Lovable Cloud dashboard.
+- Edge-function logs available via the Supabase dashboard.
 
 ## Data deletion
 - A verified school admin can request full data deletion at `Support@legacyschools.study`.

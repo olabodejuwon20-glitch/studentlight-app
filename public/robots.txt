@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://legacy-skool.lovable.app/sitemap.xml
+Sitemap: https://legacyskool.com/sitemap.xml

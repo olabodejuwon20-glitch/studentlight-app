@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const url = Deno.env.get("SUPABASE_URL")!;
     const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
     const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const aiKey = Deno.env.get("LOVABLE_API_KEY");
+    const aiKey = Deno.env.get("AI_API_KEY");
     if (!aiKey) return json({ error: "AI not configured" }, 500);
 
     const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
@@ -78,7 +78,7 @@ Write a personalised result analysis in markdown with these sections:
 
 Keep it warm, motivating, and under 400 words. Avoid generic platitudes.`;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await fetch(Deno.env.get("AI_GATEWAY_URL") ?? "https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${aiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({

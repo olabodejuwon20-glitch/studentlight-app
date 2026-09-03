@@ -112,10 +112,10 @@ function contextNote(ctx: Awaited<ReturnType<typeof loadStudentContext>>) {
 }
 
 async function callGateway(body: any, stream = false) {
-  return fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  return fetch(Deno.env.get("AI_GATEWAY_URL") ?? "https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
+      Authorization: `Bearer ${Deno.env.get("AI_API_KEY")}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ model: "google/gemini-2.5-flash", stream, ...body }),

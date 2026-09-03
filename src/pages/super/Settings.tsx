@@ -109,7 +109,7 @@ export default function SuperSettings() {
         </TabsContent>
 
         <TabsContent value="smtp">
-          <Section title="SMTP" description="Outbound email config. Secrets live in Lovable Cloud — this only persists the connection metadata.">
+          <Section title="SMTP" description="Outbound email config. Secrets live in Supabase secrets — this only persists the connection metadata.">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div><Label>Host</Label><Input value={s.smtp.host ?? ""} onChange={e => setS({ ...s, smtp: { ...s.smtp, host: e.target.value } })} /></div>
               <div><Label>Port</Label><Input type="number" value={s.smtp.port ?? ""} onChange={e => setS({ ...s, smtp: { ...s.smtp, port: Number(e.target.value) || undefined } })} /></div>
@@ -125,7 +125,7 @@ export default function SuperSettings() {
         </TabsContent>
 
         <TabsContent value="integrations">
-          <Section title="Integrations" description="Toggle availability across the platform. API keys are managed in Lovable Cloud secrets, not here.">
+          <Section title="Integrations" description="Toggle availability across the platform. API keys are managed in Supabase secrets, not here.">
             <ul className="divide-y divide-border -my-2">
               {KNOWN_INTEGRATIONS.map(i => (
                 <li key={i.key} className="py-3 flex items-center justify-between">

@@ -1,5 +1,5 @@
-// Guarded service-worker registration. Per Lovable PWA skill: never register in
-// dev, iframes, or preview hosts, and support `?sw=off` as a kill switch.
+// Guarded service-worker registration. Never register in dev, iframes,
+// or preview hosts, and support `?sw=off` as a kill switch.
 
 const APP_SW_PATH = "/sw.js";
 
@@ -7,12 +7,7 @@ function isPreviewHost(host: string) {
   return (
     host.startsWith("id-preview--") ||
     host.startsWith("preview--") ||
-    host === "lovableproject.com" ||
-    host.endsWith(".lovableproject.com") ||
-    host === "lovableproject-dev.com" ||
-    host.endsWith(".lovableproject-dev.com") ||
-    host === "beta.lovable.dev" ||
-    host.endsWith(".beta.lovable.dev")
+    host === "localhost"
   );
 }
 

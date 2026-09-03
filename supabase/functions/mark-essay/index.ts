@@ -1,4 +1,4 @@
-// Mark an essay answer against a rubric using Lovable AI.
+// Mark an essay answer against a rubric using AI Gateway.
 // Returns per-criterion scores, overall numeric grade (0-100), and feedback.
 // Persists the suggestion on assessment_answers_v2 when answer_id is provided.
 import { createClient } from "jsr:@supabase/supabase-js@2";
